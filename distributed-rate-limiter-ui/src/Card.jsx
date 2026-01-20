@@ -3,7 +3,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function Card() {
   return (
-    <div className="content-box mt-4">
+    <div className="mt-4">
       <Row className="justify-content-center g-4">
         <Col md={4}>
           <div className="stat-card total">

@@ -5,7 +5,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function Main_Box() {
   return (
-    <div className="content-box mt-4">
+    <div className="mt-4">
       <div className="table-box">
         <div className="table-scroll">
           <Table hover borderless >

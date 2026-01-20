@@ -1,5 +1,5 @@
 ### Front-End Resporitory Mini-Project-2
 
-### Team Members 
+### Developers 
 - Sidharth
 - Ankit

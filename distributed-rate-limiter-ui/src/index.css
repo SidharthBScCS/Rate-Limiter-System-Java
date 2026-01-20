@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
+
+/*Main-Body-Design by SK*/
+body {
+  margin: 0;
+  background-color: #0f172a;
+  color: white;
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+.app-layout{
+  display:flex;
+}
+::-webkit-scrollbar{
+  width:8px;
+}
+::-webkit-scrollbar-track{
+  background:rgba(50,50,50,0.2);
+}
+::-webkit-scrollbar-thumb{
+  background:rgba(7, 0, 0, 0.5);
+}
+
+/*Left-Content by SK*/
+.sidebar{
+  height: 100vh;
+  background: linear-gradient(180deg, #020617, #020617f2);
+  box-shadow: 4px 0 30px rgba(0,0,0,0.6);
+}
+
+
+/*Right-Content by SK*/
+.content-box{
+  width:1100px;
+  margin:0 auto;
+  padding:12px 24px;
+  
+}
+
+
+/*Card by SK*/
+.stat-card {
+  height: 150px;
+  width:340px;
+  border-radius: 16px;
+  padding: 12px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 60px rgba(0,0,0,0.75);
+}
+.stat-card.total {
+  background: #1d4ed8;
+}
+.stat-card.allowed {
+  background: #059669;
+}
+.stat-card.blocked {
+  background: #dc2626;
+}
+
+
+/*API-Box by SK*/
+.table-box{
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-radius:16px;
+  padding:20px 28px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.6);
+}
+.table-box table tbody tr:hover{
+  background: rgba(99,102,241,0.08);
+}
+.table-box table thead th {
+  background: rgba(15, 23, 42, 0.55);
+}
+.table-scroll{
+  max-height:380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/*MODAL by SK*/
+.modal-content {
+  background: rgb(15, 23, 42);
+  color:white;
+  border-radius:16px;
+}
+.modal-body .form-control{
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color:wheat;
+}
+.form-control::placeholder{
+  color: rgba(255,255,255,0.4);
+}
+.modal-header {
+  border-bottom: none !important;
+}
+.modal-footer {
+  border-top: none !important;
+}
+.modal .form-control:focus {
+  box-shadow: none;
+}
+
+/*TOAST by SK*/
+.toast-body-custom {
+  background: #0f172a;
+  color: #01ff5e;
+  font-weight: 500;
+  font-size: larger;
+}

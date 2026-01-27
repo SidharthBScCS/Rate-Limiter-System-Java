@@ -6,7 +6,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 
+@Entity 
+@Table(name = "api_keys")
 public class ApiKey {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String apiKey;
     private String owner;
@@ -43,7 +48,15 @@ public class ApiKey {
     public int getRateLimit(){
         return rateLimit;
     }
-    public void setRateLimit(int rateLimit){
-        this.rateLimit=rateLimit;
+    public void setRateLimit(int rateLimit) {
+        this.rateLimit = rateLimit;
+    }
+    
+
+    public int getWindowSeconds(){
+        return windowSeconds;
+    }
+    public void setWindowSeconds(int windowSeconds) {
+        this.windowSeconds = windowSeconds;
     }
 }

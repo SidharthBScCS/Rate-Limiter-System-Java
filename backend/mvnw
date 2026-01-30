@@ -13,4 +13,4 @@ if [ "$1" = "--version" ]; then
   exit $?
 fi
 mvn "$@"
-#
+#__end

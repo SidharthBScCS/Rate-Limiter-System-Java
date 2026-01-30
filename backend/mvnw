@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash...
 # Lightweight mvnw shim: delegate to system mvn, with fallback version string
 if ! command -v mvn >/dev/null 2>&1; then
   if [ "$1" = "--version" ]; then

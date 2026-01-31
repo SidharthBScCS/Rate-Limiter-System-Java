@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "material-symbols": "^0.40.2",
     "react-bootstrap": "^2.10.10"
   }
 }

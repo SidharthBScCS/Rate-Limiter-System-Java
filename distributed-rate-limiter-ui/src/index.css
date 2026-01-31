@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap');
 
 /*Main-Body-Design by SK*/
@@ -28,16 +26,24 @@ body {
   left:0;
   top:0;
   height: 100vh;
-  width:240px;
+  width:260px;
   background: linear-gradient(180deg, #020617, #020617f2);
   box-shadow: 4px 0 30px rgba(0,0,0,0.6);
 }
+.nav-item{
+  cursor:pointer;
+}
+.sidebar-text{
+  font-size: larger;
+}
+
 
 /*Right-Content by SK*/
 .right-content {
-  margin-left: 240px;
+  margin-left: 260px;
   padding: 24px;
 }
+
 
 /*Card by SK*/
 .stat-card {
@@ -114,9 +120,4 @@ body {
   color: #01ff5e;
   font-weight: 500;
   font-size: larger;
-}
-
-/*ICONS by SK*/
-.material-icons {
-  color:#1d4ed8;
 }

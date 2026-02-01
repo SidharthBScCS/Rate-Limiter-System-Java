@@ -3,38 +3,33 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function Card() {
   return (
-    <Row className="g-4 mt-4">
+    <div className="mt-4">
+      <Row className="justify-content-center g-4">
+        <Col md={4}>
+          <div className="stat-card total">
+            <i className="bi bi-activity fs-2"></i>
+            <h6>Total_Requests</h6>
+            <h2>12,430</h2>
+          </div>
+        </Col>
 
-      <Col md={4}>
-        <Card>
-          <Card.Body>
-            <div>
-              <i className="bi bi-activity"></i>
-            </div>
-            <div>
-              <small>TOTAL REQUESTS</small>
-              <h3>12,430</h3>
-            </div>
-          </Card.Body>
-        </Card>
-      </Col>
+        <Col md={4}>
+          <div className="stat-card allowed">
+            <i className="bi bi-shield-check fs-2"></i>
+            <h6>Allowed_Requests</h6>
+            <h2>11,980</h2>
+          </div>
+        </Col>
 
-      <Col md={4}>
-        <Card>
-          <Card.Body>
-            <div>
-              <i className="bi bi-shield-check"></i>
-            </div>
-            <div>
-              <small>ALLOWED REQUESTS</small>
-              <h3>11,245</h3>
-            </div>
-          </Card.Body>
-        </Card>
-      </Col>
-
-
-    </Row>
+        <Col md={4}>
+          <div className="stat-card blocked">
+            <i className="bi bi-shield-lock-fill fs-2"></i>
+            <h6>Blocked_Requests</h6>
+            <h2>450</h2>
+          </div>
+        </Col>
+      </Row>
+    </div>
   );
 }
 

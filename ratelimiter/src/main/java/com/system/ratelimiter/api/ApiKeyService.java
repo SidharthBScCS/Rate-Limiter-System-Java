@@ -2,6 +2,8 @@ package com.system.ratelimiter.api;
 
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class ApiKeyService {
 
@@ -16,6 +18,7 @@ public class ApiKeyService {
         apiKey.setOwnerName(request.getOwnerName());
         apiKey.setRateLimit(request.getRateLimit());
         apiKey.setWindowSeconds(request.getWindowSeconds());
+        apiKey.setApiKey(UUID.randomUUID().toString());
         return apiKeyRepository.save(apiKey);
     }
 }

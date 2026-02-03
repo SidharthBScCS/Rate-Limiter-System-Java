@@ -27,6 +27,9 @@ public class ApiKey {
     @Column(nullable = false)
     private Integer windowSeconds;
 
+    @Column(name = "api_key", nullable = false)
+    private String apiKey;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -61,6 +64,14 @@ public class ApiKey {
 
     public void setWindowSeconds(Integer windowSeconds) {
         this.windowSeconds = windowSeconds;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 
     public Instant getCreatedAt() {

@@ -1,7 +1,7 @@
 import { Modal, Button, Form, Toast, ToastContainer } from "react-bootstrap";
 import { useState } from "react";
 
-function APIModal({ show, handleClose }) {
+function APIModal({ show, handleClose, onCreated }) {
 
   const [ownerName, setOwnerName] = useState("");
   const [rateLimit, setRateLimit] = useState("");
@@ -32,6 +32,9 @@ function APIModal({ show, handleClose }) {
     .then((msg) => {
       console.log("BACKEND RESPONSE:", msg);
       setShowToast(true);
+      if (onCreated) {
+        onCreated();
+      }
       handleClose();
       setOwnerName("");
       setRateLimit("");

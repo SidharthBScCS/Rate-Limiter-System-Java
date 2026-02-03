@@ -2,8 +2,15 @@ import Sidebar from "./Sidebar";
 import Heading from "./Heading";
 import Card from "./Card";
 import Main_Box from "./Main_Box";
+import { useState } from "react";
 
 function App() {
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const handleCreated = () => {
+    setRefreshTick((v) => v + 1);
+  };
+
   return (
     <>
       <Sidebar />
@@ -11,15 +18,15 @@ function App() {
       <div className="right-content">
 
         <div>
-          <Heading />
+          <Heading onCreated={handleCreated} />
         </div>
         
         <div>
-          <Card />
+          <Card refreshTick={refreshTick} />
         </div>
         
         <div>
-          <Main_Box />
+          <Main_Box refreshTick={refreshTick} />
         </div>
         
       </div>

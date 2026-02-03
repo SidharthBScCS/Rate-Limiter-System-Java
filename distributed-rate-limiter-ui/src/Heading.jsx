@@ -2,7 +2,7 @@ import { Button } from "react-bootstrap";
 import { useState } from "react";
 import APIModal from "./APIModal";
 
-function Heading() {
+function Heading({ onCreated }) {
   const [showModal, setShowModal] = useState(false);
   return (
     <>
@@ -15,7 +15,11 @@ function Heading() {
           <Button onClick={() => setShowModal(true)}> + Create API Key </Button>
         </div>
       </nav>
-      <APIModal show={showModal} handleClose={() => setShowModal(false)}/>
+      <APIModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+        onCreated={onCreated}
+      />
     </>
   );
 }

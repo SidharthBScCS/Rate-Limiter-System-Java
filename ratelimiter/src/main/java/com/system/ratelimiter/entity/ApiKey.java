@@ -1,4 +1,4 @@
-package com.system.ratelimiter.api;
+package com.system.ratelimiter.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,6 +29,9 @@ public class ApiKey {
 
     @Column(name = "api_key", nullable = false)
     private String apiKey;
+
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'Normal'")
+    private String status;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -72,6 +75,14 @@ public class ApiKey {
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Instant getCreatedAt() {

@@ -1,4 +1,4 @@
-package com.system.ratelimiter.api;
+package com.system.ratelimiter.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

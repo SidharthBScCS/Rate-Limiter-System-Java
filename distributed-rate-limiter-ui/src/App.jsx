@@ -1,8 +1,10 @@
 import Sidebar from "./Sidebar";
 import Heading from "./Heading";
 import Card from "./Card";
-import Main_Box from "./Main_Box";
+import Table_Box from "./Table_Box";
+import Analytics from "./Analytics";
 import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
   const [refreshTick, setRefreshTick] = useState(0);
@@ -17,17 +19,20 @@ function App() {
 
       <div className="right-content">
 
-        <div>
-          <Heading onCreated={handleCreated} />
-        </div>
-        
-        <div>
-          <Card refreshTick={refreshTick} />
-        </div>
-        
-        <div>
-          <Main_Box refreshTick={refreshTick} />
-        </div>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <Heading onCreated={handleCreated} />
+                <Card refreshTick={refreshTick} />
+                <Table_Box refreshTick={refreshTick} />
+              </>
+            }
+          />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
         
       </div>
     </>

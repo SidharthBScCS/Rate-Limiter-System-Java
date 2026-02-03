@@ -25,7 +25,9 @@ public class ApiKeyService {
             blocked.setWindowSeconds(request.getWindowSeconds());
             blocked.setApiKey(UUID.randomUUID().toString());
             blocked.setStatus("Blocked");
-            requestStatsService.incrementBlocked(1);
+            blocked.setTotalRequests(0L);
+            blocked.setAllowedRequests(0L);
+            blocked.setBlockedRequests(0L);
             return apiKeyRepository.save(blocked);
         }
 
@@ -35,12 +37,75 @@ public class ApiKeyService {
         apiKey.setWindowSeconds(request.getWindowSeconds());
         apiKey.setApiKey(UUID.randomUUID().toString());
         apiKey.setStatus("Normal");
+        apiKey.setTotalRequests(0L);
+        apiKey.setAllowedRequests(0L);
+        apiKey.setBlockedRequests(0L);
         ApiKey saved = apiKeyRepository.save(apiKey);
-        requestStatsService.incrementAllowed(1);
         return saved;
     }
 
     public java.util.List<ApiKey> getAll() {
         return apiKeyRepository.findAll();
+    }
+
+    public ApiKey incrementRequest(Long apiKeyId) {
+        ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
+                .orElseThrow(() -> new IllegalArgumentException("API key not found"));
+
+        long currentCount = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
+        long nextCount = currentCount + 1;
+        apiKey.setTotalRequests(nextCount);
+
+        boolean blocked = apiKey.getRateLimit() != null && nextCount > apiKey.getRateLimit();
+        apiKey.setStatus(blocked ? "Blocked" : "Normal");
+
+        long currentAllowed = apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests();
+        long currentBlocked = apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests();
+        if (blocked) {
+            apiKey.setBlockedRequests(currentBlocked + 1);
+        } else {
+            apiKey.setAllowedRequests(currentAllowed + 1);
+        }
+
+        ApiKey saved = apiKeyRepository.save(apiKey);
+        if (blocked) {
+            requestStatsService.incrementBlocked(1);
+        } else {
+            requestStatsService.incrementAllowed(1);
+        }
+        return saved;
+    }
+
+    public java.util.List<java.util.Map<String, Object>> getApiKeyStats() {
+        java.util.List<ApiKey> apiKeys = apiKeyRepository.findAll();
+        boolean updated = false;
+
+        for (ApiKey apiKey : apiKeys) {
+            long total = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
+            long allowed = apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests();
+            long blocked = apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests();
+
+            if (total > 0 && allowed + blocked == 0) {
+                if ("Blocked".equalsIgnoreCase(apiKey.getStatus())) {
+                    apiKey.setBlockedRequests(total);
+                } else {
+                    apiKey.setAllowedRequests(total);
+                }
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            apiKeyRepository.saveAll(apiKeys);
+        }
+
+        return apiKeys.stream()
+                .map(apiKey -> java.util.Map.<String, Object>of(
+                        "ownerName", apiKey.getOwnerName(),
+                        "totalRequests", apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests(),
+                        "allowedRequests", apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests(),
+                        "blockedRequests", apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests()
+                ))
+                .toList();
     }
 }

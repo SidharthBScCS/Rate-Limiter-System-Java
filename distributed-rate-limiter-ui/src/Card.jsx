@@ -1,6 +1,8 @@
 import { Row, Col } from "react-bootstrap";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useEffect, useState } from "react";
+import { TrendingUp, TrendingDown, Activity, ShieldCheck, Shield, Zap } from "lucide-react";
+import './Cards.css';
 
 function Card({ refreshTick }) {
   const [stats, setStats] = useState({
@@ -43,33 +45,114 @@ function Card({ refreshTick }) {
     };
   }, [refreshTick]);
 
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat().format(num);
+  };
+
+  
+
+  const getPercentage = (value, total) => {
+    if (!total || total === 0) return 0;
+    return (value / total * 100).toFixed(1);
+  };
+
   return (
-    <div className="mt-4">
+    <div className="stat-cards-container">
       {loadError ? (
-        <div className="text-danger mb-2">{loadError}</div>
+        <div className="stat-alert" role="alert">
+          <i className="bi bi-exclamation-triangle"></i>
+          {loadError}
+        </div>
       ) : null}
-      <Row className="justify-content-center g-4">
+      
+      <Row className="g-4">
+
         <Col md={4}>
-          <div className="stat-card total">
-            <i className="bi bi-activity fs-2"></i>
-            <h6>Total_Requests</h6>
-            <h2>{stats.totalRequests}</h2>
+          <div className="stat-card stat-card-total">
+            <div className="stat-card-header">
+              <div className="stat-icon-container">
+                <Activity className="stat-icon" />
+              </div>
+              
+              
+            </div>
+            
+            <div>
+              <h6 className="stat-card-title">
+                Total Requests
+              </h6>
+              <h2 className="stat-card-value">
+                {formatNumber(stats.totalRequests)}
+              </h2>
+              
+              <div className="stat-card-footer">
+                <span className="stat-description">
+                  All traffic processed
+                </span>
+                <div className="stat-badge badge-total">
+                  <Zap size={12} className="me-1" />
+                  Live
+                </div>
+              </div>
+            </div>
           </div>
         </Col>
 
+        
         <Col md={4}>
-          <div className="stat-card allowed">
-            <i className="bi bi-shield-check fs-2"></i>
-            <h6>Allowed_Requests</h6>
-            <h2>{stats.allowedRequests}</h2>
+          <div className="stat-card stat-card-allowed">
+            <div className="stat-card-header">
+              <div className="stat-icon-container">
+                <ShieldCheck className="stat-icon" />
+              </div>
+            </div>
+            
+            <div>
+              <h6 className="stat-card-title">
+                Allowed Requests
+              </h6>
+              <h2 className="stat-card-value">
+                {formatNumber(stats.allowedRequests)}
+              </h2>
+              
+              <div className="stat-card-footer">
+                <span className="stat-description">
+                  Success rate
+                </span>
+                <div className="stat-badge badge-allowed">
+                  {getPercentage(stats.allowedRequests, stats.totalRequests)}%
+                </div>
+              </div>
+            </div>
           </div>
         </Col>
 
+        
         <Col md={4}>
-          <div className="stat-card blocked">
-            <i className="bi bi-shield-lock-fill fs-2"></i>
-            <h6>Blocked_Requests</h6>
-            <h2>{stats.blockedRequests}</h2>
+          <div className="stat-card stat-card-blocked">
+            <div className="stat-card-header">
+              <div className="stat-icon-container">
+                <Shield className="stat-icon" />
+              </div>
+            </div>
+            
+            <div>
+              <h6 className="stat-card-title">
+                Blocked Requests
+              </h6>
+              <h2 className="stat-card-value">
+                {formatNumber(stats.blockedRequests)}
+              </h2>
+              
+              <div className="stat-card-footer">
+                <span className="stat-description">
+                  Block rate
+                </span>
+                <div className="stat-badge badge-blocked">
+                  {getPercentage(stats.blockedRequests, stats.totalRequests)}%
+                </div>
+              </div>
+            </div>
           </div>
         </Col>
       </Row>

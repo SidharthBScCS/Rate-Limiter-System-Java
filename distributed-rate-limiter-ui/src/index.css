@@ -70,18 +70,41 @@ body {
 
 /*API-Box by SK*/
 .table-box{
-  background: rgba(15, 23, 42, 0.55);
+  background: #0f172a;
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   border-radius:16px;
   padding:20px 28px;
   box-shadow:0 20px 50px rgba(0,0,0,0.6);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+.table-box table{
+  background: #0f172a;
+  border-radius: 12px;
+  overflow: hidden;
+  color: #e5e7eb;
+  border: 1px solid rgba(148, 163, 184, 0.08);
 }
 .table-box table tbody tr:hover{
-  background: rgba(99,102,241,0.08);
+  background: #0f172a;
 }
 .table-box table thead th {
-  background: rgba(15, 23, 42, 0.55);
+  background: #0f172a;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #f1f5f9;
+}
+.table-box table tbody td {
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  background: #0f172a;
+  color: #e5e7eb;
+}
+.table-box table tbody tr:nth-child(even){
+  background: rgba(3, 7, 18, 0.75);
+}
+.table-box table tbody tr:first-child td {
+  border-top: none;
 }
 .table-scroll{
   max-height:380px;

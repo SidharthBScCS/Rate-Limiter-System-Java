@@ -33,6 +33,15 @@ public class ApiKey {
     @Column(nullable = false, columnDefinition = "varchar(20) default 'Normal'")
     private String status;
 
+    @Column(name = "total_request", nullable = false, columnDefinition = "bigint default 0")
+    private Long totalRequests;
+
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private Long allowedRequests;
+
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private Long blockedRequests;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -83,6 +92,30 @@ public class ApiKey {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getTotalRequests() {
+        return totalRequests;
+    }
+
+    public void setTotalRequests(Long totalRequests) {
+        this.totalRequests = totalRequests;
+    }
+
+    public Long getAllowedRequests() {
+        return allowedRequests;
+    }
+
+    public void setAllowedRequests(Long allowedRequests) {
+        this.allowedRequests = allowedRequests;
+    }
+
+    public Long getBlockedRequests() {
+        return blockedRequests;
+    }
+
+    public void setBlockedRequests(Long blockedRequests) {
+        this.blockedRequests = blockedRequests;
     }
 
     public Instant getCreatedAt() {

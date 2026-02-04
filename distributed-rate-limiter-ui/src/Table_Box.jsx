@@ -6,14 +6,13 @@ import './Table_Box.css';
 function Main_Box({ refreshTick }) {
   const [apiKeys, setApiKeys] = useState([]);
   const [loadError, setLoadError] = useState("");
-  const [requestCounts, setRequestCounts] = useState({});
-  const [statusOverrides, setStatusOverrides] = useState({});
   const [loading, setLoading] = useState(true);
   const [sendingRequest, setSendingRequest] = useState(null);
 
-  useEffect(() => {
+  const loadDashboard = () => {
+    setLoading(true);
     let isMounted = true;
-    fetch("/api")
+    fetch("/api/view/dashboard", { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();
@@ -23,15 +22,7 @@ function Main_Box({ refreshTick }) {
       })
       .then((data) => {
         if (isMounted) {
-          const safeData = Array.isArray(data) ? data : [];
-          const nextCounts = {};
-          safeData.forEach((item) => {
-            const key = item.id ?? item.apiKey;
-            nextCounts[key] = item.totalRequests ?? 0;
-          });
-          setApiKeys(safeData);
-          setRequestCounts(nextCounts);
-          setStatusOverrides({});
+          setApiKeys(Array.isArray(data.apiKeys) ? data.apiKeys : []);
           setLoadError("");
         }
       })
@@ -48,17 +39,21 @@ function Main_Box({ refreshTick }) {
     return () => {
       isMounted = false;
     };
+  };
+
+  useEffect(() => {
+    const cleanup = loadDashboard();
+    return cleanup;
   }, [refreshTick]);
 
   const handleSendRequest = (item) => {
-    const key = item.id ?? item.apiKey;
     if (!item.id) {
       setLoadError("Unable to send request: missing API key id.");
       return;
     }
-    setSendingRequest(key);
+    setSendingRequest(item.id);
 
-    fetch(`/api/${item.id}/request`, { method: "POST" })
+    fetch(`/api/${item.id}/request`, { method: "POST", credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();
@@ -66,11 +61,8 @@ function Main_Box({ refreshTick }) {
         }
         return res.json();
       })
-      .then((data) => {
-        const nextCount = data.totalRequests ?? 0;
-        const nextStatus = data.status ?? "Normal";
-        setRequestCounts((prev) => ({ ...prev, [key]: nextCount }));
-        setStatusOverrides((prevStatus) => ({ ...prevStatus, [key]: nextStatus }));
+      .then(() => {
+        loadDashboard();
       })
       .catch((err) => {
         console.error("SEND REQUEST ERROR:", err);
@@ -83,25 +75,6 @@ function Main_Box({ refreshTick }) {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  };
-
-  const formatApiKey = (key) => {
-    if (!key) return '';
-    return `${key.substring(0, 8)}...${key.substring(key.length - 8)}`;
-  };
-
-  const getStatusColor = (status) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower === 'blocked') return '#ef4444';
-    if (statusLower === 'warning') return '#f59e0b';
-    if (statusLower === 'normal') return '#10b981';
-    return '#94a3b8';
-  };
-
-  const getUsageColor = (percentage) => {
-    if (percentage > 90) return '#ef4444';
-    if (percentage > 70) return '#f59e0b';
-    return '#10b981';
   };
 
   if (loading) {
@@ -222,20 +195,19 @@ function Main_Box({ refreshTick }) {
                 </tr>
               ) : (
                 apiKeys.map((item) => {
-                  const key = item.id ?? item.apiKey;
-                  const apiKeyValue = item.apiKey ?? "";
-                  const status = statusOverrides[key] ?? item.status ?? "Normal";
-                  const statusColor = getStatusColor(status);
-                  const requestCount = requestCounts[key] ?? item.totalRequests ?? 0;
-                  const usagePercentage = Math.min((requestCount / (item.rateLimit || 1)) * 100, 100);
-                  const usageColor = getUsageColor(usagePercentage);
+                  const apiKeyValue = item.apiKeyFull ?? "";
+                  const status = item.status ?? "Normal";
+                  const statusColor = item.statusColor ?? "#94a3b8";
+                  const requestCount = item.requestCount ?? 0;
+                  const usagePercentage = Number(item.usagePercentage ?? 0);
+                  const usageColor = item.usageColor ?? "#10b981";
                   
                   return (
-                    <tr key={key} className="table-data-row">
+                    <tr key={item.id ?? item.apiKeyDisplay} className="table-data-row">
                       <td>
                         <div className="api-key-cell">
                           <div className="api-key-display">
-                            <code>{formatApiKey(apiKeyValue)}</code>
+                            <code>{item.apiKeyDisplay}</code>
                           </div>
                           <Button 
                             variant="link" 
@@ -291,12 +263,12 @@ function Main_Box({ refreshTick }) {
                       </td>
                       <td className="text-center">
                         <Button 
-                          variant={sendingRequest === key ? "outline-secondary" : "primary"}
+                          variant={sendingRequest === item.id ? "outline-secondary" : "primary"}
                           className="request-btn"
                           onClick={() => handleSendRequest(item)}
-                          disabled={sendingRequest === key}
+                          disabled={sendingRequest === item.id}
                         >
-                          {sendingRequest === key ? (
+                          {sendingRequest === item.id ? (
                             <div className="spinner-container">
                               <Spinner size="sm" animation="border" />
                               Sending...

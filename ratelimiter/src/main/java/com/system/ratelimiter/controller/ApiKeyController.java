@@ -6,20 +6,25 @@ import com.system.ratelimiter.entity.RequestStats;
 import com.system.ratelimiter.service.ApiKeyService;
 import com.system.ratelimiter.service.RequestStatsService;
 import jakarta.validation.Valid;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequestMapping("/api")
 public class ApiKeyController {
 
@@ -57,6 +62,115 @@ public class ApiKeyController {
         return ResponseEntity.ok(apiKeyService.getApiKeyStats());
     }
 
+    @GetMapping("/view/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboardView() {
+        RequestStats stats = requestStatsService.getOrCreate();
+        long total = stats.getTotalRequests() == null ? 0L : stats.getTotalRequests();
+        long allowed = stats.getAllowedRequests() == null ? 0L : stats.getAllowedRequests();
+        long blocked = stats.getBlockedRequests() == null ? 0L : stats.getBlockedRequests();
+
+        double allowedPercent = total == 0 ? 0.0 : (allowed * 100.0) / total;
+        double blockedPercent = total == 0 ? 0.0 : (blocked * 100.0) / total;
+
+        List<Map<String, Object>> apiKeys = apiKeyService.getAll().stream()
+                .map(apiKey -> {
+                    long requestCount = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
+                    int rateLimit = apiKey.getRateLimit() == null || apiKey.getRateLimit() <= 0 ? 1 : apiKey.getRateLimit();
+                    double usagePercentage = Math.min((requestCount * 100.0) / rateLimit, 100.0);
+                    String status = apiKey.getStatus() == null ? "Normal" : apiKey.getStatus();
+                    Map<String, Object> row = new java.util.LinkedHashMap<>();
+                    row.put("id", apiKey.getId());
+                    row.put("apiKeyDisplay", formatApiKey(apiKey.getApiKey()));
+                    row.put("apiKeyFull", apiKey.getApiKey());
+                    row.put("ownerName", apiKey.getOwnerName());
+                    row.put("rateLimit", apiKey.getRateLimit());
+                    row.put("windowSeconds", apiKey.getWindowSeconds());
+                    row.put("requestCount", requestCount);
+                    row.put("usagePercentage", usagePercentage);
+                    row.put("usageColor", usageColor(usagePercentage));
+                    row.put("status", status);
+                    row.put("statusColor", statusColor(status));
+                    return row;
+                })
+                .toList();
+
+        return ResponseEntity.ok(Map.of(
+                "stats", Map.of(
+                        "totalRequests", total,
+                        "allowedRequests", allowed,
+                        "blockedRequests", blocked,
+                        "allowedPercent", allowedPercent,
+                        "blockedPercent", blockedPercent
+                ),
+                "apiKeys", apiKeys
+        ));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = "Invalid request.";
+        FieldError error = ex.getBindingResult().getFieldError();
+        if (error != null && error.getDefaultMessage() != null) {
+            message = error.getDefaultMessage();
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                .body(Map.of("message", message));
+    }
+
+    @GetMapping("/analytics/view")
+    public ResponseEntity<Map<String, Object>> getAnalyticsView() {
+        List<Map<String, Object>> raw = apiKeyService.getApiKeyStats();
+        List<Map<String, Object>> top = raw.stream()
+                .sorted(Comparator.comparingLong(item -> -1L * ((Number) item.getOrDefault("totalRequests", 0)).longValue()))
+                .limit(7)
+                .toList();
+
+        List<String> labels = top.stream()
+                .map(item -> String.valueOf(item.getOrDefault("ownerName", "Unknown")))
+                .toList();
+
+        List<Long> totals = top.stream()
+                .map(item -> ((Number) item.getOrDefault("totalRequests", 0)).longValue())
+                .toList();
+
+        List<Long> allowed = top.stream()
+                .map(item -> ((Number) item.getOrDefault("allowedRequests", 0)).longValue())
+                .toList();
+
+        List<Long> blocked = top.stream()
+                .map(item -> ((Number) item.getOrDefault("blockedRequests", 0)).longValue())
+                .toList();
+
+        long sumTotal = totals.stream().mapToLong(Long::longValue).sum();
+        long sumAllowed = allowed.stream().mapToLong(Long::longValue).sum();
+        long sumBlocked = blocked.stream().mapToLong(Long::longValue).sum();
+
+        long maxValue = 1;
+        for (Long value : totals) {
+            if (value > maxValue) maxValue = value;
+        }
+        for (Long value : allowed) {
+            if (value > maxValue) maxValue = value;
+        }
+        for (Long value : blocked) {
+            if (value > maxValue) maxValue = value;
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "labels", labels,
+                "totalRequests", totals,
+                "successRequests", allowed,
+                "blockedRequests", blocked,
+                "summary", Map.of(
+                        "total", sumTotal,
+                        "success", sumAllowed,
+                        "blocked", sumBlocked
+                ),
+                "maxValue", maxValue
+        ));
+    }
+
     @PostMapping("/{id}/request")
     public ResponseEntity<Map<String, Object>> recordRequest(@PathVariable("id") Long id) {
         ApiKey updated = apiKeyService.incrementRequest(id);
@@ -65,5 +179,25 @@ public class ApiKeyController {
                 "totalRequests", updated.getTotalRequests(),
                 "status", updated.getStatus()
         ));
+    }
+
+    private static String formatApiKey(String key) {
+        if (key == null) return "";
+        if (key.length() <= 16) return key;
+        return key.substring(0, 8) + "..." + key.substring(key.length() - 8);
+    }
+
+    private static String statusColor(String status) {
+        String value = status == null ? "" : status.toLowerCase();
+        if ("blocked".equals(value)) return "#ef4444";
+        if ("warning".equals(value)) return "#f59e0b";
+        if ("normal".equals(value)) return "#10b981";
+        return "#94a3b8";
+    }
+
+    private static String usageColor(double percentage) {
+        if (percentage > 90) return "#ef4444";
+        if (percentage > 70) return "#f59e0b";
+        return "#10b981";
     }
 }

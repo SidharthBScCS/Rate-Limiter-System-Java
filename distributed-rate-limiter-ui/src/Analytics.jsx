@@ -1,15 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Analytics.css';
-import { Download, RefreshCw, LineChart } from 'lucide-react';
+import { LineChart } from 'lucide-react';
 
 function Analytics() {
-    const [keyStats, setKeyStats] = useState([]);
+    const [view, setView] = useState({
+        labels: [],
+        totalRequests: [],
+        successRequests: [],
+        blockedRequests: [],
+        summary: { total: 0, success: 0, blocked: 0 },
+        maxValue: 1
+    });
     const [loadError, setLoadError] = useState("");
 
     useEffect(() => {
         let isMounted = true;
 
-        fetch("/api/analytics/keys")
+        fetch("/api/analytics/view", { credentials: "include" })
             .then(async (res) => {
                 if (!res.ok) {
                     const text = await res.text();
@@ -19,7 +26,14 @@ function Analytics() {
             })
             .then((data) => {
                 if (isMounted) {
-                    setKeyStats(Array.isArray(data) ? data : []);
+                    setView({
+                        labels: Array.isArray(data.labels) ? data.labels : [],
+                        totalRequests: Array.isArray(data.totalRequests) ? data.totalRequests : [],
+                        successRequests: Array.isArray(data.successRequests) ? data.successRequests : [],
+                        blockedRequests: Array.isArray(data.blockedRequests) ? data.blockedRequests : [],
+                        summary: data.summary ?? { total: 0, success: 0, blocked: 0 },
+                        maxValue: data.maxValue ?? 1
+                    });
                     setLoadError("");
                 }
             })
@@ -35,41 +49,11 @@ function Analytics() {
         };
     }, []);
 
-    const lineGraphData = useMemo(() => {
-        const safe = Array.isArray(keyStats) ? keyStats : [];
-        const topKeys = [...safe]
-            .sort((a, b) => Number(b.totalRequests ?? 0) - Number(a.totalRequests ?? 0))
-            .slice(0, 7);
-        return {
-            labels: topKeys.map((item) => item.ownerName ?? "Unknown"),
-            totalRequests: topKeys.map((item) => Number(item.totalRequests ?? 0)),
-            successRequests: topKeys.map((item) => Number(item.allowedRequests ?? 0)),
-            blockedRequests: topKeys.map((item) => Number(item.blockedRequests ?? 0)),
-        };
-    }, [keyStats]);
-
-    const summary = useMemo(() => {
-        return {
-            total: lineGraphData.totalRequests.reduce((a, b) => a + b, 0),
-            success: lineGraphData.successRequests.reduce((a, b) => a + b, 0),
-            blocked: lineGraphData.blockedRequests.reduce((a, b) => a + b, 0),
-        };
-    }, [lineGraphData]);
-
-    const maxValue = useMemo(() => {
-        return Math.max(
-            1,
-            ...lineGraphData.totalRequests,
-            ...lineGraphData.successRequests,
-            ...lineGraphData.blockedRequests
-        );
-    }, [lineGraphData]);
-
     const calculateLinePath = (values) => {
-        if (!values.length || maxValue === 0) return 'none';
+        if (!values.length || view.maxValue === 0) return 'none';
         const points = values.map((value, index) => {
-            const x = lineGraphData.labels.length <= 1 ? 0 : (index / (lineGraphData.labels.length - 1)) * 100;
-            const y = (value / maxValue) * 100;
+            const x = view.labels.length <= 1 ? 0 : (index / (view.labels.length - 1)) * 100;
+            const y = (value / view.maxValue) * 100;
             return `${x}% ${100 - y}%`;
         });
         return `polygon(0 100%, ${points.join(', ')}, 100% 100%)`;
@@ -100,7 +84,7 @@ function Analytics() {
                             Total Requests (by Owner)
                         </h4>
                         <div className="graph-stats">
-                            <span className="graph-value">{summary.total.toLocaleString()}</span>
+                            <span className="graph-value">{view.summary.total.toLocaleString()}</span>
                         </div>
                     </div>
                     <div className="graph-content">
@@ -109,7 +93,7 @@ function Analytics() {
                                 {[0, 25, 50, 75, 100].map((percent, i) => (
                                     <div key={i} className="grid-line" style={{ bottom: `${percent}%` }}>
                                         <span className="grid-label">
-                                            {Math.round((percent / 100) * maxValue).toLocaleString()}
+                                            {Math.round((percent / 100) * view.maxValue).toLocaleString()}
                                         </span>
                                     </div>
                                 ))}
@@ -118,27 +102,27 @@ function Analytics() {
                             <div className="line-graph">
                                 <div
                                     className="line-path total"
-                                    style={{ clipPath: calculateLinePath(lineGraphData.totalRequests) }}
+                                    style={{ clipPath: calculateLinePath(view.totalRequests) }}
                                 ></div>
 
-                                {lineGraphData.totalRequests.map((value, index) => (
+                                {view.totalRequests.map((value, index) => (
                                     <div
                                         key={index}
                                         className="data-point total"
                                         style={{
-                                            left: `${lineGraphData.labels.length <= 1 ? 0 : (index / (lineGraphData.labels.length - 1)) * 100}%`,
-                                            bottom: `${(value / maxValue) * 100}%`
+                                            left: `${view.labels.length <= 1 ? 0 : (index / (view.labels.length - 1)) * 100}%`,
+                                            bottom: `${(value / view.maxValue) * 100}%`
                                         }}
                                     >
                                         <div className="point-tooltip">
-                                            {lineGraphData.labels[index]}: {value.toLocaleString()}
+                                            {view.labels[index]}: {value.toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
                             <div className="x-axis">
-                                {lineGraphData.labels.map((label, index) => (
+                                {view.labels.map((label, index) => (
                                     <div key={index} className="x-label">{label}</div>
                                 ))}
                             </div>
@@ -153,7 +137,7 @@ function Analytics() {
                             Success Requests (by Owner)
                         </h4>
                         <div className="graph-stats">
-                            <span className="graph-value">{summary.success.toLocaleString()}</span>
+                            <span className="graph-value">{view.summary.success.toLocaleString()}</span>
                         </div>
                     </div>
                     <div className="graph-content">
@@ -162,7 +146,7 @@ function Analytics() {
                                 {[0, 25, 50, 75, 100].map((percent, i) => (
                                     <div key={i} className="grid-line" style={{ bottom: `${percent}%` }}>
                                         <span className="grid-label">
-                                            {Math.round((percent / 100) * maxValue).toLocaleString()}
+                                            {Math.round((percent / 100) * view.maxValue).toLocaleString()}
                                         </span>
                                     </div>
                                 ))}
@@ -171,27 +155,27 @@ function Analytics() {
                             <div className="line-graph">
                                 <div
                                     className="line-path success"
-                                    style={{ clipPath: calculateLinePath(lineGraphData.successRequests) }}
+                                    style={{ clipPath: calculateLinePath(view.successRequests) }}
                                 ></div>
 
-                                {lineGraphData.successRequests.map((value, index) => (
+                                {view.successRequests.map((value, index) => (
                                     <div
                                         key={index}
                                         className="data-point success"
                                         style={{
-                                            left: `${lineGraphData.labels.length <= 1 ? 0 : (index / (lineGraphData.labels.length - 1)) * 100}%`,
-                                            bottom: `${(value / maxValue) * 100}%`
+                                            left: `${view.labels.length <= 1 ? 0 : (index / (view.labels.length - 1)) * 100}%`,
+                                            bottom: `${(value / view.maxValue) * 100}%`
                                         }}
                                     >
                                         <div className="point-tooltip">
-                                            {lineGraphData.labels[index]}: {value.toLocaleString()}
+                                            {view.labels[index]}: {value.toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
                             <div className="x-axis">
-                                {lineGraphData.labels.map((label, index) => (
+                                {view.labels.map((label, index) => (
                                     <div key={index} className="x-label">{label}</div>
                                 ))}
                             </div>
@@ -206,7 +190,7 @@ function Analytics() {
                             Blocked Requests (by Owner)
                         </h4>
                         <div className="graph-stats">
-                            <span className="graph-value">{summary.blocked.toLocaleString()}</span>
+                            <span className="graph-value">{view.summary.blocked.toLocaleString()}</span>
                         </div>
                     </div>
                     <div className="graph-content">
@@ -215,7 +199,7 @@ function Analytics() {
                                 {[0, 25, 50, 75, 100].map((percent, i) => (
                                     <div key={i} className="grid-line" style={{ bottom: `${percent}%` }}>
                                         <span className="grid-label">
-                                            {Math.round((percent / 100) * maxValue).toLocaleString()}
+                                            {Math.round((percent / 100) * view.maxValue).toLocaleString()}
                                         </span>
                                     </div>
                                 ))}
@@ -224,27 +208,27 @@ function Analytics() {
                             <div className="line-graph">
                                 <div
                                     className="line-path blocked"
-                                    style={{ clipPath: calculateLinePath(lineGraphData.blockedRequests) }}
+                                    style={{ clipPath: calculateLinePath(view.blockedRequests) }}
                                 ></div>
 
-                                {lineGraphData.blockedRequests.map((value, index) => (
+                                {view.blockedRequests.map((value, index) => (
                                     <div
                                         key={index}
                                         className="data-point blocked"
                                         style={{
-                                            left: `${lineGraphData.labels.length <= 1 ? 0 : (index / (lineGraphData.labels.length - 1)) * 100}%`,
-                                            bottom: `${(value / maxValue) * 100}%`
+                                            left: `${view.labels.length <= 1 ? 0 : (index / (view.labels.length - 1)) * 100}%`,
+                                            bottom: `${(value / view.maxValue) * 100}%`
                                         }}
                                     >
                                         <div className="point-tooltip">
-                                            {lineGraphData.labels[index]}: {value.toLocaleString()}
+                                            {view.labels[index]}: {value.toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
                             <div className="x-axis">
-                                {lineGraphData.labels.map((label, index) => (
+                                {view.labels.map((label, index) => (
                                     <div key={index} className="x-label">{label}</div>
                                 ))}
                             </div>

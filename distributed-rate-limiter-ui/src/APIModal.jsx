@@ -11,28 +11,12 @@ function APIModal({ show, handleClose, onCreated }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleCreate = () => {
-    const numericRateLimit = Number(rateLimit);
-    if (!Number.isFinite(numericRateLimit) || numericRateLimit < 1 || numericRateLimit > 10) {
-      setFormError("Rate limit must be between 1 and 10.");
-      return;
-    }
-    
-    if (!ownerName.trim()) {
-      setFormError("Owner name is required.");
-      return;
-    }
-    
-    if (!windowSeconds || Number(windowSeconds) < 1) {
-      setFormError("Window seconds must be at least 1.");
-      return;
-    }
-    
     setFormError("");
     setIsLoading(true);
     
     const data = {
-      ownerName,
-      rateLimit: numericRateLimit,
+      ownerName: ownerName.trim(),
+      rateLimit: Number(rateLimit),
       windowSeconds: Number(windowSeconds),
     };
 
@@ -41,17 +25,18 @@ function APIModal({ show, handleClose, onCreated }) {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(data),
     })
       .then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
+          const message = payload.message || "Failed to create API key.";
+          throw new Error(message);
         }
-        return res.text();
+        return payload;
       })
-      .then((msg) => {
-        console.log("BACKEND RESPONSE:", msg);
+      .then(() => {
         setShowToast(true);
         if (onCreated) {
           onCreated();
@@ -64,7 +49,7 @@ function APIModal({ show, handleClose, onCreated }) {
       })
       .catch((err) => {
         console.error("FRONTEND ERROR:", err);
-        setFormError("Failed to create API key. Please try again.");
+        setFormError(err?.message || "Failed to create API key. Please try again.");
       })
       .finally(() => {
         setIsLoading(false);

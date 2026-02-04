@@ -1,7 +1,7 @@
 import { Row, Col } from "react-bootstrap";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Activity, ShieldCheck, Shield, Zap } from "lucide-react";
+import { Activity, ShieldCheck, Shield, Zap } from "lucide-react";
 import './Cards.css';
 
 function Card({ refreshTick }) {
@@ -9,13 +9,15 @@ function Card({ refreshTick }) {
     totalRequests: 0,
     allowedRequests: 0,
     blockedRequests: 0,
+    allowedPercent: 0,
+    blockedPercent: 0
   });
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
-    fetch("/api/stats")
+    fetch("/api/view/dashboard", { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();
@@ -25,10 +27,13 @@ function Card({ refreshTick }) {
       })
       .then((data) => {
         if (isMounted) {
+          const next = data.stats ?? {};
           setStats({
-            totalRequests: data.totalRequests ?? 0,
-            allowedRequests: data.allowedRequests ?? 0,
-            blockedRequests: data.blockedRequests ?? 0,
+            totalRequests: next.totalRequests ?? 0,
+            allowedRequests: next.allowedRequests ?? 0,
+            blockedRequests: next.blockedRequests ?? 0,
+            allowedPercent: next.allowedPercent ?? 0,
+            blockedPercent: next.blockedPercent ?? 0
           });
           setLoadError("");
         }
@@ -50,11 +55,6 @@ function Card({ refreshTick }) {
   };
 
   
-
-  const getPercentage = (value, total) => {
-    if (!total || total === 0) return 0;
-    return (value / total * 100).toFixed(1);
-  };
 
   return (
     <div className="stat-cards-container">
@@ -120,7 +120,7 @@ function Card({ refreshTick }) {
                   Success rate
                 </span>
                 <div className="stat-badge badge-allowed">
-                  {getPercentage(stats.allowedRequests, stats.totalRequests)}%
+                  {Number(stats.allowedPercent).toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -149,7 +149,7 @@ function Card({ refreshTick }) {
                   Block rate
                 </span>
                 <div className="stat-badge badge-blocked">
-                  {getPercentage(stats.blockedRequests, stats.totalRequests)}%
+                  {Number(stats.blockedPercent).toFixed(1)}%
                 </div>
               </div>
             </div>

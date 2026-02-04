@@ -1,6 +1,7 @@
 package com.system.ratelimiter.dto;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -11,6 +12,7 @@ public class ApiKeyRequest {
 
     @NotNull
     @Min(1)
+    @Max(10)
     private Integer rateLimit;
 
     @NotNull

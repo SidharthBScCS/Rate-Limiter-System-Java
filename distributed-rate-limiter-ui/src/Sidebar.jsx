@@ -9,25 +9,35 @@ import {
     Sparkles
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import './Sidebar.css';
 
 function Sidebar() {
     const location = useLocation();
     const [hoverItem, setHoverItem] = useState(null);
+    const [adminName, setAdminName] = useState("");
+    const [adminInitials, setAdminInitials] = useState("AD");
+
+    const handleLogout = () => {
+        fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+            .catch(() => {})
+            .finally(() => {
+                window.location.href = "/login";
+            });
+    };
 
     const menuItems = [
         { 
             id: "dashboard", 
             icon: <LayoutGrid size={20} />, 
             label: "Dashboard",
-            to: "/"
+            to: "/dashboard"
         },
         { 
             id: "limits", 
             icon: <Scale size={20} />, 
             label: "Rules & Limits",
-            to: "/"
+            to: "/rules-limits"
         },
         { 
             id: "analytics", 
@@ -39,34 +49,55 @@ function Sidebar() {
             id: "settings", 
             icon: <Settings size={20} />, 
             label: "Settings",
-            to: "/"
+            to: "/settings"
         },
     ];
 
+    useEffect(() => {
+        let isMounted = true;
+
+        fetch("/api/auth/me", { credentials: "include" })
+            .then(async (res) => {
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text);
+                }
+                return res.json();
+            })
+            .then((data) => {
+                if (isMounted) {
+                    setAdminName(data.fullName || data.userId || "");
+                    setAdminInitials(data.initials || "AD");
+                }
+            })
+            .catch(() => {
+                if (isMounted) {
+                    setAdminName("");
+                    setAdminInitials("AD");
+                }
+                window.location.href = "/login";
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+
     return (
         <div className="sidebar-container">
-            {/* Header with Glow Effect */}
-            <div className="sidebar-header">
-                <div className="logo-container">
-                    <Shield size={22} fill="white" />
-                    <div className="status-indicator" />
-                </div>
-                <div>
-                    <h5 className="logo-title">RateLimit </h5>
-                </div>
-            </div>
 
             {/* User Profile with Gradient */}
             <div className="user-profile">
                 <div className="user-avatar">
-                    SK
+                    {adminInitials}
                     <div className="online-indicator">
                         <div className="online-dot" />
                     </div>
                 </div>
                 
                 <div className="user-info">
-                    <h6 className="user-name">SIDHARTH KRISHNA</h6>
+                    <h6 className="user-name">{adminName || "ADMIN USER"}</h6>
                     <div className="user-details">
                     </div>
                 </div>
@@ -116,6 +147,7 @@ function Sidebar() {
             <div className="sidebar-footer">
                 <button 
                     className="logout-btn"
+                    onClick={handleLogout}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-1px)';
                         e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
@@ -133,7 +165,7 @@ function Sidebar() {
                 
                 {/* Version Info */}
                 <div className="version-info">
-                    <small>Mini-Project-II • © 2026</small>
+                    <small>Mini-Project-II</small>
                 </div>
             </div>
 

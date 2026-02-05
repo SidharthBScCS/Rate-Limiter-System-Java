@@ -1,7 +1,7 @@
 import "./LoginPage.css";
 import { Lock, Fingerprint } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -67,6 +67,10 @@ function LoginPage() {
         <div className="scan-line" />
         <div className="glow-orb" />
       </div>
+
+      <Link className="login-back" to="/" aria-label="Back to landing page">
+        Back
+      </Link>
 
       <div className="login-card">
         <div className="login-badge">SECURE ACCESS</div>

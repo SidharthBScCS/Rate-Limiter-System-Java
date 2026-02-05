@@ -5,6 +5,7 @@ import Table_Box from "./Table_Box";
 import Analytics from "./Analytics";
 import RulesLimits from "./RulesLimits";
 import SettingsPage from "./SettingsPage";
+import LandingPage from "./LandingPage";
 import LoginPage from "./LoginPage";
 import { useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -12,7 +13,8 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 function App() {
   const [refreshTick, setRefreshTick] = useState(0);
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login";
+  const isFullWidthPage =
+    location.pathname === "/" || location.pathname === "/login";
 
   const handleCreated = () => {
     setRefreshTick((v) => v + 1);
@@ -20,11 +22,11 @@ function App() {
 
   return (
     <>
-      {!isLoginPage ? <Sidebar /> : null}
+      {!isFullWidthPage ? <Sidebar /> : null}
 
-      <div className={`right-content ${isLoginPage ? "full-width" : ""}`}>
-
+      <div className={`right-content ${isFullWidthPage ? "full-width" : ""}`}>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/dashboard"
@@ -39,10 +41,8 @@ function App() {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/rules-limits" element={<RulesLimits />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        
       </div>
     </>
   );

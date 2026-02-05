@@ -22,6 +22,7 @@ function Sidebar() {
         fetch("/api/auth/logout", { method: "POST", credentials: "include" })
             .catch(() => {})
             .finally(() => {
+                localStorage.removeItem("adminUser");
                 window.location.href = "/login";
             });
     };
@@ -56,6 +57,18 @@ function Sidebar() {
     useEffect(() => {
         let isMounted = true;
 
+        let hasCachedAdmin = false;
+        try {
+            const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
+            if (cached && typeof cached === "object") {
+                hasCachedAdmin = true;
+                setAdminName(cached.fullName || cached.userId || "");
+                setAdminInitials(cached.initials || "AD");
+            }
+        } catch {
+            localStorage.removeItem("adminUser");
+        }
+
         fetch("/api/auth/me", { credentials: "include" })
             .then(async (res) => {
                 if (!res.ok) {
@@ -68,14 +81,19 @@ function Sidebar() {
                 if (isMounted) {
                     setAdminName(data.fullName || data.userId || "");
                     setAdminInitials(data.initials || "AD");
+                    localStorage.setItem("adminUser", JSON.stringify(data));
                 }
             })
             .catch(() => {
                 if (isMounted) {
-                    setAdminName("");
-                    setAdminInitials("AD");
+                    if (!hasCachedAdmin) {
+                        setAdminName("");
+                        setAdminInitials("AD");
+                    }
                 }
-                window.location.href = "/login";
+                if (!hasCachedAdmin) {
+                    window.location.href = "/login";
+                }
             });
 
         return () => {

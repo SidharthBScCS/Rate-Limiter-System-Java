@@ -8,6 +8,17 @@ function SettingsPage() {
 
   useEffect(() => {
     let isMounted = true;
+    let hasCachedAdmin = false;
+
+    try {
+      const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
+      if (cached && typeof cached === "object") {
+        hasCachedAdmin = true;
+        setAdmin(cached);
+      }
+    } catch {
+      localStorage.removeItem("adminUser");
+    }
 
     const loadCurrent = fetch("/api/auth/me", { credentials: "include" })
       .then(async (res) => {
@@ -23,12 +34,15 @@ function SettingsPage() {
         if (isMounted) {
           setAdmin(current);
           setLoadError("");
+          localStorage.setItem("adminUser", JSON.stringify(current));
         }
       })
       .catch((err) => {
         console.error("LOAD ADMIN ERROR:", err);
-        if (isMounted) setLoadError("Unable to load admin profile.");
-        window.location.href = "/login";
+        if (isMounted && !hasCachedAdmin) {
+          setLoadError("Unable to load admin profile.");
+          window.location.href = "/login";
+        }
       });
 
     return () => {

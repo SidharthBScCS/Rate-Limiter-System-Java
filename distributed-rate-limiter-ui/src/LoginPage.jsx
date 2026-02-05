@@ -1,12 +1,14 @@
 import "./LoginPage.css";
 import { Lock, Fingerprint } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const timestamp = useMemo(() => {
     return new Date().toLocaleTimeString("en-IN", {
@@ -30,14 +32,29 @@ function LoginPage() {
         body: JSON.stringify({ username, password })
       });
 
+      const contentType = response.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const payload = isJson ? await response.json() : await response.text();
+
       if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Login failed");
+        const message =
+          (typeof payload === "string" && payload) ||
+          (payload && payload.message) ||
+          "Login failed";
+        throw new Error(message);
       }
 
-      window.location.href = "/dashboard";
-    } catch {
-      setError("Invalid credentials.");
+      if (payload && typeof payload === "object") {
+        localStorage.setItem("adminUser", JSON.stringify(payload));
+      } else {
+        localStorage.removeItem("adminUser");
+      }
+
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      const message =
+        err instanceof Error && err.message ? err.message : "Login failed.";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }

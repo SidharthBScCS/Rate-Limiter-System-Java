@@ -1,0 +1,129 @@
+.hero {
+  --hero-bg-image: none;
+  position: relative;
+  min-height: 74vh;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 40px 60px;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.22)),
+    linear-gradient(to top, rgba(9, 9, 9, 1), rgba(9, 9, 9, 0)),
+    radial-gradient(circle at 78% 32%, rgba(229, 9, 20, 0.36), transparent 42%),
+    var(--hero-bg-image),
+    linear-gradient(120deg, #1e1e1e, #121212);
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(9, 9, 9, 0.86) 6%, transparent 42%),
+    linear-gradient(to right, rgba(9, 9, 9, 0.12), transparent 28%);
+  pointer-events: none;
+}
+
+.hero__overlay {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.hero__tag {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #ececec;
+}
+
+.hero__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #efefef;
+}
+
+.hero__badge--rating {
+  color: var(--brand-gold);
+}
+
+.hero__title {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  line-height: 1.02;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+
+.hero__description {
+  margin: 18px 0 0;
+  color: #e6e6e6;
+  max-width: 560px;
+  font-size: 1.03rem;
+  line-height: 1.56;
+}
+
+.hero__actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.hero__button {
+  border: 0;
+  border-radius: 6px;
+  padding: 11px 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.hero__button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.hero__button-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero__button--play {
+  background: #f7f7f7;
+  color: #0f0f0f;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.hero__button--info {
+  background: rgba(85, 85, 85, 0.92);
+  color: var(--text-primary);
+}
+
+@media (max-width: 700px) {
+  .hero {
+    min-height: 60vh;
+    padding: 0 20px 32px;
+  }
+
+  .hero__description {
+    font-size: 0.95rem;
+  }
+}

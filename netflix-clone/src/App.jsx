@@ -6,7 +6,7 @@ import RowSection from "./RowSection";
 import Footer from "./Footer";
 import LoadingSpinner from "./LoadingSpinner";
 import LandingPage from "./LandingPage";
-import { loginUser, registerUser } from "./api/auth";
+import { fetchMe, loginUser, logoutUser, registerUser } from "./api/auth";
 import {
   getActionMovies,
   getNetflixOriginals,
@@ -37,7 +37,8 @@ function readStoredUser() {
 }
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(() => readStoredUser());
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [sections, setSections] = useState([]);
   const [heroMovie, setHeroMovie] = useState(null);
   const [error, setError] = useState("");
@@ -45,7 +46,34 @@ function App() {
   const [activeNav, setActiveNav] = useState("Home");
 
   useEffect(() => {
-    if (!currentUser) {
+    async function restoreSession() {
+      try {
+        const stored = readStoredUser();
+        if (stored) {
+          setCurrentUser(stored);
+        }
+
+        const user = await fetchMe();
+        const authenticatedUser = {
+          name: user.fullName,
+          email: user.email,
+          mode: "login",
+        };
+        setCurrentUser(authenticatedUser);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authenticatedUser));
+      } catch {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        setCurrentUser(null);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    }
+
+    restoreSession();
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser || isCheckingAuth) {
       return;
     }
 
@@ -77,7 +105,7 @@ function App() {
     }
 
     loadMovies();
-  }, [currentUser]);
+  }, [currentUser, isCheckingAuth]);
 
   const handleNavClick = (navItem) => {
     setActiveNav(navItem);
@@ -107,21 +135,37 @@ function App() {
     });
   };
 
-  const handleGuest = () => {
-    handleAuthenticated({
-      name: "Guest",
-      email: "guest@local",
-      mode: "guest",
-    });
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // Force local logout even when the backend session already expired.
+    } finally {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      setCurrentUser(null);
+      setSections([]);
+      setHeroMovie(null);
+      setActiveNav("Home");
+      setError("");
+    }
   };
 
+  if (isCheckingAuth) {
+    return <LoadingSpinner />;
+  }
+
   if (!currentUser) {
-    return <LandingPage onLogin={handleLogin} onRegister={handleRegister} onGuest={handleGuest} />;
+    return <LandingPage onLogin={handleLogin} onRegister={handleRegister} />;
   }
 
   return (
     <div className="app">
-      <Navigator activeNav={activeNav} onNavClick={handleNavClick} />
+      <Navigator
+        activeNav={activeNav}
+        onNavClick={handleNavClick}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
       <main className="app__content">
         {isLoading ? (
           <LoadingSpinner />

@@ -97,6 +97,12 @@ public class NetflixAuthController {
         return ResponseEntity.status(status).body(Map.of("message", message));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        String message = ex.getMessage() == null ? "Service unavailable" : ex.getMessage();
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("message", message));
+    }
+
     private Map<String, Object> toUserPayload(NetflixUser user) {
         return Map.of(
                 "id", user.getId(),

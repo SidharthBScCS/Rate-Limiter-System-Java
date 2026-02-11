@@ -74,6 +74,15 @@
   gap: 14px;
 }
 
+.nav__user {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .nav__icon {
   display: inline-flex;
   align-items: center;
@@ -126,6 +135,22 @@
   border-top: 5px solid var(--text-secondary);
 }
 
+.nav__logout {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(229, 9, 20, 0.55);
+  border-radius: 8px;
+  background: rgba(229, 9, 20, 0.15);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nav__logout:hover {
+  background: rgba(229, 9, 20, 0.28);
+}
+
 @media (max-width: 900px) {
   .nav {
     padding: 14px 20px;
@@ -137,6 +162,10 @@
 
   .nav__links a {
     font-size: 0.82rem;
+  }
+
+  .nav__user {
+    display: none;
   }
 }
 

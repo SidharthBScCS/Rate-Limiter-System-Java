@@ -7,7 +7,6 @@ function Main_Box({ refreshTick }) {
   const [apiKeys, setApiKeys] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [sendingRequest, setSendingRequest] = useState(null);
 
   const loadDashboard = () => {
     setLoading(true);
@@ -45,33 +44,6 @@ function Main_Box({ refreshTick }) {
     const cleanup = loadDashboard();
     return cleanup;
   }, [refreshTick]);
-
-  const handleSendRequest = (item) => {
-    if (!item.id) {
-      setLoadError("Unable to send request: missing API key id.");
-      return;
-    }
-    setSendingRequest(item.id);
-
-    fetch(`/api/${item.id}/request`, { method: "POST", credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
-        }
-        return res.json();
-      })
-      .then(() => {
-        loadDashboard();
-      })
-      .catch((err) => {
-        console.error("SEND REQUEST ERROR:", err);
-        setLoadError("Unable to send request.");
-      })
-      .finally(() => {
-        setSendingRequest(null);
-      });
-  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -173,17 +145,12 @@ function Main_Box({ refreshTick }) {
                     <span>Status</span>
                   </div>
                 </th>
-                <th className="text-center">
-                  <div className="table-header-cell">
-                    <span>Actions</span>
-                  </div>
-                </th>
               </tr>
             </thead>
             <tbody>
               {apiKeys.length === 0 ? (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="6">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <Key size={48} />
@@ -260,23 +227,6 @@ function Main_Box({ refreshTick }) {
                         <span style={{ color: statusColor, fontWeight: 600 }}>
                           {status}
                         </span>
-                      </td>
-                      <td className="text-center">
-                        <Button 
-                          variant={sendingRequest === item.id ? "outline-secondary" : "primary"}
-                          className="request-btn"
-                          onClick={() => handleSendRequest(item)}
-                          disabled={sendingRequest === item.id}
-                        >
-                          {sendingRequest === item.id ? (
-                            <div className="spinner-container">
-                              <Spinner size="sm" animation="border" />
-                              Sending...
-                            </div>
-                          ) : (
-                            <>Send</>
-                          )}
-                        </Button>
                       </td>
                     </tr>
                   );

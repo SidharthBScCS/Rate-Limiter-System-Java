@@ -1,6 +1,11 @@
 import "./Navigator.css";
 
-function Navigator({ activeNav = "Home", onNavClick = () => {} }) {
+function Navigator({
+  activeNav = "Home",
+  onNavClick = () => {},
+  currentUser = null,
+  onLogout = () => Promise.resolve(),
+}) {
   const navItems = ["Home", "TV Shows", "Movies", "New & Popular", "My List"];
 
   return (
@@ -25,6 +30,7 @@ function Navigator({ activeNav = "Home", onNavClick = () => {} }) {
       </div>
 
       <div className="nav__right">
+        <div className="nav__user">{currentUser?.name || currentUser?.email || "User"}</div>
         <button className="nav__icon" aria-label="Search">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -40,6 +46,9 @@ function Navigator({ activeNav = "Home", onNavClick = () => {} }) {
         <button className="nav__profile" aria-label="Open profile menu">
           <span className="nav__avatar" />
           <span className="nav__caret" />
+        </button>
+        <button type="button" className="nav__logout" onClick={onLogout}>
+          Logout
         </button>
       </div>
     </header>

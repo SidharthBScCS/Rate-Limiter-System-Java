@@ -6,6 +6,7 @@ import com.netflixclone.netflix_clone_backend.entity.NetflixUser;
 import com.netflixclone.netflix_clone_backend.repository.NetflixUserRepository;
 import java.util.Locale;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +15,19 @@ public class NetflixAuthService {
 
     private final NetflixUserRepository netflixUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RateLimiterProvisioningService rateLimiterProvisioningService;
 
-    public NetflixAuthService(NetflixUserRepository netflixUserRepository, PasswordEncoder passwordEncoder) {
+    public NetflixAuthService(
+            NetflixUserRepository netflixUserRepository,
+            PasswordEncoder passwordEncoder,
+            RateLimiterProvisioningService rateLimiterProvisioningService
+    ) {
         this.netflixUserRepository = netflixUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.rateLimiterProvisioningService = rateLimiterProvisioningService;
     }
 
+    @Transactional
     public NetflixUser register(NetflixRegisterRequest request) {
         String normalizedEmail = normalizeEmail(request.getEmail());
         if (netflixUserRepository.existsByEmail(normalizedEmail)) {
@@ -30,7 +38,9 @@ public class NetflixAuthService {
         user.setFullName(request.getFullName().trim());
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        return netflixUserRepository.save(user);
+        NetflixUser saved = netflixUserRepository.save(user);
+        rateLimiterProvisioningService.provisionOwner(saved.getFullName());
+        return saved;
     }
 
     public NetflixUser login(NetflixLoginRequest request) {

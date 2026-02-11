@@ -4,8 +4,8 @@ import "./LandingPage.css";
 function LandingPage({
   onLogin = () => Promise.resolve(),
   onRegister = () => Promise.resolve(),
-  onGuest = () => {},
 }) {
+  const [isCreateMode, setIsCreateMode] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,9 +59,19 @@ function LandingPage({
     }
   };
 
-  const handleGuest = () => {
+  const handleCreateClick = async () => {
+    if (!isCreateMode) {
+      setError("");
+      setIsCreateMode(true);
+      return;
+    }
+    await handleRegister();
+  };
+
+  const handleBackToLogin = () => {
     setError("");
-    onGuest();
+    setIsCreateMode(false);
+    setName("");
   };
 
   return (
@@ -69,18 +79,22 @@ function LandingPage({
       <div className="landing__overlay" />
       <div className="landing__card">
         <h1 className="landing__logo">NETFLIX</h1>
-        <p className="landing__title">Welcome Back</p>
+        <p className="landing__title">{isCreateMode ? "Create Account" : "Welcome Back"}</p>
         <p className="landing__subtitle">
-          Sign in to continue or explore the app as a guest.
+          {isCreateMode
+            ? "Enter your name to create your account."
+            : "Sign in with your email and password."}
         </p>
 
         <form className="landing__form" onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder="Full name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
+          {isCreateMode ? (
+            <input
+              type="text"
+              placeholder="Full name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          ) : null}
           <input
             type="email"
             placeholder="Email"
@@ -104,21 +118,22 @@ function LandingPage({
           <button
             type="button"
             className="landing__button landing__button--tertiary"
-            onClick={handleRegister}
+            onClick={handleCreateClick}
             disabled={isSubmitting}
           >
-            Create Account
+            {isCreateMode ? "Create Account" : "Create New Account"}
           </button>
+          {isCreateMode ? (
+            <button
+              type="button"
+              className="landing__button landing__button--secondary"
+              onClick={handleBackToLogin}
+              disabled={isSubmitting}
+            >
+              Back to Login
+            </button>
+          ) : null}
         </form>
-
-        <button
-          type="button"
-          className="landing__button landing__button--secondary"
-          onClick={handleGuest}
-          disabled={isSubmitting}
-        >
-          Continue as Guest
-        </button>
       </div>
     </section>
   );

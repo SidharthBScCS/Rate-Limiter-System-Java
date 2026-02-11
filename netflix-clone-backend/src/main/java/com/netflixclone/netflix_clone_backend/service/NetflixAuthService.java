@@ -39,7 +39,7 @@ public class NetflixAuthService {
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         NetflixUser saved = netflixUserRepository.save(user);
-        rateLimiterProvisioningService.provisionOwner(saved.getFullName());
+        rateLimiterProvisioningService.provisionUser(saved.getFullName());
         return saved;
     }
 

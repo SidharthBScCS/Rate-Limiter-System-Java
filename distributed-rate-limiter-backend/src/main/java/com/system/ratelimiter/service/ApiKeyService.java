@@ -20,7 +20,7 @@ public class ApiKeyService {
     public ApiKey create(ApiKeyRequest request) {
         if (request.getRateLimit() != null && request.getRateLimit() > 100) {
             ApiKey blocked = new ApiKey();
-            blocked.setOwnerName(request.getOwnerName());
+            blocked.setUserName(request.getUserName());
             blocked.setRateLimit(request.getRateLimit());
             blocked.setWindowSeconds(request.getWindowSeconds());
             blocked.setApiKey(UUID.randomUUID().toString());
@@ -32,7 +32,7 @@ public class ApiKeyService {
         }
 
         ApiKey apiKey = new ApiKey();
-        apiKey.setOwnerName(request.getOwnerName());
+        apiKey.setUserName(request.getUserName());
         apiKey.setRateLimit(request.getRateLimit());
         apiKey.setWindowSeconds(request.getWindowSeconds());
         apiKey.setApiKey(UUID.randomUUID().toString());
@@ -73,7 +73,7 @@ public class ApiKeyService {
 
         return apiKeys.stream()
                 .map(apiKey -> java.util.Map.<String, Object>of(
-                        "ownerName", apiKey.getOwnerName(),
+                        "userName", apiKey.getUserName(),
                         "totalRequests", apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests(),
                         "allowedRequests", apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests(),
                         "blockedRequests", apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests()

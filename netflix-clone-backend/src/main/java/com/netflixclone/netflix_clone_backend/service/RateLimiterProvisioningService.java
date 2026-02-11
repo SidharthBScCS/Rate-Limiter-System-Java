@@ -23,17 +23,17 @@ public class RateLimiterProvisioningService {
         this.defaultWindowSeconds = defaultWindowSeconds;
     }
 
-    public void provisionOwner(String ownerName) {
-        String normalizedOwner = ownerName == null ? "" : ownerName.trim();
-        if (normalizedOwner.isEmpty()) {
-            throw new IllegalArgumentException("Owner name is required");
+    public void provisionUser(String userName) {
+        String normalizedUser = userName == null ? "" : userName.trim();
+        if (normalizedUser.isEmpty()) {
+            throw new IllegalArgumentException("User name is required");
         }
 
         try {
             jdbcTemplate.update(
-                    "INSERT INTO api_keys (owner_name, rate_limit, window_seconds, api_key, status, total_request, allowed_requests, blocked_requests, created_at) "
+                    "INSERT INTO api_keys (user_name, rate_limit, window_seconds, api_key, status, total_request, allowed_requests, blocked_requests, created_at) "
                             + "VALUES (?, ?, ?, ?, 'Normal', 0, 0, 0, NOW())",
-                    normalizedOwner,
+                    normalizedUser,
                     defaultRateLimit,
                     defaultWindowSeconds,
                     UUID.randomUUID().toString()

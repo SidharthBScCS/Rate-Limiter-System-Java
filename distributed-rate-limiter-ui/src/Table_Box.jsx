@@ -118,7 +118,7 @@ function Main_Box({ refreshTick }) {
                 <th>
                   <div className="table-header-cell">
                     <User size={16} />
-                    <span>Owner</span>
+                    <span>User</span>
                   </div>
                 </th>
                 <th>
@@ -189,7 +189,7 @@ function Main_Box({ refreshTick }) {
                       </td>
                       <td>
                         <div className="owner-cell">
-                          <span className="owner-name">{item.ownerName}</span>
+                          <span className="owner-name">{item.userName}</span>
                         </div>
                       </td>
                       <td>

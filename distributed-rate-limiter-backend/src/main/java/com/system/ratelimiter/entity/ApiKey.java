@@ -18,8 +18,8 @@ public class ApiKey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String ownerName;
+    @Column(name = "user_name", nullable = false)
+    private String userName;
 
     @Column(nullable = false)
     private Integer rateLimit;
@@ -54,12 +54,12 @@ public class ApiKey {
         return id;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public Integer getRateLimit() {

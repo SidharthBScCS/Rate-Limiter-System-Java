@@ -42,7 +42,7 @@ public class ApiKeyController {
                 .body(Map.of(
                         "message", "API Key created successfully",
                         "id", created.getId(),
-                        "ownerName", created.getOwnerName()
+                        "userName", created.getUserName()
                 ));
     }
 
@@ -81,7 +81,7 @@ public class ApiKeyController {
                     row.put("id", apiKey.getId());
                     row.put("apiKeyDisplay", formatApiKey(apiKey.getApiKey()));
                     row.put("apiKeyFull", apiKey.getApiKey());
-                    row.put("ownerName", apiKey.getOwnerName());
+                    row.put("userName", apiKey.getUserName());
                     row.put("rateLimit", apiKey.getRateLimit());
                     row.put("windowSeconds", apiKey.getWindowSeconds());
                     row.put("requestCount", requestCount);
@@ -137,7 +137,7 @@ public class ApiKeyController {
                 .toList();
 
         List<String> labels = top.stream()
-                .map(item -> String.valueOf(item.getOrDefault("ownerName", "Unknown")))
+                .map(item -> String.valueOf(item.getOrDefault("userName", "Unknown")))
                 .toList();
 
         List<Long> totals = top.stream()

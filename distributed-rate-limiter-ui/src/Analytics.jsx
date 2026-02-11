@@ -81,7 +81,7 @@ function Analytics() {
                     <div className="graph-header">
                         <h4 className="graph-title">
                             <LineChart size={18} />
-                            Total Requests (by Owner)
+                            Total Requests (by User)
                         </h4>
                         <div className="graph-stats">
                             <span className="graph-value">{view.summary.total.toLocaleString()}</span>
@@ -134,7 +134,7 @@ function Analytics() {
                     <div className="graph-header">
                         <h4 className="graph-title">
                             <LineChart size={18} />
-                            Success Requests (by Owner)
+                            Success Requests (by User)
                         </h4>
                         <div className="graph-stats">
                             <span className="graph-value">{view.summary.success.toLocaleString()}</span>
@@ -187,7 +187,7 @@ function Analytics() {
                     <div className="graph-header">
                         <h4 className="graph-title">
                             <LineChart size={18} />
-                            Blocked Requests (by Owner)
+                            Blocked Requests (by User)
                         </h4>
                         <div className="graph-stats">
                             <span className="graph-value">{view.summary.blocked.toLocaleString()}</span>

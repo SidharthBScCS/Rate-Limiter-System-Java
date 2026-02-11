@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Key, User, Clock, Hash, Zap } from "lucide-react";
 
 function APIModal({ show, handleClose, onCreated }) {
-  const [ownerName, setOwnerName] = useState("");
+  const [userName, setUserName] = useState("");
   const [rateLimit, setRateLimit] = useState("10");
   const [windowSeconds, setWindowSeconds] = useState("60");
   const [showToast, setShowToast] = useState(false);
@@ -15,7 +15,7 @@ function APIModal({ show, handleClose, onCreated }) {
     setIsLoading(true);
     
     const data = {
-      ownerName: ownerName.trim(),
+      userName: userName.trim(),
       rateLimit: Number(rateLimit),
       windowSeconds: Number(windowSeconds),
     };
@@ -42,7 +42,7 @@ function APIModal({ show, handleClose, onCreated }) {
           onCreated();
         }
         handleClose();
-        setOwnerName("");
+        setUserName("");
         setRateLimit("10");
         setWindowSeconds("60");
         setFormError("");
@@ -114,7 +114,7 @@ function APIModal({ show, handleClose, onCreated }) {
                   <User size={20} className="text-success" />
                 </div>
                 <div>
-                  <h6 className="mb-0 text-white">Owner Information</h6>
+                  <h6 className="mb-0 text-white">User Information</h6>
                 </div>
               </div>
               
@@ -122,8 +122,8 @@ function APIModal({ show, handleClose, onCreated }) {
                 <Form.Control 
                   type="text" 
                   placeholder="Enter company or user name..." 
-                  value={ownerName} 
-                  onChange={(e) => setOwnerName(e.target.value)}
+                  value={userName} 
+                  onChange={(e) => setUserName(e.target.value)}
                   style={{ 
                     background: 'rgba(30, 41, 59, 0.8)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',

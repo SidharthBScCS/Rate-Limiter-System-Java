@@ -1,0 +1,38 @@
+const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
+const BACKEND_BASE_URL = import.meta.env.VITE_NETFLIX_AUTH_BASE_URL || "http://localhost:8082";
+
+async function fetchMovies(path) {
+  const response = await fetch(`${BACKEND_BASE_URL}${path}`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (response.status === 429) {
+    throw new Error(payload.message || payload.status_message || "Too Many Requests");
+  }
+  if (response.status === 401) {
+    throw new Error(payload.message || payload.status_message || "Not authenticated");
+  }
+  if (!response.ok) {
+    throw new Error(payload.message || payload.status_message || `TMDB request failed: ${response.status}`);
+  }
+
+  const data = payload;
+  return (data.results || []).filter(
+    (item) => item && (item.backdrop_path || item.poster_path),
+  );
+}
+
+export const tmdbImageUrl = (path) => {
+  if (!path) return "";
+  return `${TMDB_IMAGE_BASE_URL}${path}`;
+};
+
+export const getTrending = () => fetchMovies("/api/movies/trending");
+export const getTopRated = () => fetchMovies("/api/movies/top-rated");
+export const getNetflixOriginals = () => fetchMovies("/api/movies/netflix-originals");
+export const getActionMovies = () => fetchMovies("/api/movies/action");

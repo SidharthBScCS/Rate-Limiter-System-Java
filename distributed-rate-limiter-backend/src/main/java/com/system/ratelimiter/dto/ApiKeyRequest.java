@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 public class ApiKeyRequest {
 
     @NotBlank
-    private String ownerName;
+    private String userName;
 
     @NotNull
     @Min(1)
@@ -19,12 +19,12 @@ public class ApiKeyRequest {
     @Min(1)
     private Integer windowSeconds;
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public Integer getRateLimit() {

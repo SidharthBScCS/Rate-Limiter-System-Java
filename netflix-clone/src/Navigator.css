@@ -98,12 +98,6 @@
   background: rgba(255, 255, 255, 0.11);
 }
 
-.nav__kids {
-  color: var(--text-primary);
-  text-decoration: none;
-  font-size: 0.92rem;
-}
-
 .nav__profile {
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.03);
@@ -147,8 +141,7 @@
 }
 
 @media (max-width: 700px) {
-  .nav__links a:nth-child(n + 4),
-  .nav__kids {
+  .nav__links a:nth-child(n + 4) {
     display: none;
   }
 }

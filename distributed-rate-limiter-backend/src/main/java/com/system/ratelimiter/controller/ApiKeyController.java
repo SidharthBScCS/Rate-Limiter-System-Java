@@ -21,10 +21,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(originPatterns = "http://localhost:*", allowCredentials = "true")
 @RequestMapping("/api")
 public class ApiKeyController {
 
@@ -118,6 +119,17 @@ public class ApiKeyController {
                 .body(Map.of("message", message));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        String message = ex.getMessage() == null ? "Invalid request." : ex.getMessage();
+        HttpStatus status = "API key not found".equalsIgnoreCase(message)
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status)
+                .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                .body(Map.of("message", message));
+    }
+
     @GetMapping("/analytics/view")
     public ResponseEntity<Map<String, Object>> getAnalyticsView() {
         List<Map<String, Object>> raw = apiKeyService.getApiKeyStats();
@@ -179,6 +191,14 @@ public class ApiKeyController {
                 "totalRequests", updated.getTotalRequests(),
                 "status", updated.getStatus()
         ));
+    }
+
+    @PostMapping("/ratelimit/check")
+    public ResponseEntity<Map<String, Object>> checkRateLimit(@RequestHeader(value = "X-API-Key", required = false) String apiKeyHeader) {
+        Map<String, Object> result = apiKeyService.checkAndRecordByApiKey(apiKeyHeader);
+        boolean allowed = Boolean.TRUE.equals(result.get("allowed"));
+        HttpStatus status = allowed ? HttpStatus.OK : HttpStatus.TOO_MANY_REQUESTS;
+        return ResponseEntity.status(status).body(result);
     }
 
     private static String formatApiKey(String key) {

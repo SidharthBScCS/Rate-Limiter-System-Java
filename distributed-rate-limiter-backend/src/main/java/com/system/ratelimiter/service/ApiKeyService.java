@@ -3,6 +3,7 @@ package com.system.ratelimiter.service;
 import com.system.ratelimiter.dto.ApiKeyRequest;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.repository.ApiKeyRepository;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,33 @@ public class ApiKeyService {
     public ApiKey incrementRequest(Long apiKeyId) {
         ApiKey apiKey = apiKeyRepository.findById(apiKeyId)
                 .orElseThrow(() -> new IllegalArgumentException("API key not found"));
+        return incrementRequestInternal(apiKey);
+    }
 
+    public Map<String, Object> checkAndRecordByApiKey(String rawApiKey) {
+        String normalized = rawApiKey == null ? "" : rawApiKey.trim();
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("API key is required");
+        }
+
+        ApiKey apiKey = apiKeyRepository.findByApiKey(normalized)
+                .orElseThrow(() -> new IllegalArgumentException("API key not found"));
+
+        ApiKey updated = incrementRequestInternal(apiKey);
+        boolean allowed = !"Blocked".equalsIgnoreCase(updated.getStatus());
+
+        return Map.of(
+                "id", updated.getId(),
+                "ownerName", updated.getOwnerName(),
+                "allowed", allowed,
+                "status", updated.getStatus(),
+                "totalRequests", updated.getTotalRequests() == null ? 0L : updated.getTotalRequests(),
+                "allowedRequests", updated.getAllowedRequests() == null ? 0L : updated.getAllowedRequests(),
+                "blockedRequests", updated.getBlockedRequests() == null ? 0L : updated.getBlockedRequests()
+        );
+    }
+
+    private ApiKey incrementRequestInternal(ApiKey apiKey) {
         long currentCount = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
         long nextCount = currentCount + 1;
         apiKey.setTotalRequests(nextCount);

@@ -1,12 +1,27 @@
-import { Button, Spinner } from "react-bootstrap";
-import { useEffect, useState } from "react";
-import { Copy, RefreshCw, Activity, Shield, Clock, User, Key, AlertCircle } from "lucide-react";
-import './Table_Box.css';
+﻿import { Button, Spinner } from "react-bootstrap";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Copy,
+  RefreshCw,
+  Activity,
+  Shield,
+  Clock,
+  User,
+  Key,
+  AlertCircle,
+  Search,
+  Filter,
+  Plus,
+} from "lucide-react";
+import "./Table_Box.css";
 
 function Main_Box({ refreshTick }) {
   const [apiKeys, setApiKeys] = useState([]);
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState("");
+  const [algorithmFilter, setAlgorithmFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const loadDashboard = () => {
     setLoading(true);
@@ -45,6 +60,27 @@ function Main_Box({ refreshTick }) {
     return cleanup;
   }, [refreshTick]);
 
+  const filteredApiKeys = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    return apiKeys.filter((item) => {
+      const algorithm = String(item.algorithm ?? "SLIDING_WINDOW").toUpperCase();
+      const status = String(item.status ?? "Normal").toUpperCase();
+      const matchesAlgorithm = algorithmFilter === "ALL" || algorithm === algorithmFilter;
+      const matchesStatus = statusFilter === "ALL" || status === statusFilter;
+      if (!matchesAlgorithm || !matchesStatus) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      const searchable = [item.userName, item.apiKeyDisplay, item.algorithm, item.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return searchable.includes(query);
+    });
+  }, [apiKeys, searchText, algorithmFilter, statusFilter]);
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
   };
@@ -62,20 +98,28 @@ function Main_Box({ refreshTick }) {
 
   return (
     <div className="table-container">
-      {/* Table Header */}
       <div className="table-header-card">
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <h4 className="table-title">API Keys Management</h4>
             <p className="table-subtitle">
-              {apiKeys.length} {apiKeys.length === 1 ? 'API Key' : 'API Keys'} • 
+              {filteredApiKeys.length} of {apiKeys.length} {apiKeys.length === 1 ? "API Key" : "API Keys"} •
               <span className="text-success"> Rate Limiter Active</span>
             </p>
           </div>
           <div className="d-flex gap-2">
+            <Button
+              variant="outline-primary"
+              size="sm"
+              className="refresh-btn"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-api-modal"))}
+            >
+              <Plus size={16} />
+              Add API
+            </Button>
             {loadError && (
-              <Button 
-                variant="outline-warning" 
+              <Button
+                variant="outline-warning"
                 size="sm"
                 onClick={() => window.location.reload()}
                 className="refresh-btn"
@@ -88,7 +132,38 @@ function Main_Box({ refreshTick }) {
         </div>
       </div>
 
-      {/* Error Alert */}
+      <div className="table-toolbar">
+        <div className="table-search-box">
+          <Search size={16} />
+          <input
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search by user, API key, algorithm..."
+          />
+        </div>
+        <div className="table-filter-group">
+          <div className="table-select-wrap">
+            <Filter size={14} />
+            <select value={algorithmFilter} onChange={(e) => setAlgorithmFilter(e.target.value)}>
+              <option value="ALL">All Algorithms</option>
+              <option value="SLIDING_WINDOW">Sliding Window</option>
+              <option value="TOKEN_BUCKET">Token Bucket</option>
+              <option value="FIXED_WINDOW">Fixed Window</option>
+              <option value="COMBINED">Combined</option>
+            </select>
+          </div>
+          <div className="table-select-wrap">
+            <Shield size={14} />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="ALL">All Status</option>
+              <option value="NORMAL">Normal</option>
+              <option value="BLOCKED">Blocked</option>
+              <option value="WARNING">Warning</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       {loadError && (
         <div className="table-error-alert">
           <div className="d-flex align-items-center gap-3">
@@ -103,7 +178,6 @@ function Main_Box({ refreshTick }) {
         </div>
       )}
 
-      {/* Table Container */}
       <div className="modern-table-container">
         <div className="table-wrapper">
           <table className="modern-table">
@@ -154,27 +228,27 @@ function Main_Box({ refreshTick }) {
               </tr>
             </thead>
             <tbody>
-              {apiKeys.length === 0 ? (
+              {filteredApiKeys.length === 0 ? (
                 <tr>
                   <td colSpan="8">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <Key size={48} />
                       </div>
-                      <h4>No API Keys Found</h4>
-                      <p>Create your first API key to get started with rate limiting</p>
+                      <h4>No Matching API Keys</h4>
+                      <p>Adjust search/filter settings or create a new API key.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                apiKeys.map((item) => {
+                filteredApiKeys.map((item) => {
                   const apiKeyValue = item.apiKeyFull ?? "";
                   const status = item.status ?? "Normal";
                   const statusColor = item.statusColor ?? "#94a3b8";
                   const requestCount = item.requestCount ?? 0;
                   const usagePercentage = Number(item.usagePercentage ?? 0);
                   const usageColor = item.usageColor ?? "#10b981";
-                  
+
                   return (
                     <tr key={item.id ?? item.apiKeyDisplay} className="table-data-row">
                       <td>
@@ -182,9 +256,9 @@ function Main_Box({ refreshTick }) {
                           <div className="api-key-display">
                             <code>{item.apiKeyDisplay}</code>
                           </div>
-                          <Button 
-                            variant="link" 
-                            size="sm" 
+                          <Button
+                            variant="link"
+                            size="sm"
                             className="copy-btn"
                             onClick={() => copyToClipboard(apiKeyValue)}
                             title="Copy API Key"
@@ -211,7 +285,7 @@ function Main_Box({ refreshTick }) {
                         </div>
                       </td>
                       <td>
-                        <span className="owner-name">{item.algorithm ?? "SLIDING_WINDOW"}</span>
+                        <span className="algorithm-pill">{item.algorithm ?? "SLIDING_WINDOW"}</span>
                       </td>
                       <td>
                         <div className="requests-cell">
@@ -222,18 +296,18 @@ function Main_Box({ refreshTick }) {
                             </span>
                           </div>
                           <div className="usage-bar">
-                            <div 
-                              className="usage-progress" 
-                              style={{ 
+                            <div
+                              className="usage-progress"
+                              style={{
                                 width: `${usagePercentage}%`,
-                                backgroundColor: usageColor
+                                backgroundColor: usageColor,
                               }}
                             />
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span style={{ color: statusColor, fontWeight: 600 }}>
+                        <span className="status-pill" style={{ color: statusColor }}>
                           {status}
                         </span>
                       </td>

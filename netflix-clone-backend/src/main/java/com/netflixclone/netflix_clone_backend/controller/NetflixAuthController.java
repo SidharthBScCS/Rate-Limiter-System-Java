@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class NetflixAuthController {
 
     private static final String AUTH_SESSION_KEY = "netflixUserEmail";
+    private static final Logger LOG = LoggerFactory.getLogger(NetflixAuthController.class);
 
     private final NetflixAuthService netflixAuthService;
     private final NetflixRateLimiterService netflixRateLimiterService;
@@ -49,6 +52,7 @@ public class NetflixAuthController {
                 buildRateLimitKey(httpRequest, request.getEmail()),
                 request.getEmail()
         );
+        logDecision("/api/auth/register", request.getEmail(), decision);
         if (!decision.allowed()) {
             return tooManyRequests(decision);
         }
@@ -71,6 +75,7 @@ public class NetflixAuthController {
                 buildRateLimitKey(httpRequest, request.getEmail()),
                 request.getEmail()
         );
+        logDecision("/api/auth/login", request.getEmail(), decision);
         if (!decision.allowed()) {
             return tooManyRequests(decision);
         }
@@ -85,17 +90,6 @@ public class NetflixAuthController {
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(HttpSession session, HttpServletRequest httpRequest) {
-        String userEmail = Optional.ofNullable(session.getAttribute(AUTH_SESSION_KEY))
-                .map(String::valueOf)
-                .orElse("");
-        NetflixRateLimiterService.Decision decision = netflixRateLimiterService.checkAuthAndRecord(
-                buildRateLimitKey(httpRequest, userEmail),
-                userEmail
-        );
-        if (!decision.allowed()) {
-            return tooManyRequests(decision);
-        }
-
         Object email = session.getAttribute(AUTH_SESSION_KEY);
         if (email == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -113,17 +107,6 @@ public class NetflixAuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(HttpSession session, HttpServletRequest httpRequest) {
-        String userEmail = Optional.ofNullable(session.getAttribute(AUTH_SESSION_KEY))
-                .map(String::valueOf)
-                .orElse("");
-        NetflixRateLimiterService.Decision decision = netflixRateLimiterService.checkAuthAndRecord(
-                buildRateLimitKey(httpRequest, userEmail),
-                userEmail
-        );
-        if (!decision.allowed()) {
-            return tooManyRequests(decision);
-        }
-
         session.invalidate();
         return ResponseEntity.ok(Map.of("message", "Logged out"));
     }
@@ -196,5 +179,16 @@ public class NetflixAuthController {
         }
         String remoteAddr = request.getRemoteAddr();
         return remoteAddr == null || remoteAddr.isBlank() ? "unknown" : remoteAddr.trim();
+    }
+
+    private void logDecision(String endpoint, String identity, NetflixRateLimiterService.Decision decision) {
+        LOG.info(
+                "rate-limit endpoint={} identity={} allowed={} reason={} retryAfter={}",
+                endpoint,
+                identity == null ? "" : identity,
+                decision.allowed(),
+                decision.reason(),
+                decision.retryAfterSeconds()
+        );
     }
 }

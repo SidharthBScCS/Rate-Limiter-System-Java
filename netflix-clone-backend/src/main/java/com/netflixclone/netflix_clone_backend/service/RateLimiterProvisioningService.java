@@ -30,6 +30,7 @@ public class RateLimiterProvisioningService {
         }
 
         try {
+            ensureMetricsSchema();
             Integer existing = jdbcTemplate.queryForObject(
                     "SELECT COUNT(*) FROM api_keys WHERE user_name = ?",
                     Integer.class,
@@ -49,5 +50,32 @@ public class RateLimiterProvisioningService {
         } catch (DataAccessException ex) {
             throw new IllegalStateException("Failed to create rate limiter owner entry", ex);
         }
+    }
+
+    private void ensureMetricsSchema() {
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS api_keys (
+                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    user_name VARCHAR(255) NOT NULL,
+                    rate_limit INT NOT NULL,
+                    window_seconds INT NOT NULL,
+                    algorithm VARCHAR(30) NOT NULL DEFAULT 'SLIDING_WINDOW',
+                    api_key VARCHAR(255) NOT NULL,
+                    status VARCHAR(20) NOT NULL DEFAULT 'Normal',
+                    total_request BIGINT NOT NULL DEFAULT 0,
+                    allowed_requests BIGINT NOT NULL DEFAULT 0,
+                    blocked_requests BIGINT NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """);
+
+        jdbcTemplate.execute("""
+                CREATE TABLE IF NOT EXISTS request_stats (
+                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                    total_requests BIGINT NOT NULL DEFAULT 0,
+                    allowed_requests BIGINT NOT NULL DEFAULT 0,
+                    blocked_requests BIGINT NOT NULL DEFAULT 0
+                )
+                """);
     }
 }

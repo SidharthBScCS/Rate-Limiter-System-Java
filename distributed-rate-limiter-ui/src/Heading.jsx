@@ -1,10 +1,16 @@
 import { Button, Badge } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import APIModal from "./APIModal";
 import { Activity, Shield } from "lucide-react";
 
 function Heading({ onCreated }) {
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const openModal = () => setShowModal(true);
+    window.addEventListener("open-api-modal", openModal);
+    return () => window.removeEventListener("open-api-modal", openModal);
+  }, []);
   
   return (
     <>

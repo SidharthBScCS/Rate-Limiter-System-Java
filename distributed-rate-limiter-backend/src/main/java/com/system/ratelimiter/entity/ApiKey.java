@@ -27,6 +27,9 @@ public class ApiKey {
     @Column(nullable = false)
     private Integer windowSeconds;
 
+    @Column(nullable = false, columnDefinition = "varchar(30) default 'SLIDING_WINDOW'")
+    private String algorithm;
+
     @Column(name = "api_key", nullable = false)
     private String apiKey;
 
@@ -76,6 +79,14 @@ public class ApiKey {
 
     public void setWindowSeconds(Integer windowSeconds) {
         this.windowSeconds = windowSeconds;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 
     public String getApiKey() {

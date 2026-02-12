@@ -30,6 +30,14 @@ public class RateLimiterProvisioningService {
         }
 
         try {
+            Integer existing = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM api_keys WHERE user_name = ?",
+                    Integer.class,
+                    normalizedUser
+            );
+            if (existing != null && existing > 0) {
+                return;
+            }
             jdbcTemplate.update(
                     "INSERT INTO api_keys (user_name, rate_limit, window_seconds, api_key, status, total_request, allowed_requests, blocked_requests, created_at) "
                             + "VALUES (?, ?, ?, ?, 'Normal', 0, 0, 0, NOW())",

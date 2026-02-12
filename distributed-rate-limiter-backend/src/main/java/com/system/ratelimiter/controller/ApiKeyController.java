@@ -1,9 +1,11 @@
 package com.system.ratelimiter.controller;
-
 import com.system.ratelimiter.dto.ApiKeyRequest;
+import com.system.ratelimiter.dto.RateLimitCheckRequest;
+import com.system.ratelimiter.dto.RateLimitDecisionResponse;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.entity.RequestStats;
 import com.system.ratelimiter.service.ApiKeyService;
+import com.system.ratelimiter.service.DistributedRateLimiterService;
 import com.system.ratelimiter.service.RequestStatsService;
 import jakarta.validation.Valid;
 import java.util.Comparator;
@@ -29,10 +31,16 @@ public class ApiKeyController {
 
     private final ApiKeyService apiKeyService;
     private final RequestStatsService requestStatsService;
+    private final DistributedRateLimiterService distributedRateLimiterService;
 
-    public ApiKeyController(ApiKeyService apiKeyService, RequestStatsService requestStatsService) {
+    public ApiKeyController(
+            ApiKeyService apiKeyService,
+            RequestStatsService requestStatsService,
+            DistributedRateLimiterService distributedRateLimiterService
+    ) {
         this.apiKeyService = apiKeyService;
         this.requestStatsService = requestStatsService;
+        this.distributedRateLimiterService = distributedRateLimiterService;
     }
 
     @PostMapping
@@ -42,7 +50,8 @@ public class ApiKeyController {
                 .body(Map.of(
                         "message", "API Key created successfully",
                         "id", created.getId(),
-                        "userName", created.getUserName()
+                        "userName", created.getUserName(),
+                        "algorithm", created.getAlgorithm()
                 ));
     }
 
@@ -84,6 +93,7 @@ public class ApiKeyController {
                     row.put("userName", apiKey.getUserName());
                     row.put("rateLimit", apiKey.getRateLimit());
                     row.put("windowSeconds", apiKey.getWindowSeconds());
+                    row.put("algorithm", apiKey.getAlgorithm());
                     row.put("requestCount", requestCount);
                     row.put("usagePercentage", usagePercentage);
                     row.put("usageColor", usageColor(usagePercentage));
@@ -105,6 +115,28 @@ public class ApiKeyController {
         ));
     }
 
+    @PostMapping("/limit/check")
+    public ResponseEntity<RateLimitDecisionResponse> checkLimit(@Valid @RequestBody RateLimitCheckRequest request) {
+        DistributedRateLimiterService.Decision decision = distributedRateLimiterService.evaluate(
+                request.getApiKey(),
+                request.getRoute(),
+                request.getTokens() == null ? 1 : request.getTokens()
+        );
+        RateLimitDecisionResponse body = new RateLimitDecisionResponse(
+                decision.allowed(),
+                decision.retryAfterSeconds(),
+                decision.reason(),
+                decision.algorithm(),
+                request.getApiKey()
+        );
+        if (!decision.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(decision.retryAfterSeconds()))
+                    .body(body);
+        }
+        return ResponseEntity.ok(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = "Invalid request.";
@@ -124,6 +156,14 @@ public class ApiKeyController {
                 ? HttpStatus.NOT_FOUND
                 : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status)
+                .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                .body(Map.of("message", message));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        String message = ex.getMessage() == null ? "Service unavailable." : ex.getMessage();
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .header(HttpHeaders.CONTENT_TYPE, "application/json")
                 .body(Map.of("message", message));
     }

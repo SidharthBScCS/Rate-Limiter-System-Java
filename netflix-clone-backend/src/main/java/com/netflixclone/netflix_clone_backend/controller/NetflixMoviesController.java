@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +56,41 @@ public class NetflixMoviesController {
         return fetchWithRateLimit(session, "action");
     }
 
+    @GetMapping("/home")
+    public ResponseEntity<?> home(HttpSession session) {
+        Object emailObj = session.getAttribute(AUTH_SESSION_KEY);
+        if (emailObj == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"message\":\"Not authenticated\"}");
+        }
+
+        String email = String.valueOf(emailObj);
+        Optional<NetflixUser> userOpt = netflixAuthService.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"message\":\"Not authenticated\"}");
+        }
+
+        NetflixUser user = userOpt.get();
+        NetflixRateLimiterService.Decision decision =
+                netflixRateLimiterService.checkAndRecord(user.getEmail(), user.getEmail());
+        if (!decision.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(decision.retryAfterSeconds()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"message\":\"Too Many Requests\",\"reason\":\"" + decision.reason() + "\"}");
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "trending", mockMovieCatalogService.trending(),
+                "topRated", mockMovieCatalogService.topRated(),
+                "netflixOriginals", mockMovieCatalogService.netflixOriginals(),
+                "action", mockMovieCatalogService.action()
+        ));
+    }
+
     private ResponseEntity<?> fetchWithRateLimit(HttpSession session, String category) {
         Object emailObj = session.getAttribute(AUTH_SESSION_KEY);
         if (emailObj == null) {
@@ -73,12 +109,12 @@ public class NetflixMoviesController {
 
         NetflixUser user = userOpt.get();
         NetflixRateLimiterService.Decision decision =
-                netflixRateLimiterService.checkAndRecord(user.getEmail(), user.getFullName());
+                netflixRateLimiterService.checkAndRecord(user.getEmail(), user.getEmail());
         if (!decision.allowed()) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .header(HttpHeaders.RETRY_AFTER, String.valueOf(decision.retryAfterSeconds()))
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body("{\"message\":\"Too Many Requests\"}");
+                    .body("{\"message\":\"Too Many Requests\",\"reason\":\"" + decision.reason() + "\"}");
         }
 
         return switch (category) {
@@ -87,5 +123,12 @@ public class NetflixMoviesController {
             case "action" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.action()));
             default -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.trending()));
         };
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException ex) {
+        String message = ex.getMessage() == null ? "Service unavailable" : ex.getMessage();
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("message", message));
     }
 }

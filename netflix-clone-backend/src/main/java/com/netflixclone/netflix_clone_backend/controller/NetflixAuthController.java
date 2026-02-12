@@ -4,9 +4,13 @@ import com.netflixclone.netflix_clone_backend.dto.NetflixLoginRequest;
 import com.netflixclone.netflix_clone_backend.dto.NetflixRegisterRequest;
 import com.netflixclone.netflix_clone_backend.entity.NetflixUser;
 import com.netflixclone.netflix_clone_backend.service.NetflixAuthService;
+import com.netflixclone.netflix_clone_backend.service.NetflixRateLimiterService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -25,13 +29,30 @@ public class NetflixAuthController {
     private static final String AUTH_SESSION_KEY = "netflixUserEmail";
 
     private final NetflixAuthService netflixAuthService;
+    private final NetflixRateLimiterService netflixRateLimiterService;
 
-    public NetflixAuthController(NetflixAuthService netflixAuthService) {
+    public NetflixAuthController(
+            NetflixAuthService netflixAuthService,
+            NetflixRateLimiterService netflixRateLimiterService
+    ) {
         this.netflixAuthService = netflixAuthService;
+        this.netflixRateLimiterService = netflixRateLimiterService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody NetflixRegisterRequest request, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> register(
+            @Valid @RequestBody NetflixRegisterRequest request,
+            HttpSession session,
+            HttpServletRequest httpRequest
+    ) {
+        NetflixRateLimiterService.Decision decision = netflixRateLimiterService.checkAuthAndRecord(
+                buildRateLimitKey(httpRequest, request.getEmail()),
+                request.getEmail()
+        );
+        if (!decision.allowed()) {
+            return tooManyRequests(decision);
+        }
+
         NetflixUser user = netflixAuthService.register(request);
         session.setAttribute(AUTH_SESSION_KEY, user.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
@@ -41,7 +62,19 @@ public class NetflixAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody NetflixLoginRequest request, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> login(
+            @Valid @RequestBody NetflixLoginRequest request,
+            HttpSession session,
+            HttpServletRequest httpRequest
+    ) {
+        NetflixRateLimiterService.Decision decision = netflixRateLimiterService.checkAuthAndRecord(
+                buildRateLimitKey(httpRequest, request.getEmail()),
+                request.getEmail()
+        );
+        if (!decision.allowed()) {
+            return tooManyRequests(decision);
+        }
+
         NetflixUser user = netflixAuthService.login(request);
         session.setAttribute(AUTH_SESSION_KEY, user.getEmail());
         return ResponseEntity.ok(Map.of(
@@ -51,7 +84,18 @@ public class NetflixAuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> me(HttpSession session) {
+    public ResponseEntity<Map<String, Object>> me(HttpSession session, HttpServletRequest httpRequest) {
+        String userEmail = Optional.ofNullable(session.getAttribute(AUTH_SESSION_KEY))
+                .map(String::valueOf)
+                .orElse("");
+        NetflixRateLimiterService.Decision decision = netflixRateLimiterService.checkAuthAndRecord(
+                buildRateLimitKey(httpRequest, userEmail),
+                userEmail
+        );
+        if (!decision.allowed()) {
+            return tooManyRequests(decision);
+        }
+
         Object email = session.getAttribute(AUTH_SESSION_KEY);
         if (email == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -68,7 +112,18 @@ public class NetflixAuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(HttpSession session) {
+    public ResponseEntity<Map<String, Object>> logout(HttpSession session, HttpServletRequest httpRequest) {
+        String userEmail = Optional.ofNullable(session.getAttribute(AUTH_SESSION_KEY))
+                .map(String::valueOf)
+                .orElse("");
+        NetflixRateLimiterService.Decision decision = netflixRateLimiterService.checkAuthAndRecord(
+                buildRateLimitKey(httpRequest, userEmail),
+                userEmail
+        );
+        if (!decision.allowed()) {
+            return tooManyRequests(decision);
+        }
+
         session.invalidate();
         return ResponseEntity.ok(Map.of("message", "Logged out"));
     }
@@ -110,5 +165,36 @@ public class NetflixAuthController {
                 "email", user.getEmail(),
                 "createdAt", user.getCreatedAt()
         );
+    }
+
+    private ResponseEntity<Map<String, Object>> tooManyRequests(NetflixRateLimiterService.Decision decision) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(decision.retryAfterSeconds()))
+                .body(Map.of(
+                        "message", "Too Many Requests",
+                        "reason", decision.reason()
+                ));
+    }
+
+    private String buildRateLimitKey(HttpServletRequest request, String identityHint) {
+        String ip = extractClientIp(request);
+        String normalizedIdentity = identityHint == null ? "" : identityHint.trim().toLowerCase(Locale.ROOT);
+        if (normalizedIdentity.isEmpty()) {
+            normalizedIdentity = "anonymous";
+        }
+        return "ip:" + ip + "|id:" + normalizedIdentity;
+    }
+
+    private String extractClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        String remoteAddr = request.getRemoteAddr();
+        return remoteAddr == null || remoteAddr.isBlank() ? "unknown" : remoteAddr.trim();
     }
 }

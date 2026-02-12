@@ -135,6 +135,12 @@ function Main_Box({ refreshTick }) {
                 </th>
                 <th>
                   <div className="table-header-cell">
+                    <Shield size={16} />
+                    <span>Algorithm</span>
+                  </div>
+                </th>
+                <th>
+                  <div className="table-header-cell">
                     <Activity size={16} />
                     <span>Requests</span>
                   </div>
@@ -150,7 +156,7 @@ function Main_Box({ refreshTick }) {
             <tbody>
               {apiKeys.length === 0 ? (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="8">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <Key size={48} />
@@ -203,6 +209,9 @@ function Main_Box({ refreshTick }) {
                           <span className="window-value">{item.windowSeconds}</span>
                           <span className="window-unit">seconds</span>
                         </div>
+                      </td>
+                      <td>
+                        <span className="owner-name">{item.algorithm ?? "SLIDING_WINDOW"}</span>
                       </td>
                       <td>
                         <div className="requests-cell">

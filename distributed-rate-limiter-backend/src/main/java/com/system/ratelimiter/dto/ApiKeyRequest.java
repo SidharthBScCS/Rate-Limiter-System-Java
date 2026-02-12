@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 public class ApiKeyRequest {
 
@@ -18,6 +19,12 @@ public class ApiKeyRequest {
     @NotNull
     @Min(1)
     private Integer windowSeconds;
+
+    @Pattern(
+            regexp = "TOKEN_BUCKET|SLIDING_WINDOW|FIXED_WINDOW|COMBINED",
+            message = "Algorithm must be TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW, or COMBINED"
+    )
+    private String algorithm;
 
     public String getUserName() {
         return userName;
@@ -41,5 +48,13 @@ public class ApiKeyRequest {
 
     public void setWindowSeconds(Integer windowSeconds) {
         this.windowSeconds = windowSeconds;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 }

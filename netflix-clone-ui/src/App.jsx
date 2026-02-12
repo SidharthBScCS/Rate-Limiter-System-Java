@@ -8,19 +8,16 @@ import LoadingSpinner from "./LoadingSpinner";
 import LandingPage from "./LandingPage";
 import { fetchMe, loginUser, logoutUser, registerUser } from "./api/auth";
 import {
-  getActionMovies,
-  getNetflixOriginals,
-  getTopRated,
-  getTrending,
+  getHomeMovies,
 } from "./api/movies";
 
 const AUTH_STORAGE_KEY = "netflix_clone_auth_user";
 
 const sectionConfig = [
-  { title: "Trending Now", large: true, fetcher: getTrending },
-  { title: "Top Rated", fetcher: getTopRated },
-  { title: "Only on Netflix", fetcher: getNetflixOriginals },
-  { title: "Action & Adventure", fetcher: getActionMovies },
+  { title: "Trending Now", large: true, key: "trending" },
+  { title: "Top Rated", key: "topRated" },
+  { title: "Only on Netflix", key: "netflixOriginals" },
+  { title: "Action & Adventure", key: "action" },
 ];
 
 function readStoredUser() {
@@ -82,13 +79,12 @@ function App() {
         setError("");
         setIsLoading(true);
 
-        const results = await Promise.all(
-          sectionConfig.map(async (section) => ({
-            title: section.title,
-            large: section.large,
-            movies: await section.fetcher(),
-          })),
-        );
+        const movieBundle = await getHomeMovies();
+        const results = sectionConfig.map((section) => ({
+          title: section.title,
+          large: section.large,
+          movies: movieBundle[section.key] || [],
+        }));
 
         setSections(results);
         const heroSource = results[0]?.movies || [];

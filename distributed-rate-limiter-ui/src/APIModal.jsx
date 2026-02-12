@@ -1,11 +1,12 @@
 import { Modal, Button, Form, Toast, ToastContainer } from "react-bootstrap";
 import { useState } from "react";
-import { Key, User, Clock, Hash, Zap } from "lucide-react";
+import { Key, User, Clock, Hash, Zap, Shield } from "lucide-react";
 
 function APIModal({ show, handleClose, onCreated }) {
   const [userName, setUserName] = useState("");
   const [rateLimit, setRateLimit] = useState("10");
   const [windowSeconds, setWindowSeconds] = useState("60");
+  const [algorithm, setAlgorithm] = useState("SLIDING_WINDOW");
   const [showToast, setShowToast] = useState(false);
   const [formError, setFormError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +19,7 @@ function APIModal({ show, handleClose, onCreated }) {
       userName: userName.trim(),
       rateLimit: Number(rateLimit),
       windowSeconds: Number(windowSeconds),
+      algorithm,
     };
 
     fetch("/api", {
@@ -45,6 +47,7 @@ function APIModal({ show, handleClose, onCreated }) {
         setUserName("");
         setRateLimit("10");
         setWindowSeconds("60");
+        setAlgorithm("SLIDING_WINDOW");
         setFormError("");
       })
       .catch((err) => {
@@ -205,6 +208,42 @@ function APIModal({ show, handleClose, onCreated }) {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="mb-4">
+              <div className="d-flex align-items-center gap-2 mb-3">
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Shield size={20} className="text-success" />
+                </div>
+                <div>
+                  <h6 className="mb-0 text-white">Algorithm</h6>
+                </div>
+              </div>
+
+              <Form.Select
+                value={algorithm}
+                onChange={(e) => setAlgorithm(e.target.value)}
+                style={{
+                  background: 'rgba(30, 41, 59, 0.8)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '10px'
+                }}
+              >
+                <option value="SLIDING_WINDOW">Sliding Window</option>
+                <option value="TOKEN_BUCKET">Token Bucket</option>
+                <option value="FIXED_WINDOW">Fixed Window</option>
+                <option value="COMBINED">Combined (Token + Sliding)</option>
+              </Form.Select>
             </div>
 
             {formError && (

@@ -1,5 +1,4 @@
-const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
-const BACKEND_BASE_URL = import.meta.env.VITE_NETFLIX_AUTH_BASE_URL || "http://localhost:8082";
+const BACKEND_BASE_URL = import.meta.env.VITE_NETFLIX_AUTH_BASE_URL || "";
 
 async function fetchMovies(path) {
   const response = await fetch(`${BACKEND_BASE_URL}${path}`, {
@@ -18,18 +17,20 @@ async function fetchMovies(path) {
     throw new Error(payload.message || payload.status_message || "Not authenticated");
   }
   if (!response.ok) {
-    throw new Error(payload.message || payload.status_message || `TMDB request failed: ${response.status}`);
+    throw new Error(payload.message || payload.status_message || `Movies request failed: ${response.status}`);
   }
 
-  const data = payload;
-  return (data.results || []).filter(
+  return (payload.results || []).filter(
     (item) => item && (item.backdrop_path || item.poster_path),
   );
 }
 
-export const tmdbImageUrl = (path) => {
+export const imageUrl = (path) => {
   if (!path) return "";
-  return `${TMDB_IMAGE_BASE_URL}${path}`;
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  return "";
 };
 
 export const getTrending = () => fetchMovies("/api/movies/trending");

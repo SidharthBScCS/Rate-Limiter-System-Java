@@ -1,12 +1,12 @@
 import "./HeroBanner.css";
-import { tmdbImageUrl } from "./api/tmdb";
+import { imageUrl } from "./api/movies";
 
 function HeroBanner({ movie }) {
   const title = movie?.title || movie?.name || "Featured Title";
   const description =
     movie?.overview ||
     "Discover trending stories from around the world, updated from a live movie database.";
-  const backdrop = tmdbImageUrl(movie?.backdrop_path || movie?.poster_path);
+  const backdrop = imageUrl(movie?.backdrop_path || movie?.poster_path);
   const mediaType = movie?.media_type === "tv" ? "NETFLIX SERIES" : "NETFLIX MOVIE";
   const heroStyle = backdrop ? { "--hero-bg-image": `url(${backdrop})` } : {};
 

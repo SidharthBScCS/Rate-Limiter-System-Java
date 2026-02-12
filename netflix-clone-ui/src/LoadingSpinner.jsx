@@ -9,7 +9,7 @@ function LoadingSpinner() {
         <div />
       </div>
       <div className="spinner-label">
-        Loading movies from TMDB...
+        Loading movies...
         <div className="spinner-subtitle">Preparing your Netflix experience</div>
       </div>
     </div>

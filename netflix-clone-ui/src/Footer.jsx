@@ -27,7 +27,7 @@ function Footer() {
         ))}
       </div>
 
-      <small>Netflix UI Clone . React . TMDB Data . {currentYear} . Demo</small>
+      <small>Netflix UI Clone . React . Mock Catalog . {currentYear} . Demo</small>
       <div className="footer__note">Non-commercial educational project</div>
     </footer>
   );

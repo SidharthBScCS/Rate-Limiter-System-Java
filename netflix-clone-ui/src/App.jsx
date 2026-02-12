@@ -12,7 +12,7 @@ import {
   getNetflixOriginals,
   getTopRated,
   getTrending,
-} from "./api/tmdb";
+} from "./api/movies";
 
 const AUTH_STORAGE_KEY = "netflix_clone_auth_user";
 

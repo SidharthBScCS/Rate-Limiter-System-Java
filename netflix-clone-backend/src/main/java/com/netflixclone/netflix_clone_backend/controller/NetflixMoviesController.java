@@ -1,9 +1,9 @@
 package com.netflixclone.netflix_clone_backend.controller;
 
 import com.netflixclone.netflix_clone_backend.entity.NetflixUser;
+import com.netflixclone.netflix_clone_backend.service.MockMovieCatalogService;
 import com.netflixclone.netflix_clone_backend.service.NetflixAuthService;
 import com.netflixclone.netflix_clone_backend.service.NetflixRateLimiterService;
-import com.netflixclone.netflix_clone_backend.service.TmdbProxyService;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.Optional;
@@ -23,45 +23,39 @@ public class NetflixMoviesController {
 
     private final NetflixAuthService netflixAuthService;
     private final NetflixRateLimiterService netflixRateLimiterService;
-    private final TmdbProxyService tmdbProxyService;
+    private final MockMovieCatalogService mockMovieCatalogService;
 
     public NetflixMoviesController(
             NetflixAuthService netflixAuthService,
             NetflixRateLimiterService netflixRateLimiterService,
-            TmdbProxyService tmdbProxyService
+            MockMovieCatalogService mockMovieCatalogService
     ) {
         this.netflixAuthService = netflixAuthService;
         this.netflixRateLimiterService = netflixRateLimiterService;
-        this.tmdbProxyService = tmdbProxyService;
+        this.mockMovieCatalogService = mockMovieCatalogService;
     }
 
     @GetMapping("/trending")
-    public ResponseEntity<String> trending(HttpSession session) {
-        return fetchWithRateLimit(session, "/trending/movie/week", Map.of());
+    public ResponseEntity<?> trending(HttpSession session) {
+        return fetchWithRateLimit(session, "trending");
     }
 
     @GetMapping("/top-rated")
-    public ResponseEntity<String> topRated(HttpSession session) {
-        return fetchWithRateLimit(session, "/movie/top_rated", Map.of());
+    public ResponseEntity<?> topRated(HttpSession session) {
+        return fetchWithRateLimit(session, "topRated");
     }
 
     @GetMapping("/netflix-originals")
-    public ResponseEntity<String> netflixOriginals(HttpSession session) {
-        return fetchWithRateLimit(session, "/discover/tv", Map.of(
-                "with_networks", "213",
-                "sort_by", "popularity.desc"
-        ));
+    public ResponseEntity<?> netflixOriginals(HttpSession session) {
+        return fetchWithRateLimit(session, "netflixOriginals");
     }
 
     @GetMapping("/action")
-    public ResponseEntity<String> action(HttpSession session) {
-        return fetchWithRateLimit(session, "/discover/movie", Map.of(
-                "with_genres", "28",
-                "sort_by", "popularity.desc"
-        ));
+    public ResponseEntity<?> action(HttpSession session) {
+        return fetchWithRateLimit(session, "action");
     }
 
-    private ResponseEntity<String> fetchWithRateLimit(HttpSession session, String path, Map<String, String> params) {
+    private ResponseEntity<?> fetchWithRateLimit(HttpSession session, String category) {
         Object emailObj = session.getAttribute(AUTH_SESSION_KEY);
         if (emailObj == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -87,6 +81,11 @@ public class NetflixMoviesController {
                     .body("{\"message\":\"Too Many Requests\"}");
         }
 
-        return tmdbProxyService.fetch(path, params);
+        return switch (category) {
+            case "topRated" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.topRated()));
+            case "netflixOriginals" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.netflixOriginals()));
+            case "action" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.action()));
+            default -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.trending()));
+        };
     }
 }

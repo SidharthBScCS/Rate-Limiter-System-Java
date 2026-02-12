@@ -1,4 +1,5 @@
 import "./Navigator.css";
+import { useEffect, useRef, useState } from "react";
 
 function Navigator({
   activeNav = "Home",
@@ -6,7 +7,25 @@ function Navigator({
   currentUser = null,
   onLogout = () => Promise.resolve(),
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const navItems = ["Home", "TV Shows", "Movies", "New & Popular", "My List"];
+  const userName = currentUser?.name || currentUser?.email || "user_name";
+  const avatarUrl = `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(userName)}`;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!menuRef.current || menuRef.current.contains(event.target)) {
+        return;
+      }
+      setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="nav">
@@ -30,7 +49,6 @@ function Navigator({
       </div>
 
       <div className="nav__right">
-        <div className="nav__user">{currentUser?.name || currentUser?.email || "User"}</div>
         <button className="nav__icon" aria-label="Search">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -43,13 +61,38 @@ function Navigator({
             />
           </svg>
         </button>
-        <button className="nav__profile" aria-label="Open profile menu">
-          <span className="nav__avatar" />
-          <span className="nav__caret" />
-        </button>
-        <button type="button" className="nav__logout" onClick={onLogout}>
-          Logout
-        </button>
+        <div className="nav__profile-wrap" ref={menuRef}>
+          <button
+            className="nav__profile"
+            aria-label="Open profile menu"
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            <span className="nav__avatar">
+              <img src={avatarUrl} alt={`${userName} profile`} className="nav__avatar-image" />
+            </span>
+            {menuOpen ? <span className="nav__caret" /> : null}
+          </button>
+          {menuOpen ? (
+            <div className="nav__dropdown">
+              <div className="nav__dropdown-user">
+                <span className="nav__dropdown-avatar">
+                  <img src={avatarUrl} alt={`${userName} profile`} className="nav__avatar-image" />
+                </span>
+                <span className="nav__dropdown-name">{userName}</span>
+              </div>
+              <button
+                type="button"
+                className="nav__dropdown-logout"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLogout();
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </header>
   );

@@ -1,5 +1,5 @@
 import "./RowSection.css";
-import { tmdbImageUrl } from "./api/tmdb";
+import { imageUrl } from "./api/movies";
 
 function RowSection({ title, movies = [], large = false }) {
   const visibleMovies = movies.slice(0, 4);
@@ -12,7 +12,7 @@ function RowSection({ title, movies = [], large = false }) {
           const movieTitle =
             movie.title || movie.name || movie.original_title || "Untitled";
           const imagePath = movie.backdrop_path || movie.poster_path;
-          const imageUrl = tmdbImageUrl(imagePath);
+          const movieImageUrl = imageUrl(imagePath);
           const releaseDate = movie.release_date || movie.first_air_date || "";
           const year = releaseDate ? new Date(releaseDate).getFullYear() : null;
           const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
@@ -22,10 +22,10 @@ function RowSection({ title, movies = [], large = false }) {
               key={`${title}-${movie.id || movieTitle}-${index}`}
               className={`row__card ${large ? "row__card--large" : ""}`}
             >
-              {imageUrl ? (
+              {movieImageUrl ? (
                 <div
                   className="row__poster"
-                  style={{ backgroundImage: `url(${imageUrl})` }}
+                  style={{ backgroundImage: `url(${movieImageUrl})` }}
                 />
               ) : (
                 <div className="row__poster row__poster--fallback" />

@@ -1,19 +1,23 @@
 .hero {
   --hero-bg-image: none;
   position: relative;
-  min-height: 74vh;
+  min-height: 78vh;
   display: flex;
   align-items: flex-end;
-  padding: 0 40px 60px;
+  padding: 0 32px 66px;
   background-image:
-    linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.22)),
-    linear-gradient(to top, rgba(9, 9, 9, 1), rgba(9, 9, 9, 0)),
-    radial-gradient(circle at 78% 32%, rgba(229, 9, 20, 0.36), transparent 42%),
+    linear-gradient(to right, rgba(6, 10, 18, 0.94), rgba(6, 10, 18, 0.2)),
+    linear-gradient(to top, rgba(6, 8, 13, 1), rgba(6, 8, 13, 0)),
+    radial-gradient(circle at 82% 24%, rgba(41, 217, 209, 0.34), transparent 36%),
+    radial-gradient(circle at 62% 78%, rgba(255, 143, 63, 0.24), transparent 42%),
     var(--hero-bg-image),
-    linear-gradient(120deg, #1e1e1e, #121212);
+    linear-gradient(120deg, #10131c, #0c1222);
   background-size: cover;
   background-position: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 0;
+  border-right: 0;
+  box-shadow: inset 0 -90px 80px rgba(0, 0, 0, 0.35);
 }
 
 .hero::after {
@@ -29,7 +33,19 @@
 .hero__overlay {
   position: relative;
   z-index: 1;
-  max-width: 620px;
+  max-width: 700px;
+  animation: heroFade 0.65s ease-out both;
+}
+
+@keyframes heroFade {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hero__meta {
@@ -41,63 +57,69 @@
 
 .hero__tag {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: #ececec;
+  color: #d5ebff;
 }
 
 .hero__badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #efefef;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #eaf4ff;
 }
 
 .hero__badge--rating {
-  color: var(--brand-gold);
+  color: #ffc97a;
+  background: rgba(255, 143, 63, 0.18);
 }
 
 .hero__title {
   margin: 0;
-  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-size: clamp(2.5rem, 6vw, 4.8rem);
   line-height: 1.02;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: var(--text-primary);
-  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #f8fbff;
+  text-shadow: 0 12px 36px rgba(0, 0, 0, 0.58);
 }
 
 .hero__description {
-  margin: 18px 0 0;
-  color: #e6e6e6;
-  max-width: 560px;
-  font-size: 1.03rem;
-  line-height: 1.56;
+  margin: 16px 0 0;
+  color: #d1e0ff;
+  max-width: 590px;
+  font-size: 1.02rem;
+  line-height: 1.62;
 }
 
 .hero__actions {
   display: flex;
-  gap: 14px;
-  margin-top: 30px;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
 }
 
 .hero__button {
-  border: 0;
-  border-radius: 6px;
-  padding: 11px 24px;
-  font-size: 1rem;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-size: 0.92rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: transform 0.2s ease, filter 0.2s ease;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .hero__button:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.04);
+  transform: translateY(-2px);
 }
 
 .hero__button-content {
@@ -107,20 +129,25 @@
 }
 
 .hero__button--play {
-  background: #f7f7f7;
-  color: #0f0f0f;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(135deg, #ffc15d, #ff8b3d);
+  color: #0f1118;
+  box-shadow: 0 10px 22px rgba(255, 143, 63, 0.34);
 }
 
 .hero__button--info {
-  background: rgba(85, 85, 85, 0.92);
-  color: var(--text-primary);
+  background: rgba(41, 217, 209, 0.16);
+  border-color: rgba(41, 217, 209, 0.44);
+  color: #dff7ff;
+}
+
+.hero__button--info:hover {
+  background: rgba(41, 217, 209, 0.28);
 }
 
 @media (max-width: 700px) {
   .hero {
-    min-height: 60vh;
-    padding: 0 20px 32px;
+    min-height: 64vh;
+    padding: 0 16px 30px;
   }
 
   .hero__description {

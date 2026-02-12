@@ -1,4 +1,4 @@
-const AUTH_BASE_URL = import.meta.env.VITE_NETFLIX_AUTH_BASE_URL || "http://localhost:8082";
+const AUTH_BASE_URL = import.meta.env.VITE_NETFLIX_AUTH_BASE_URL || "";
 
 async function request(path, options = {}) {
   const response = await fetch(`${AUTH_BASE_URL}${path}`, {

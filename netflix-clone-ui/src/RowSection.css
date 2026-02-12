@@ -1,24 +1,24 @@
 .row {
   position: relative;
-  padding: 14px 40px 12px;
+  padding: 18px 28px 14px;
 }
 
 .row::before {
   content: "";
   position: absolute;
-  left: 40px;
-  right: 40px;
+  left: 28px;
+  right: 28px;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
 }
 
 .row__title {
-  margin: 0 0 14px;
-  color: var(--text-primary);
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  margin: 0 0 16px;
+  color: #eef4ff;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   display: inline-block;
   position: relative;
 }
@@ -28,41 +28,39 @@
   position: absolute;
   left: 0;
   bottom: -4px;
-  width: 64px;
+  width: 70px;
   height: 3px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--brand-red), var(--brand-red-soft));
+  border-radius: 3px;
+  background: linear-gradient(90deg, #29d9d1, #ff8f3f);
 }
 
 .row__track {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
 }
 
 .row__card {
   position: relative;
-  flex: 1 1 220px;
-  max-width: 260px;
-  height: 124px;
-  border-radius: 8px;
-  background: var(--bg-elevated-soft);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  min-height: 172px;
+  border-radius: 14px;
+  background: #1a2233;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   overflow: hidden;
   transform-origin: center;
-  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+  box-shadow: 0 8px 18px rgba(2, 5, 12, 0.45);
 }
 
 .row__card--large {
-  flex-basis: 250px;
-  max-width: 300px;
-  height: 156px;
+  min-height: 196px;
 }
 
 .row__card:hover {
-  transform: translateY(-5px) scale(1.03);
-  border-color: rgba(255, 255, 255, 0.24);
-  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.62);
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(41, 217, 209, 0.52);
+  box-shadow: 0 22px 34px rgba(2, 5, 12, 0.62);
 }
 
 .row__poster {
@@ -79,7 +77,7 @@
 }
 
 .row__card:hover .row__poster {
-  transform: scale(1.08);
+  transform: scale(1.09);
   filter: saturate(1.1);
 }
 
@@ -87,63 +85,71 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.18)),
-    linear-gradient(120deg, rgba(229, 9, 20, 0.52), rgba(255, 255, 255, 0.04));
+    linear-gradient(to top, rgba(4, 8, 17, 0.92), rgba(4, 8, 17, 0.22)),
+    linear-gradient(120deg, rgba(41, 217, 209, 0.3), rgba(255, 143, 63, 0.25));
 }
 
 .row__card h4 {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 32px;
+  left: 12px;
+  right: 12px;
+  bottom: 36px;
   margin: 0;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  font-weight: 600;
+  color: #f4f8ff;
+  font-size: 1rem;
+  font-weight: 700;
   line-height: 1.25;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 .row__meta {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.74rem;
-  font-weight: 600;
+  color: rgba(233, 243, 255, 0.9);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .row__rating {
-  color: var(--brand-gold);
+  color: #ffc97a;
+}
+
+@media (max-width: 1100px) {
+  .row__track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 700px) {
   .row {
-    padding: 10px 20px 8px;
+    padding: 12px 16px 10px;
   }
 
   .row::before {
-    left: 20px;
-    right: 20px;
+    left: 16px;
+    right: 16px;
   }
 
   .row__title {
-    font-size: 1.12rem;
+    font-size: 1.18rem;
+  }
+
+  .row__track {
+    grid-template-columns: 1fr;
   }
 
   .row__card {
-    flex-basis: 170px;
-    max-width: 220px;
-    height: 100px;
+    min-height: 150px;
   }
 
   .row__card--large {
-    flex-basis: 190px;
-    max-width: 240px;
-    height: 114px;
+    min-height: 164px;
   }
 }

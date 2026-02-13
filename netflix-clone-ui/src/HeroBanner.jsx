@@ -16,6 +16,13 @@ function HeroBanner({ movie }) {
     : movie?.first_air_date
       ? new Date(movie.first_air_date).getFullYear()
       : null;
+  const genres = [];
+  if (movie?.genre_ids?.length) {
+    genres.push("Trending");
+  }
+  if (movie?.adult === false) {
+    genres.push("U/A 16+");
+  }
 
   return (
     <section className="hero" style={heroStyle}>
@@ -28,6 +35,7 @@ function HeroBanner({ movie }) {
 
         <h2 className="hero__title">{title}</h2>
         <p className="hero__description">{description}</p>
+        {genres.length ? <p className="hero__chips">{genres.join(" | ")}</p> : null}
 
         <div className="hero__actions">
           <button className="hero__button hero__button--play">
@@ -48,6 +56,7 @@ function HeroBanner({ movie }) {
           </button>
         </div>
       </div>
+      <div className="hero__fade-bottom" />
     </section>
   );
 }

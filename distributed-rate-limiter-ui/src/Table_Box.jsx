@@ -15,6 +15,32 @@ import {
 } from "lucide-react";
 import "./Table_Box.css";
 
+function deriveStatusMeta(item) {
+  const sourceStatus = String(item.status ?? "NORMAL").toUpperCase();
+
+  if (sourceStatus === "BLOCKED") {
+    return {
+      label: "Blocked",
+      value: "BLOCKED",
+      color: item.statusColor ?? "#f87171",
+    };
+  }
+
+  if (sourceStatus === "WARNING") {
+    return {
+      label: "Warning",
+      value: "WARNING",
+      color: item.statusColor ?? "#fbbf24",
+    };
+  }
+
+  return {
+    label: "Normal",
+    value: "NORMAL",
+    color: item.statusColor ?? "#86efac",
+  };
+}
+
 function Main_Box({ refreshTick }) {
   const [apiKeys, setApiKeys] = useState([]);
   const [loadError, setLoadError] = useState("");
@@ -64,16 +90,16 @@ function Main_Box({ refreshTick }) {
     const query = searchText.trim().toLowerCase();
     return apiKeys.filter((item) => {
       const algorithm = String(item.algorithm ?? "SLIDING_WINDOW").toUpperCase();
-      const status = String(item.status ?? "Normal").toUpperCase();
+      const statusMeta = deriveStatusMeta(item);
       const matchesAlgorithm = algorithmFilter === "ALL" || algorithm === algorithmFilter;
-      const matchesStatus = statusFilter === "ALL" || status === statusFilter;
+      const matchesStatus = statusFilter === "ALL" || statusMeta.value === statusFilter;
       if (!matchesAlgorithm || !matchesStatus) {
         return false;
       }
       if (!query) {
         return true;
       }
-      const searchable = [item.userName, item.apiKeyDisplay, item.algorithm, item.status]
+      const searchable = [item.userName, item.apiKeyDisplay, item.algorithm, statusMeta.label]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -99,15 +125,15 @@ function Main_Box({ refreshTick }) {
   return (
     <div className="table-container">
       <div className="table-header-card">
-        <div className="d-flex justify-content-between align-items-center">
+        <div className="table-header-row">
           <div>
             <h4 className="table-title">API Keys Management</h4>
             <p className="table-subtitle">
               {filteredApiKeys.length} of {apiKeys.length} {apiKeys.length === 1 ? "API Key" : "API Keys"} •
-              <span className="text-success"> Rate Limiter Active</span>
+              <span className="table-health"> Rate Limiter Active</span>
             </p>
           </div>
-          <div className="d-flex gap-2">
+          <div className="table-header-actions">
             <Button
               variant="outline-primary"
               size="sm"
@@ -149,6 +175,7 @@ function Main_Box({ refreshTick }) {
               <option value="SLIDING_WINDOW">Sliding Window</option>
               <option value="TOKEN_BUCKET">Token Bucket</option>
               <option value="FIXED_WINDOW">Fixed Window</option>
+              <option value="LEAKY_BUCKET">Leaky Bucket</option>
               <option value="COMBINED">Combined</option>
             </select>
           </div>
@@ -166,11 +193,11 @@ function Main_Box({ refreshTick }) {
 
       {loadError && (
         <div className="table-error-alert">
-          <div className="d-flex align-items-center gap-3">
+          <div className="table-error-content">
             <div className="error-icon">
               <AlertCircle size={20} />
             </div>
-            <div className="flex-grow-1">
+            <div className="table-error-body">
               <h6 className="error-title">Error Loading Data</h6>
               <p className="error-message">{loadError}</p>
             </div>
@@ -230,7 +257,7 @@ function Main_Box({ refreshTick }) {
             <tbody>
               {filteredApiKeys.length === 0 ? (
                 <tr>
-                  <td colSpan="8">
+                  <td colSpan="7">
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <Key size={48} />
@@ -243,9 +270,8 @@ function Main_Box({ refreshTick }) {
               ) : (
                 filteredApiKeys.map((item) => {
                   const apiKeyValue = item.apiKeyFull ?? "";
-                  const status = item.status ?? "Normal";
-                  const statusColor = item.statusColor ?? "#94a3b8";
-                  const requestCount = item.requestCount ?? 0;
+                  const requestCount = Number(item.requestCount ?? 0);
+                  const statusMeta = deriveStatusMeta(item);
                   const usagePercentage = Number(item.usagePercentage ?? 0);
                   const usageColor = item.usageColor ?? "#10b981";
 
@@ -307,8 +333,8 @@ function Main_Box({ refreshTick }) {
                         </div>
                       </td>
                       <td>
-                        <span className="status-pill" style={{ color: statusColor }}>
-                          {status}
+                        <span className="status-pill" style={{ color: statusMeta.color }}>
+                          {statusMeta.label}
                         </span>
                       </td>
                     </tr>

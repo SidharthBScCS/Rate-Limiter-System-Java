@@ -4,123 +4,118 @@
   place-items: center;
   position: relative;
   background:
-    linear-gradient(110deg, rgba(0, 0, 0, 0.85), rgba(20, 20, 20, 0.88)),
-    radial-gradient(circle at 15% 20%, rgba(229, 9, 20, 0.28), transparent 45%),
-    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.06), transparent 30%),
-    #090909;
+    linear-gradient(to top, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.56)),
+    url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1800&q=80") center / cover no-repeat,
+    #000;
   overflow: hidden;
+}
+
+.landing__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 22px 4%;
+}
+
+.landing__brand {
+  margin: 0;
+  color: var(--brand-red);
+  font-size: 2.05rem;
+  letter-spacing: 0.04em;
+  font-weight: 900;
 }
 
 .landing__overlay {
   position: absolute;
   inset: 0;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.02) 0px,
-      rgba(255, 255, 255, 0.02) 1px,
-      transparent 1px,
-      transparent 4px
-    );
+  background: radial-gradient(circle, transparent 0%, rgba(0, 0, 0, 0.58) 78%, rgba(0, 0, 0, 0.78) 100%);
   pointer-events: none;
 }
 
 .landing__card {
-  width: min(92vw, 430px);
-  padding: 30px 26px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(17, 17, 17, 0.84);
-  backdrop-filter: blur(8px);
+  width: min(92vw, 450px);
+  padding: 48px 56px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 4px;
   position: relative;
   z-index: 1;
-  box-shadow: 0 28px 55px rgba(0, 0, 0, 0.45);
-}
-
-.landing__logo {
-  margin: 0 0 8px;
-  color: #e50914;
-  font-size: 2rem;
-  letter-spacing: 0.09em;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 }
 
 .landing__title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .landing__subtitle {
-  margin: 6px 0 16px;
-  color: #d4d4d8;
-  font-size: 0.92rem;
+  margin: 8px 0 18px;
+  color: #b3b3b3;
+  font-size: 0.96rem;
 }
 
 .landing__form {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .landing__form input {
-  height: 42px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.04);
+  height: 50px;
+  padding: 0 14px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background: #333;
   color: #fff;
   outline: none;
 }
 
 .landing__form input:focus {
-  border-color: rgba(229, 9, 20, 0.72);
-  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.22);
+  border-color: #777;
 }
 
 .landing__error {
   margin: 0;
-  color: #ffb3b8;
+  color: #ffa00a;
   font-size: 0.88rem;
 }
 
 .landing__button {
   width: 100%;
-  height: 42px;
+  height: 46px;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 700;
-  font-size: 0.94rem;
+  font-size: 1rem;
 }
 
 .landing__button--primary {
-  background: linear-gradient(95deg, #e50914, #ff3842);
+  margin-top: 10px;
+  background: var(--brand-red);
   color: #fff;
 }
 
 .landing__button--tertiary {
-  margin-top: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #555;
+  background: transparent;
   color: #fff;
 }
 
 .landing__button--secondary {
-  margin-top: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid #555;
+  background: #1f1f1f;
   color: #fff;
 }
 
 .landing__button--primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
-.landing__button--secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
+.landing__button--secondary:hover,
 .landing__button--tertiary:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: #2a2a2a;
 }
 
 .landing__button:disabled {
@@ -130,6 +125,14 @@
 
 @media (max-width: 600px) {
   .landing__card {
-    padding: 24px 18px;
+    padding: 32px 24px;
+  }
+
+  .landing__brand {
+    font-size: 1.7rem;
+  }
+
+  .landing__title {
+    font-size: 1.65rem;
   }
 }

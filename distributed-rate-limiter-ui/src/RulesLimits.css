@@ -1,7 +1,7 @@
 .rules-page {
-  padding: 20px;
-  background: #0f172a;
-  min-height: 100vh;
+  padding: 8px 10px 16px;
+  background: transparent;
+  min-height: auto;
   color: #e2e8f0;
 }
 
@@ -69,16 +69,17 @@
 
 .rules-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
 .rules-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  background: linear-gradient(155deg, rgba(20, 26, 53, 0.95), rgba(12, 16, 33, 0.92));
   border-radius: 16px;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -136,16 +137,17 @@
 
 .rules-panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
 
 .rules-panel {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
+  background: linear-gradient(155deg, rgba(20, 26, 53, 0.95), rgba(12, 16, 33, 0.92));
   border-radius: 16px;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
 }
 
 .panel-header {
@@ -242,7 +244,7 @@
 }
 
 .rules-table-container {
-  min-height: 280px;
+  min-height: 0;
 }
 
 .rules-table th:nth-child(1) { width: 20%; }
@@ -337,3 +339,5 @@
     justify-content: flex-start;
   }
 }
+
+.rules-header{animation: rules-rise .35s ease both;} .rules-cards .rules-card{animation: rules-rise .45s ease both;} .rules-cards .rules-card:nth-child(1){animation-delay:70ms;} .rules-cards .rules-card:nth-child(2){animation-delay:130ms;} .rules-cards .rules-card:nth-child(3){animation-delay:190ms;} .rules-panels .rules-panel{animation: rules-rise .45s ease both;} .rules-panels .rules-panel:nth-child(1){animation-delay:220ms;} .rules-panels .rules-panel:nth-child(2){animation-delay:280ms;} .rules-table-section{animation: rules-rise .5s ease both; animation-delay:320ms;} @keyframes rules-rise{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}

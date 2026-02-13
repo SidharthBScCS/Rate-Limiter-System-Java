@@ -3,19 +3,19 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 240px;
+  min-height: 260px;
   padding: 40px;
 }
 
 .netflix-spinner {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   position: relative;
 }
 
 .netflix-spinner div {
   position: absolute;
-  width: 16px;
+  width: 18px;
   background: var(--brand-red);
   animation: netflix-spinner 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
 }
@@ -23,42 +23,39 @@
 .netflix-spinner div:nth-child(1) {
   left: 8px;
   animation-delay: -0.24s;
-  background: linear-gradient(to bottom, var(--brand-red), var(--brand-red-soft));
 }
 
 .netflix-spinner div:nth-child(2) {
-  left: 32px;
+  left: 36px;
   animation-delay: -0.12s;
-  background: linear-gradient(to bottom, var(--brand-red-soft), #ff6b6b);
 }
 
 .netflix-spinner div:nth-child(3) {
-  left: 56px;
-  animation-delay: 0;
-  background: linear-gradient(to bottom, #ff6b6b, #ff9b9b);
+  left: 64px;
+  animation-delay: 0s;
 }
 
 .spinner-label {
   margin-top: 20px;
   text-align: center;
-  color: var(--text-muted);
+  color: #b3b3b3;
 }
 
 .spinner-subtitle {
-  margin-top: 10px;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+  font-size: 0.84rem;
+  color: #808080;
 }
 
 @keyframes netflix-spinner {
   0% {
     top: 8px;
-    height: 64px;
+    height: 70px;
   }
 
   50%,
   100% {
-    top: 24px;
-    height: 32px;
+    top: 26px;
+    height: 34px;
   }
 }

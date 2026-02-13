@@ -1,46 +1,43 @@
 .hero {
   --hero-bg-image: none;
   position: relative;
-  min-height: 78vh;
+  min-height: 95vh;
   display: flex;
   align-items: flex-end;
-  padding: 0 32px 66px;
-  background-image:
-    linear-gradient(to right, rgba(6, 10, 18, 0.94), rgba(6, 10, 18, 0.2)),
-    linear-gradient(to top, rgba(6, 8, 13, 1), rgba(6, 8, 13, 0)),
-    radial-gradient(circle at 82% 24%, rgba(41, 217, 209, 0.34), transparent 36%),
-    radial-gradient(circle at 62% 78%, rgba(255, 143, 63, 0.24), transparent 42%),
-    var(--hero-bg-image),
-    linear-gradient(120deg, #10131c, #0c1222);
+  padding: 0 4% 12vh;
+  background-image: 
+    var(--gradient-hero),
+    linear-gradient(to top, var(--bg) 4%, rgba(20, 20, 20, 0.6) 30%, rgba(20, 20, 20, 0.2) 70%),
+    var(--hero-bg-image);
   background-size: cover;
-  background-position: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-left: 0;
-  border-right: 0;
-  box-shadow: inset 0 -90px 80px rgba(0, 0, 0, 0.35);
+  background-position: center 20%;
+  transition: background-image 0.5s ease;
 }
 
-.hero::after {
-  content: "";
+.hero::before {
+  content: '';
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to top, rgba(9, 9, 9, 0.86) 6%, transparent 42%),
-    linear-gradient(to right, rgba(9, 9, 9, 0.12), transparent 28%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
   pointer-events: none;
 }
 
 .hero__overlay {
   position: relative;
-  z-index: 1;
-  max-width: 700px;
-  animation: heroFade 0.65s ease-out both;
+  z-index: 2;
+  max-width: 42%;
+  min-width: 320px;
+  animation: heroEntrance 0.8s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  padding-top: 64px;
 }
 
-@keyframes heroFade {
+@keyframes heroEntrance {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -51,106 +48,173 @@
 .hero__meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .hero__tag {
   margin: 0;
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.28em;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #d5ebff;
+  color: #e5e5e5;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 30px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hero__badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #eaf4ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
 }
 
 .hero__badge--rating {
-  color: #ffc97a;
-  background: rgba(255, 143, 63, 0.18);
+  background: rgba(70, 211, 105, 0.2);
+  border-color: rgba(70, 211, 105, 0.4);
+  color: #46d369;
 }
 
 .hero__title {
   margin: 0;
-  font-size: clamp(2.5rem, 6vw, 4.8rem);
-  line-height: 1.02;
-  font-family: "Bebas Neue", sans-serif;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: #f8fbff;
-  text-shadow: 0 12px 36px rgba(0, 0, 0, 0.58);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 1;
+  font-weight: 800;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hero__description {
+  margin: 20px 0 0;
+  color: #e5e5e5;
+  max-width: 45ch;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  opacity: 0.9;
+}
+
+.hero__chips {
   margin: 16px 0 0;
-  color: #d1e0ff;
-  max-width: 590px;
-  font-size: 1.02rem;
-  line-height: 1.62;
+  color: #a3a3a3;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .hero__actions {
   display: flex;
-  gap: 12px;
-  margin-top: 28px;
+  gap: 16px;
+  margin-top: 30px;
   flex-wrap: wrap;
 }
 
 .hero__button {
-  border-radius: 999px;
-  padding: 11px 22px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.hero__button:hover {
-  transform: translateY(-2px);
+  border: 0;
+  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  letter-spacing: 0.3px;
 }
 
 .hero__button-content {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .hero__button--play {
-  background: linear-gradient(135deg, #ffc15d, #ff8b3d);
-  color: #0f1118;
-  box-shadow: 0 10px 22px rgba(255, 143, 63, 0.34);
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.hero__button--play:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.05);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.6);
 }
 
 .hero__button--info {
-  background: rgba(41, 217, 209, 0.16);
-  border-color: rgba(41, 217, 209, 0.44);
-  color: #dff7ff;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .hero__button--info:hover {
-  background: rgba(41, 217, 209, 0.28);
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-@media (max-width: 700px) {
+.hero__fade-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 15rem;
+  background: var(--gradient-overlay);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@media (max-width: 950px) {
   .hero {
-    min-height: 64vh;
-    padding: 0 16px 30px;
+    min-height: 80vh;
+  }
+
+  .hero__overlay {
+    max-width: 68%;
+    padding-top: 48px;
   }
 
   .hero__description {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 650px) {
+  .hero {
+    min-height: 70vh;
+    padding-bottom: 8vh;
+  }
+
+  .hero__overlay {
+    max-width: 100%;
+    min-width: auto;
+  }
+
+  .hero__description {
+    -webkit-line-clamp: 4;
     font-size: 0.95rem;
+  }
+
+  .hero__button {
+    width: 100%;
+    justify-content: center;
   }
 }

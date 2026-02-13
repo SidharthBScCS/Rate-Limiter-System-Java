@@ -77,8 +77,10 @@ function LandingPage({
   return (
     <section className="landing">
       <div className="landing__overlay" />
+      <header className="landing__header">
+        <h1 className="landing__brand">NETFLIX</h1>
+      </header>
       <div className="landing__card">
-        <h1 className="landing__logo">NETFLIX</h1>
         <p className="landing__title">{isCreateMode ? "Create Account" : "Welcome Back"}</p>
         <p className="landing__subtitle">
           {isCreateMode

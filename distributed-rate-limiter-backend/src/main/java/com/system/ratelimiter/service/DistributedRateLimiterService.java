@@ -99,6 +99,41 @@ public class DistributedRateLimiterService {
             return {1, 0, 0}
             """;
 
+    private static final String LEAKY_BUCKET_SCRIPT = """
+            local now = tonumber(ARGV[1])
+            local capacity = tonumber(ARGV[2])
+            local leakPerSecond = tonumber(ARGV[3])
+            local cost = tonumber(ARGV[4])
+            local ttlMs = tonumber(ARGV[5])
+
+            if leakPerSecond <= 0 then leakPerSecond = 0.000001 end
+
+            local state = redis.call('HMGET', KEYS[1], 'level', 'last_leak')
+            local level = tonumber(state[1])
+            local lastLeak = tonumber(state[2])
+
+            if level == nil then level = 0 end
+            if lastLeak == nil then lastLeak = now end
+            if now < lastLeak then lastLeak = now end
+
+            local elapsed = (now - lastLeak) / 1000.0
+            local leaked = elapsed * leakPerSecond
+            level = math.max(0, level - leaked)
+
+            if level + cost > capacity then
+                local overflow = (level + cost) - capacity
+                local retrySeconds = math.ceil(overflow / leakPerSecond)
+                redis.call('HSET', KEYS[1], 'level', tostring(level), 'last_leak', tostring(now))
+                redis.call('PEXPIRE', KEYS[1], ttlMs)
+                return {0, retrySeconds, 5}
+            end
+
+            level = level + cost
+            redis.call('HSET', KEYS[1], 'level', tostring(level), 'last_leak', tostring(now))
+            redis.call('PEXPIRE', KEYS[1], ttlMs)
+            return {1, 0, 0}
+            """;
+
     private final StringRedisTemplate redisTemplate;
     private final ApiKeyRepository apiKeyRepository;
     private final RequestStatsService requestStatsService;
@@ -107,9 +142,11 @@ public class DistributedRateLimiterService {
     private final String defaultAlgorithm;
     private final double refillPerSecond;
     private final double capacityMultiplier;
+    private final long blockThreshold;
     private final DefaultRedisScript<List> tokenBucketScript;
     private final DefaultRedisScript<List> slidingWindowScript;
     private final DefaultRedisScript<List> fixedWindowScript;
+    private final DefaultRedisScript<List> leakyBucketScript;
 
     public DistributedRateLimiterService(
             StringRedisTemplate redisTemplate,
@@ -119,7 +156,8 @@ public class DistributedRateLimiterService {
             @Value("${ratelimiter.redis-prefix:ratelimiter}") String redisPrefix,
             @Value("${ratelimiter.default-algorithm:SLIDING_WINDOW}") String defaultAlgorithm,
             @Value("${ratelimiter.token-bucket.refill-per-second:1.0}") double refillPerSecond,
-            @Value("${ratelimiter.token-bucket.capacity-multiplier:1.0}") double capacityMultiplier
+            @Value("${ratelimiter.token-bucket.capacity-multiplier:1.0}") double capacityMultiplier,
+            @Value("${ratelimiter.block-threshold:10}") long blockThreshold
     ) {
         this.redisTemplate = redisTemplate;
         this.apiKeyRepository = apiKeyRepository;
@@ -129,6 +167,7 @@ public class DistributedRateLimiterService {
         this.defaultAlgorithm = normalizeAlgorithm(defaultAlgorithm);
         this.refillPerSecond = refillPerSecond;
         this.capacityMultiplier = capacityMultiplier;
+        this.blockThreshold = Math.max(0L, blockThreshold);
 
         this.tokenBucketScript = new DefaultRedisScript<>();
         this.tokenBucketScript.setScriptText(TOKEN_BUCKET_SCRIPT);
@@ -141,10 +180,19 @@ public class DistributedRateLimiterService {
         this.fixedWindowScript = new DefaultRedisScript<>();
         this.fixedWindowScript.setScriptText(FIXED_WINDOW_SCRIPT);
         this.fixedWindowScript.setResultType(List.class);
+
+        this.leakyBucketScript = new DefaultRedisScript<>();
+        this.leakyBucketScript.setScriptText(LEAKY_BUCKET_SCRIPT);
+        this.leakyBucketScript.setResultType(List.class);
     }
 
     @Transactional
     public Decision evaluate(String rawApiKey, String route, int tokens) {
+        return evaluate(rawApiKey, route, tokens, null);
+    }
+
+    @Transactional
+    public Decision evaluate(String rawApiKey, String route, int tokens, String requestedAlgorithm) {
         String apiKeyValue = rawApiKey == null ? "" : rawApiKey.trim();
         if (apiKeyValue.isEmpty()) {
             throw new IllegalArgumentException("apiKey is required");
@@ -153,12 +201,38 @@ public class DistributedRateLimiterService {
         ApiKey apiKey = apiKeyRepository.findByApiKey(apiKeyValue)
                 .orElseThrow(() -> new IllegalArgumentException("API key not found"));
 
+        long currentTotal = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
+        if (currentTotal >= blockThreshold) {
+            Decision decision = new Decision(false, 60, "HARD_BLOCK_THRESHOLD_EXCEEDED", normalizeAlgorithm(apiKey.getAlgorithm()));
+            updateStats(apiKey, false);
+            meterRegistry.counter(
+                    "ratelimiter_requests_total",
+                    "algorithm",
+                    decision.algorithm(),
+                    "result",
+                    "blocked"
+            ).increment();
+            return decision;
+        }
+
         int cost = Math.max(1, tokens);
         String routeKey = normalizeRoute(route);
-        String algorithm = normalizeAlgorithm(apiKey.getAlgorithm());
-        if (algorithm.isBlank()) {
-            algorithm = defaultAlgorithm;
-            apiKey.setAlgorithm(algorithm);
+        String storedAlgorithm = normalizeAlgorithm(apiKey.getAlgorithm());
+        if (storedAlgorithm.isBlank()) {
+            storedAlgorithm = defaultAlgorithm;
+            apiKey.setAlgorithm(storedAlgorithm);
+        }
+
+        String requestAlgorithm = normalizeAlgorithm(requestedAlgorithm);
+        String algorithm = requestAlgorithm.isBlank() ? storedAlgorithm : requestAlgorithm;
+
+        if (!requestAlgorithm.isBlank() && !storedAlgorithm.equals(requestAlgorithm)) {
+            throw new IllegalArgumentException(
+                    "Requested algorithm does not match API key algorithm. expected="
+                            + storedAlgorithm
+                            + ", received="
+                            + requestAlgorithm
+            );
         }
 
         Decision decision;
@@ -166,6 +240,7 @@ public class DistributedRateLimiterService {
             decision = switch (algorithm) {
                 case "TOKEN_BUCKET" -> tokenBucketDecision(apiKey, routeKey, cost);
                 case "FIXED_WINDOW" -> fixedWindowDecision(apiKey, routeKey, cost);
+                case "LEAKY_BUCKET" -> leakyBucketDecision(apiKey, routeKey, cost);
                 case "COMBINED" -> combinedDecision(apiKey, routeKey, cost);
                 default -> slidingWindowDecision(apiKey, routeKey, cost);
             };
@@ -194,7 +269,9 @@ public class DistributedRateLimiterService {
 
     private Decision tokenBucketDecision(ApiKey apiKey, String route, int cost) {
         int capacity = Math.max(1, (int) Math.round(apiKey.getRateLimit() * Math.max(0.1, capacityMultiplier)));
-        double refill = Math.max(0.000001, refillPerSecond);
+        double windowSeconds = Math.max(1.0, apiKey.getWindowSeconds() == null ? 60.0 : apiKey.getWindowSeconds().doubleValue());
+        double dynamicRefillPerSecond = Math.max(1.0, apiKey.getRateLimit()) / windowSeconds;
+        double refill = Math.max(0.000001, dynamicRefillPerSecond * Math.max(0.1, refillPerSecond));
         long ttlMs = Math.max(windowMs(apiKey), Duration.ofMinutes(2).toMillis());
         String bucketKey = redisPrefix + ":bucket:" + apiKey.getApiKey() + ":" + route;
         List<Long> result = redisTemplate.execute(
@@ -238,6 +315,24 @@ public class DistributedRateLimiterService {
         return toDecision(result, "FIXED_WINDOW_EXCEEDED", "FIXED_WINDOW");
     }
 
+    private Decision leakyBucketDecision(ApiKey apiKey, String route, int cost) {
+        int capacity = Math.max(1, apiKey.getRateLimit());
+        double windowSeconds = Math.max(1.0, apiKey.getWindowSeconds() == null ? 60.0 : apiKey.getWindowSeconds().doubleValue());
+        double leakPerSecond = Math.max(0.000001, Math.max(1.0, apiKey.getRateLimit()) / windowSeconds);
+        long ttlMs = Math.max(windowMs(apiKey), Duration.ofMinutes(2).toMillis());
+        String bucketKey = redisPrefix + ":leaky:" + apiKey.getApiKey() + ":" + route;
+        List<Long> result = redisTemplate.execute(
+                leakyBucketScript,
+                List.of(bucketKey),
+                Long.toString(System.currentTimeMillis()),
+                Integer.toString(capacity),
+                Double.toString(leakPerSecond),
+                Integer.toString(cost),
+                Long.toString(ttlMs)
+        );
+        return toDecision(result, "LEAKY_BUCKET_EXCEEDED", "LEAKY_BUCKET");
+    }
+
     private Decision toDecision(List<Long> result, String defaultReason, String algorithm) {
         if (result == null || result.size() < 3) {
             return new Decision(false, 1, "LIMITER_ERROR", algorithm);
@@ -250,6 +345,7 @@ public class DistributedRateLimiterService {
             case 1 -> "TOKEN_BUCKET_EXCEEDED";
             case 2 -> "SLIDING_WINDOW_EXCEEDED";
             case 3 -> "FIXED_WINDOW_EXCEEDED";
+            case 5 -> "LEAKY_BUCKET_EXCEEDED";
             default -> defaultReason;
         };
         return allowed
@@ -261,14 +357,17 @@ public class DistributedRateLimiterService {
         long total = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
         long allowedCount = apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests();
         long blockedCount = apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests();
+        long nextTotal = total + 1L;
 
-        apiKey.setTotalRequests(total + 1L);
+        apiKey.setTotalRequests(nextTotal);
         if (allowed) {
             apiKey.setAllowedRequests(allowedCount + 1L);
         } else {
             apiKey.setBlockedRequests(blockedCount + 1L);
         }
-        apiKey.setStatus(allowed ? "Normal" : "Blocked");
+
+        boolean exceedsThreshold = nextTotal > blockThreshold;
+        apiKey.setStatus((!allowed || exceedsThreshold) ? "Blocked" : "Normal");
         apiKeyRepository.save(apiKey);
 
         if (allowed) {
@@ -299,7 +398,7 @@ public class DistributedRateLimiterService {
             return "";
         }
         return switch (value) {
-            case "TOKEN_BUCKET", "SLIDING_WINDOW", "FIXED_WINDOW", "COMBINED" -> value;
+            case "TOKEN_BUCKET", "SLIDING_WINDOW", "FIXED_WINDOW", "LEAKY_BUCKET", "COMBINED" -> value;
             default -> (defaultAlgorithm == null || defaultAlgorithm.isBlank()) ? "SLIDING_WINDOW" : defaultAlgorithm;
         };
     }

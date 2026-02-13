@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Analytics.css';
-import { LineChart } from 'lucide-react';
+import { LineChart, Activity, ShieldCheck, ShieldX } from 'lucide-react';
 
 function Analytics() {
     const [view, setView] = useState({
@@ -59,6 +59,19 @@ function Analytics() {
         return `polygon(0 100%, ${points.join(', ')}, 100% 100%)`;
     };
 
+    const formatAxisLabel = (label) => {
+        if (!label) return "";
+        const text = String(label);
+        if (text.length <= 12) return text;
+        return `${text.slice(0, 6)}...${text.slice(-4)}`;
+    };
+
+    const total = Number(view.summary.total ?? 0);
+    const success = Number(view.summary.success ?? 0);
+    const blocked = Number(view.summary.blocked ?? 0);
+    const successRate = total > 0 ? ((success / total) * 100).toFixed(1) : "0.0";
+    const blockedRate = total > 0 ? ((blocked / total) * 100).toFixed(1) : "0.0";
+
     return (
         <div className="analytics-page dark-theme">
             <div className="analytics-header">
@@ -66,6 +79,35 @@ function Analytics() {
                     <div>
                         <h1 className="page-title">API Analytics Dashboard</h1>
                         <p className="page-subtitle">API key totals from MySQL</p>
+                    </div>
+                </div>
+                <div className="analytics-kpis">
+                    <div className="analytics-kpi analytics-kpi--total">
+                        <div className="analytics-kpi-icon">
+                            <Activity size={16} />
+                        </div>
+                        <div>
+                            <p>Total Requests</p>
+                            <strong>{total.toLocaleString()}</strong>
+                        </div>
+                    </div>
+                    <div className="analytics-kpi analytics-kpi--success">
+                        <div className="analytics-kpi-icon">
+                            <ShieldCheck size={16} />
+                        </div>
+                        <div>
+                            <p>Success Rate</p>
+                            <strong>{successRate}%</strong>
+                        </div>
+                    </div>
+                    <div className="analytics-kpi analytics-kpi--blocked">
+                        <div className="analytics-kpi-icon">
+                            <ShieldX size={16} />
+                        </div>
+                        <div>
+                            <p>Blocked Rate</p>
+                            <strong>{blockedRate}%</strong>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -77,7 +119,7 @@ function Analytics() {
             ) : null}
 
             <div className="graphs-section">
-                <div className="graph-card line-graph-card">
+                <div className="graph-card line-graph-card graph-card--total">
                     <div className="graph-header">
                         <h4 className="graph-title">
                             <LineChart size={18} />
@@ -85,6 +127,7 @@ function Analytics() {
                         </h4>
                         <div className="graph-stats">
                             <span className="graph-value">{view.summary.total.toLocaleString()}</span>
+                            <span className="graph-badge graph-badge--total">Traffic</span>
                         </div>
                     </div>
                     <div className="graph-content">
@@ -123,14 +166,16 @@ function Analytics() {
 
                             <div className="x-axis">
                                 {view.labels.map((label, index) => (
-                                    <div key={index} className="x-label">{label}</div>
+                                    <div key={index} className="x-label" title={label}>
+                                        {formatAxisLabel(label)}
+                                    </div>
                                 ))}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="graph-card line-graph-card">
+                <div className="graph-card line-graph-card graph-card--success">
                     <div className="graph-header">
                         <h4 className="graph-title">
                             <LineChart size={18} />
@@ -138,6 +183,7 @@ function Analytics() {
                         </h4>
                         <div className="graph-stats">
                             <span className="graph-value">{view.summary.success.toLocaleString()}</span>
+                            <span className="graph-badge graph-badge--success">Healthy</span>
                         </div>
                     </div>
                     <div className="graph-content">
@@ -176,14 +222,16 @@ function Analytics() {
 
                             <div className="x-axis">
                                 {view.labels.map((label, index) => (
-                                    <div key={index} className="x-label">{label}</div>
+                                    <div key={index} className="x-label" title={label}>
+                                        {formatAxisLabel(label)}
+                                    </div>
                                 ))}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="graph-card line-graph-card">
+                <div className="graph-card line-graph-card analytics-card--wide graph-card--blocked">
                     <div className="graph-header">
                         <h4 className="graph-title">
                             <LineChart size={18} />
@@ -191,6 +239,7 @@ function Analytics() {
                         </h4>
                         <div className="graph-stats">
                             <span className="graph-value">{view.summary.blocked.toLocaleString()}</span>
+                            <span className="graph-badge graph-badge--blocked">Defense</span>
                         </div>
                     </div>
                     <div className="graph-content">
@@ -229,7 +278,9 @@ function Analytics() {
 
                             <div className="x-axis">
                                 {view.labels.map((label, index) => (
-                                    <div key={index} className="x-label">{label}</div>
+                                    <div key={index} className="x-label" title={label}>
+                                        {formatAxisLabel(label)}
+                                    </div>
                                 ))}
                             </div>
                         </div>

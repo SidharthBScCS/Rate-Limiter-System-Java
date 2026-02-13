@@ -72,15 +72,15 @@ public class ApiKeyController {
 
     @GetMapping("/view/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardView() {
-        RequestStats stats = requestStatsService.getOrCreate();
-        long total = stats.getTotalRequests() == null ? 0L : stats.getTotalRequests();
-        long allowed = stats.getAllowedRequests() == null ? 0L : stats.getAllowedRequests();
-        long blocked = stats.getBlockedRequests() == null ? 0L : stats.getBlockedRequests();
+        List<ApiKey> allKeys = apiKeyService.getAll();
+        long total = allKeys.stream().mapToLong(k -> k.getTotalRequests() == null ? 0L : k.getTotalRequests()).sum();
+        long allowed = allKeys.stream().mapToLong(k -> k.getAllowedRequests() == null ? 0L : k.getAllowedRequests()).sum();
+        long blocked = allKeys.stream().mapToLong(k -> k.getBlockedRequests() == null ? 0L : k.getBlockedRequests()).sum();
 
         double allowedPercent = total == 0 ? 0.0 : (allowed * 100.0) / total;
         double blockedPercent = total == 0 ? 0.0 : (blocked * 100.0) / total;
 
-        List<Map<String, Object>> apiKeys = apiKeyService.getAll().stream()
+        List<Map<String, Object>> apiKeys = allKeys.stream()
                 .map(apiKey -> {
                     long requestCount = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
                     int rateLimit = apiKey.getRateLimit() == null || apiKey.getRateLimit() <= 0 ? 1 : apiKey.getRateLimit();
@@ -120,7 +120,8 @@ public class ApiKeyController {
         DistributedRateLimiterService.Decision decision = distributedRateLimiterService.evaluate(
                 request.getApiKey(),
                 request.getRoute(),
-                request.getTokens() == null ? 1 : request.getTokens()
+                request.getTokens() == null ? 1 : request.getTokens(),
+                request.getAlgorithm()
         );
         RateLimitDecisionResponse body = new RateLimitDecisionResponse(
                 decision.allowed(),

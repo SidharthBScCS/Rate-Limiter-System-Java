@@ -1,10 +1,21 @@
-import "./SettingsPage.css";
+﻿import "./SettingsPage.css";
 import { useEffect, useMemo, useState } from "react";
-import { User, Mail, ShieldCheck, KeyRound, CalendarClock, Shield } from "lucide-react";
+import { User, Mail, KeyRound, CalendarClock, Shield } from "lucide-react";
 
 function SettingsPage() {
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
+      return cached && typeof cached === "object" ? cached : null;
+    } catch {
+      localStorage.removeItem("adminUser");
+      return null;
+    }
+  });
   const [loadError, setLoadError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftEmail, setDraftEmail] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -12,27 +23,24 @@ function SettingsPage() {
 
     try {
       const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
-      if (cached && typeof cached === "object") {
-        hasCachedAdmin = true;
-        setAdmin(cached);
-      }
+      hasCachedAdmin = Boolean(cached && typeof cached === "object");
     } catch {
       localStorage.removeItem("adminUser");
     }
 
-    const loadCurrent = fetch("/api/auth/me", { credentials: "include" })
+    fetch("/api/auth/me", { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();
           throw new Error(text);
         }
         return res.json();
-      });
-
-    loadCurrent
+      })
       .then((current) => {
         if (isMounted) {
           setAdmin(current);
+          setDraftName(current?.fullName || "");
+          setDraftEmail(current?.email || "");
           setLoadError("");
           localStorage.setItem("adminUser", JSON.stringify(current));
         }
@@ -50,6 +58,30 @@ function SettingsPage() {
     };
   }, []);
 
+  const handleUpdateClick = () => {
+    if (!isEditing) {
+      setDraftName(admin?.fullName || "");
+      setDraftEmail(admin?.email || "");
+      setIsEditing(true);
+      return;
+    }
+
+    const next = {
+      ...(admin || {}),
+      fullName: draftName.trim(),
+      email: draftEmail.trim(),
+    };
+    setAdmin(next);
+    localStorage.setItem("adminUser", JSON.stringify(next));
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setDraftName(admin?.fullName || "");
+    setDraftEmail(admin?.email || "");
+    setIsEditing(false);
+  };
+
   const initials = useMemo(() => {
     const name = admin?.fullName || admin?.userId || "A";
     const parts = name.trim().split(/\s+/);
@@ -64,10 +96,17 @@ function SettingsPage() {
           <h1 className="page-title">Profile Settings</h1>
           <p className="page-subtitle">Manage your personal information and security</p>
         </div>
-        <button className="settings-cta">
+        <div className="settings-header-actions">
+          {isEditing ? (
+            <button className="settings-cta settings-cta-secondary" type="button" onClick={handleCancelEdit}>
+              Cancel
+            </button>
+          ) : null}
+          <button className="settings-cta" type="button" onClick={handleUpdateClick}>
           <KeyRound size={16} />
-          Update Profile
-        </button>
+            {isEditing ? "Save Profile" : "Update Profile"}
+          </button>
+        </div>
       </div>
 
       <div className="settings-grid">
@@ -82,39 +121,52 @@ function SettingsPage() {
 
           {loadError ? <div className="settings-error">{loadError}</div> : null}
 
+          {isEditing ? (
+            <div className="settings-edit-form">
+              <label className="settings-edit-field">
+                <span>Full Name</span>
+                <input value={draftName} onChange={(e) => setDraftName(e.target.value)} />
+              </label>
+              <label className="settings-edit-field">
+                <span>Email</span>
+                <input value={draftEmail} onChange={(e) => setDraftEmail(e.target.value)} />
+              </label>
+            </div>
+          ) : null}
+
           <div className="settings-rows">
             <div className="settings-row">
               <span>
                 <User size={14} />
                 Full Name
               </span>
-              <strong>{admin?.fullName || "—"}</strong>
+              <strong>{admin?.fullName || "-"}</strong>
             </div>
             <div className="settings-row">
               <span>
                 <Mail size={14} />
                 Email
               </span>
-              <strong>{admin?.email || "—"}</strong>
+              <strong>{admin?.email || "-"}</strong>
             </div>
             <div className="settings-row">
               <span>
                 <Shield size={14} />
                 User ID
               </span>
-              <strong>{admin?.userId || "—"}</strong>
+              <strong>{admin?.userId || "-"}</strong>
             </div>
             <div className="settings-row">
               <span>
                 <CalendarClock size={14} />
                 Created
               </span>
-              <strong>{admin?.createdAt ? new Date(admin.createdAt).toLocaleString("en-IN") : "—"}</strong>
+              <strong>{admin?.createdAt ? new Date(admin.createdAt).toLocaleString("en-IN") : "-"}</strong>
             </div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }

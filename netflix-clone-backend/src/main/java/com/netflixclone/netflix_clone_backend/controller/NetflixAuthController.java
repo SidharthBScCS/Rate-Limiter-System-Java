@@ -146,7 +146,9 @@ public class NetflixAuthController {
                 "id", user.getId(),
                 "fullName", user.getFullName(),
                 "email", user.getEmail(),
-                "createdAt", user.getCreatedAt()
+                "createdAt", user.getCreatedAt(),
+                "premium", user.isPremium(),
+                "premiumActivatedAt", user.getPremiumActivatedAt()
         );
     }
 

@@ -52,6 +52,12 @@ async function fetchHomeMovies() {
       (item) => item && (item.backdrop_path || item.poster_path),
     ),
     action: (payload.action || []).filter((item) => item && (item.backdrop_path || item.poster_path)),
+    comedy: (payload.comedy || []).filter((item) => item && (item.backdrop_path || item.poster_path)),
+    horror: (payload.horror || []).filter((item) => item && (item.backdrop_path || item.poster_path)),
+    romance: (payload.romance || []).filter((item) => item && (item.backdrop_path || item.poster_path)),
+    documentaries: (payload.documentaries || []).filter(
+      (item) => item && (item.backdrop_path || item.poster_path),
+    ),
   };
 }
 
@@ -67,4 +73,9 @@ export const getTrending = () => fetchMovies("/api/movies/trending");
 export const getTopRated = () => fetchMovies("/api/movies/top-rated");
 export const getNetflixOriginals = () => fetchMovies("/api/movies/netflix-originals");
 export const getActionMovies = () => fetchMovies("/api/movies/action");
+export const getComedyMovies = () => fetchMovies("/api/movies/comedy");
+export const getHorrorMovies = () => fetchMovies("/api/movies/horror");
+export const getRomanceMovies = () => fetchMovies("/api/movies/romance");
+export const getDocumentaryMovies = () => fetchMovies("/api/movies/documentaries");
+export const getPremiumMovies = () => fetchMovies("/api/movies/premium");
 export const getHomeMovies = () => fetchHomeMovies();

@@ -18,6 +18,10 @@ const sectionConfig = [
   { title: "Top Rated", key: "topRated" },
   { title: "Only on Netflix", key: "netflixOriginals" },
   { title: "Action & Adventure", key: "action" },
+  { title: "Comedy Picks", key: "comedy" },
+  { title: "Horror Nights", key: "horror" },
+  { title: "Romance", key: "romance" },
+  { title: "Documentaries", key: "documentaries" },
 ];
 
 function readStoredUser() {

@@ -21,8 +21,8 @@ public class ApiKeyRequest {
     private Integer windowSeconds;
 
     @Pattern(
-            regexp = "TOKEN_BUCKET|SLIDING_WINDOW|FIXED_WINDOW|COMBINED",
-            message = "Algorithm must be TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW, or COMBINED"
+            regexp = "TOKEN_BUCKET|SLIDING_WINDOW|FIXED_WINDOW|LEAKY_BUCKET|COMBINED",
+            message = "Algorithm must be TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW, LEAKY_BUCKET, or COMBINED"
     )
     private String algorithm;
 

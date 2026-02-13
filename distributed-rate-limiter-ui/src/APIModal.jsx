@@ -242,6 +242,7 @@ function APIModal({ show, handleClose, onCreated }) {
                 <option value="SLIDING_WINDOW">Sliding Window</option>
                 <option value="TOKEN_BUCKET">Token Bucket</option>
                 <option value="FIXED_WINDOW">Fixed Window</option>
+                <option value="LEAKY_BUCKET">Leaky Bucket</option>
                 <option value="COMBINED">Combined (Token + Sliding)</option>
               </Form.Select>
             </div>

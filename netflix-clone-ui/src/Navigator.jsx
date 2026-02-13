@@ -8,6 +8,7 @@ function Navigator({
   onLogout = () => Promise.resolve(),
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef(null);
   const navItems = ["Home", "TV Shows", "Movies", "New & Popular", "My List"];
   const userName = currentUser?.name || currentUser?.email || "user_name";
@@ -27,8 +28,19 @@ function Navigator({
     };
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
   return (
-    <header className="nav">
+    <header className={`nav ${isScrolled ? "nav--solid" : ""}`}>
       <div className="nav__left">
         <h1 className="nav__logo">NETFLIX</h1>
         <nav className="nav__links">
@@ -49,10 +61,23 @@ function Navigator({
       </div>
 
       <div className="nav__right">
+        <span className="nav__text">Kids</span>
         <button className="nav__icon" aria-label="Search">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M15.5 15.5 21 21m-9.5-2a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13Z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button className="nav__icon" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-4H5l2-2v-5a5 5 0 1 1 10 0v5l2 2Z"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.8"

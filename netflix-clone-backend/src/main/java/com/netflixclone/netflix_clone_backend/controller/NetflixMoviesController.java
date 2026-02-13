@@ -56,6 +56,68 @@ public class NetflixMoviesController {
         return fetchWithRateLimit(session, "action");
     }
 
+    @GetMapping("/comedy")
+    public ResponseEntity<?> comedy(HttpSession session) {
+        return fetchWithRateLimit(session, "comedy");
+    }
+
+    @GetMapping("/horror")
+    public ResponseEntity<?> horror(HttpSession session) {
+        return fetchWithRateLimit(session, "horror");
+    }
+
+    @GetMapping("/romance")
+    public ResponseEntity<?> romance(HttpSession session) {
+        return fetchWithRateLimit(session, "romance");
+    }
+
+    @GetMapping("/documentaries")
+    public ResponseEntity<?> documentaries(HttpSession session) {
+        return fetchWithRateLimit(session, "documentaries");
+    }
+
+    @GetMapping("/premium")
+    public ResponseEntity<?> premium(HttpSession session) {
+        Object emailObj = session.getAttribute(AUTH_SESSION_KEY);
+        if (emailObj == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"message\":\"Not authenticated\"}");
+        }
+
+        String email = String.valueOf(emailObj);
+        Optional<NetflixUser> userOpt = netflixAuthService.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"message\":\"Not authenticated\"}");
+        }
+
+        NetflixUser user = userOpt.get();
+        if (!user.isPremium()) {
+            return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "message", "Premium subscription required",
+                            "premium", false
+                    ));
+        }
+
+        NetflixRateLimiterService.Decision decision =
+                netflixRateLimiterService.checkAndRecord(user.getEmail(), user.getEmail());
+        if (!decision.allowed()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header(HttpHeaders.RETRY_AFTER, String.valueOf(decision.retryAfterSeconds()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"message\":\"Too Many Requests\",\"reason\":\"" + decision.reason() + "\"}");
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "premium", true,
+                "results", mockMovieCatalogService.premiumPicks()
+        ));
+    }
+
     @GetMapping("/home")
     public ResponseEntity<?> home(HttpSession session) {
         Object emailObj = session.getAttribute(AUTH_SESSION_KEY);
@@ -87,7 +149,11 @@ public class NetflixMoviesController {
                 "trending", mockMovieCatalogService.trending(),
                 "topRated", mockMovieCatalogService.topRated(),
                 "netflixOriginals", mockMovieCatalogService.netflixOriginals(),
-                "action", mockMovieCatalogService.action()
+                "action", mockMovieCatalogService.action(),
+                "comedy", mockMovieCatalogService.comedy(),
+                "horror", mockMovieCatalogService.horror(),
+                "romance", mockMovieCatalogService.romance(),
+                "documentaries", mockMovieCatalogService.documentaries()
         ));
     }
 
@@ -121,6 +187,10 @@ public class NetflixMoviesController {
             case "topRated" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.topRated()));
             case "netflixOriginals" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.netflixOriginals()));
             case "action" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.action()));
+            case "comedy" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.comedy()));
+            case "horror" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.horror()));
+            case "romance" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.romance()));
+            case "documentaries" -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.documentaries()));
             default -> ResponseEntity.ok(Map.of("results", mockMovieCatalogService.trending()));
         };
     }

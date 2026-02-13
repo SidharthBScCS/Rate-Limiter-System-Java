@@ -2,6 +2,7 @@ package com.system.ratelimiter.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public class RateLimitCheckRequest {
 
@@ -13,6 +14,12 @@ public class RateLimitCheckRequest {
 
     @Min(value = 1, message = "tokens must be >= 1")
     private Integer tokens = 1;
+
+    @Pattern(
+            regexp = "TOKEN_BUCKET|SLIDING_WINDOW|FIXED_WINDOW|LEAKY_BUCKET|COMBINED",
+            message = "Algorithm must be TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW, LEAKY_BUCKET, or COMBINED"
+    )
+    private String algorithm;
 
     public String getApiKey() {
         return apiKey;
@@ -36,5 +43,13 @@ public class RateLimitCheckRequest {
 
     public void setTokens(Integer tokens) {
         this.tokens = tokens;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 }

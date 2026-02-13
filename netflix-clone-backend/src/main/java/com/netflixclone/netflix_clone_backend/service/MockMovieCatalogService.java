@@ -48,10 +48,45 @@ public class MockMovieCatalogService {
         return randomized(10);
     }
 
+    public List<Map<String, Object>> comedy() {
+        return pickByIds(List.of(1, 4, 9, 11, 12), 8);
+    }
+
+    public List<Map<String, Object>> horror() {
+        return pickByIds(List.of(2, 5, 7, 10, 12), 8);
+    }
+
+    public List<Map<String, Object>> romance() {
+        return pickByIds(List.of(3, 6, 8, 9, 11), 8);
+    }
+
+    public List<Map<String, Object>> documentaries() {
+        return pickByIds(List.of(2, 4, 6, 8, 10), 8);
+    }
+
+    public List<Map<String, Object>> premiumPicks() {
+        return pickByIds(List.of(3, 5, 7, 8, 10), 8);
+    }
+
     private List<Map<String, Object>> randomized(int limit) {
         List<Map<String, Object>> copy = new ArrayList<>(CATALOG);
         Collections.shuffle(copy);
         return copy.subList(0, Math.min(limit, copy.size()));
+    }
+
+    private List<Map<String, Object>> pickByIds(List<Integer> ids, int limit) {
+        List<Map<String, Object>> selected = new ArrayList<>();
+        for (Map<String, Object> item : CATALOG) {
+            Object idValue = item.get("id");
+            if (idValue instanceof Integer && ids.contains((Integer) idValue)) {
+                selected.add(item);
+            }
+        }
+        if (selected.isEmpty()) {
+            return randomized(limit);
+        }
+        Collections.shuffle(selected);
+        return selected.subList(0, Math.min(limit, selected.size()));
     }
 
     private static Map<String, Object> movie(

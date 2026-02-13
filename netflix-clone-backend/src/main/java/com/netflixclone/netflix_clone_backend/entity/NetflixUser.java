@@ -29,6 +29,12 @@ public class NetflixUser {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(nullable = false)
+    private boolean premium = false;
+
+    @Column(name = "premium_activated_at")
+    private Instant premiumActivatedAt;
+
     @PrePersist
     void onCreate() {
         createdAt = Instant.now();
@@ -64,5 +70,21 @@ public class NetflixUser {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isPremium() {
+        return premium;
+    }
+
+    public void setPremium(boolean premium) {
+        this.premium = premium;
+    }
+
+    public Instant getPremiumActivatedAt() {
+        return premiumActivatedAt;
+    }
+
+    public void setPremiumActivatedAt(Instant premiumActivatedAt) {
+        this.premiumActivatedAt = premiumActivatedAt;
     }
 }

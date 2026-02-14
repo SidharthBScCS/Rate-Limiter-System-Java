@@ -71,8 +71,8 @@ function APIModal({ show, handleClose, onCreated }) {
           closeButton 
           className="border-0"
           style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: 'linear-gradient(135deg, #fef9c3 0%, #d9f99d 100%)',
+            color: '#183223',
             padding: '1.5rem'
           }}
         >
@@ -81,7 +81,7 @@ function APIModal({ show, handleClose, onCreated }) {
               <div style={{
                 width: '48px',
                 height: '48px',
-                background: 'rgba(255, 255, 255, 0.2)',
+                background: 'rgba(22, 163, 74, 0.16)',
                 borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
@@ -92,7 +92,7 @@ function APIModal({ show, handleClose, onCreated }) {
               </div>
               <div>
                 <h4 className="mb-1 fw-bold">Create API Key</h4>
-                <p className="mb-0 opacity-90">Configure rate limiting for your application</p>
+                <p className="mb-0" style={{ color: '#4f6658' }}>Configure rate limiting for your application</p>
               </div>
             </div>
           </Modal.Title>
@@ -100,7 +100,7 @@ function APIModal({ show, handleClose, onCreated }) {
 
         <Modal.Body 
           className="p-0"
-          style={{ background: '#0f172a' }}
+          style={{ background: '#f8faee' }}
         >
           <div style={{ padding: '1.5rem' }}>
             <div className="mb-4">
@@ -108,7 +108,7 @@ function APIModal({ show, handleClose, onCreated }) {
                 <div style={{
                   width: '40px',
                   height: '40px',
-                  background: 'rgba(16, 185, 129, 0.1)',
+                  background: 'rgba(16, 185, 129, 0.14)',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
@@ -117,7 +117,7 @@ function APIModal({ show, handleClose, onCreated }) {
                   <User size={20} className="text-success" />
                 </div>
                 <div>
-                  <h6 className="mb-0 text-white">User Information</h6>
+                  <h6 className="mb-0" style={{ color: '#183223' }}>User Information</h6>
                 </div>
               </div>
               
@@ -128,9 +128,9 @@ function APIModal({ show, handleClose, onCreated }) {
                   value={userName} 
                   onChange={(e) => setUserName(e.target.value)}
                   style={{ 
-                    background: 'rgba(30, 41, 59, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'white',
+                    background: '#ffffff',
+                    border: '1px solid #d9e6cf',
+                    color: '#183223',
                     padding: '0.75rem 1rem',
                     borderRadius: '10px'
                   }}
@@ -143,30 +143,30 @@ function APIModal({ show, handleClose, onCreated }) {
                 <div style={{
                   width: '40px',
                   height: '40px',
-                  background: 'rgba(102, 126, 234, 0.1)',
+                  background: 'rgba(234, 179, 8, 0.14)',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <Zap size={20} className="text-primary" />
+                  <Zap size={20} style={{ color: '#b8860b' }} />
                 </div>
                 <div>
-                  <h6 className="mb-0 text-white">Rate Limit Settings</h6>
+                  <h6 className="mb-0" style={{ color: '#183223' }}>Rate Limit Settings</h6>
                 </div>
               </div>
 
               <div className="row g-3">
                 <div className="col-md-6">
                   <div style={{
-                    background: 'rgba(30, 41, 59, 0.8)',
-                    border: '1px solid rgba(102, 126, 234, 0.2)',
+                    background: '#ffffff',
+                    border: '1px solid #d9e6cf',
                     borderRadius: '10px',
                     padding: '1rem'
                   }}>
                     <div className="d-flex align-items-center gap-2 mb-2">
-                      <Hash size={16} className="text-primary" />
-                      <label className="text-white fw-medium mb-0">Rate Limit</label>
+                      <Hash size={16} style={{ color: '#146c40' }} />
+                      <label className="fw-medium mb-0" style={{ color: '#1f3d2b' }}>Rate Limit</label>
                     </div>
                     <div className="d-flex align-items-center">
                       <Form.Control
@@ -175,24 +175,24 @@ function APIModal({ show, handleClose, onCreated }) {
                         max={10}
                         value={rateLimit}
                         onChange={(e) => setRateLimit(e.target.value)}
-                        className="border-0 bg-transparent text-white p-0"
+                        className="border-0 bg-transparent p-0"
                         style={{ fontSize: '1.25rem', fontWeight: 'bold', width: '60px' }}
                       />
-                      <span className="ms-2">requests</span>
+                      <span className="ms-2" style={{ color: '#4f6658' }}>requests</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="col-md-6">
                   <div style={{
-                    background: 'rgba(30, 41, 59, 0.8)',
-                    border: '1px solid rgba(245, 158, 11, 0.2)',
+                    background: '#ffffff',
+                    border: '1px solid #d9e6cf',
                     borderRadius: '10px',
                     padding: '1rem'
                   }}>
                     <div className="d-flex align-items-center gap-2 mb-2">
-                      <Clock size={16} className="text-warning" />
-                      <label className="text-white fw-medium mb-0">Time Window</label>
+                      <Clock size={16} style={{ color: '#b8860b' }} />
+                      <label className="fw-medium mb-0" style={{ color: '#1f3d2b' }}>Time Window</label>
                     </div>
                     <div className="d-flex align-items-center">
                       <Form.Control 
@@ -200,10 +200,10 @@ function APIModal({ show, handleClose, onCreated }) {
                         min={1}
                         value={windowSeconds} 
                         onChange={(e) => setWindowSeconds(e.target.value)}
-                        className="border-0 bg-transparent text-white p-0"
+                        className="border-0 bg-transparent p-0"
                         style={{ fontSize: '1.25rem', fontWeight: 'bold', width: '60px' }}
                       />
-                      <span className="ms-2">seconds</span>
+                      <span className="ms-2" style={{ color: '#4f6658' }}>seconds</span>
                     </div>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ function APIModal({ show, handleClose, onCreated }) {
                 <div style={{
                   width: '40px',
                   height: '40px',
-                  background: 'rgba(16, 185, 129, 0.1)',
+                  background: 'rgba(16, 185, 129, 0.14)',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
@@ -224,7 +224,7 @@ function APIModal({ show, handleClose, onCreated }) {
                   <Shield size={20} className="text-success" />
                 </div>
                 <div>
-                  <h6 className="mb-0 text-white">Algorithm</h6>
+                  <h6 className="mb-0" style={{ color: '#183223' }}>Algorithm</h6>
                 </div>
               </div>
 
@@ -232,9 +232,9 @@ function APIModal({ show, handleClose, onCreated }) {
                 value={algorithm}
                 onChange={(e) => setAlgorithm(e.target.value)}
                 style={{
-                  background: 'rgba(30, 41, 59, 0.8)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'white',
+                  background: '#ffffff',
+                  border: '1px solid #d9e6cf',
+                  color: '#183223',
                   padding: '0.75rem 1rem',
                   borderRadius: '10px'
                 }}
@@ -249,28 +249,28 @@ function APIModal({ show, handleClose, onCreated }) {
 
             {formError && (
               <div className="alert alert-danger d-flex align-items-center gap-2 py-3 border-0" style={{ 
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
+                background: '#fff7da',
+                border: '1px solid rgba(202, 138, 4, 0.35)',
                 borderRadius: '10px'
               }}>
                 <div className="d-flex align-items-center gap-3">
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    background: 'rgba(239, 68, 68, 0.2)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      background: 'rgba(250, 204, 21, 0.24)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                       <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
                     </svg>
                   </div>
                   <div>
-                    <h6 className="mb-0 text-danger">Error</h6>
-                    <p className="mb-0 text-danger">{formError}</p>
+                    <h6 className="mb-0" style={{ color: '#7a5907' }}>Error</h6>
+                    <p className="mb-0" style={{ color: '#835f08' }}>{formError}</p>
                   </div>
                 </div>
               </div>
@@ -281,17 +281,18 @@ function APIModal({ show, handleClose, onCreated }) {
         <Modal.Footer 
           className="border-0"
           style={{ 
-            background: 'rgba(30, 41, 59, 0.9)',
+            background: '#eef6e3',
             padding: '1.5rem'
           }}
         >
           <div className="d-flex justify-content-between w-100 align-items-center">
             <Button 
-              variant="outline-light" 
+              variant="outline-secondary" 
               onClick={handleClose}
               className="px-4"
               style={{
-                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: 'rgba(22, 163, 74, 0.3)',
+                color: '#1f3d2b',
                 borderRadius: '8px'
               }}
             >
@@ -304,11 +305,12 @@ function APIModal({ show, handleClose, onCreated }) {
               disabled={isLoading}
               className="px-4 d-flex align-items-center gap-2"
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #facc15 0%, #22c55e 100%)',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '0.625rem 1.5rem',
-                fontWeight: '600'
+                fontWeight: '700',
+                color: '#173625'
               }}
             >
               {isLoading ? (
@@ -338,13 +340,13 @@ function APIModal({ show, handleClose, onCreated }) {
           style={{ borderRadius: '10px', overflow: 'hidden' }}
         >
           <Toast.Body 
-            className="text-white p-3 d-flex align-items-center gap-3"
-            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+            className="p-3 d-flex align-items-center gap-3"
+            style={{ background: 'linear-gradient(135deg, #d9f99d 0%, #86efac 100%)', color: '#173625' }}
           >
             <div style={{
               width: '36px',
               height: '36px',
-              background: 'rgba(255, 255, 255, 0.2)',
+              background: 'rgba(255, 255, 255, 0.55)',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',

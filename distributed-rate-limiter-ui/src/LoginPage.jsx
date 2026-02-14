@@ -1,5 +1,5 @@
 import "./LoginPage.css";
-import { Lock, Fingerprint } from "lucide-react";
+import { LogIn, Shield, Key, AlertCircle, Sparkles, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -15,7 +15,8 @@ function LoginPage() {
       timeZone: "Asia/Kolkata",
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit"
+      second: "2-digit",
+      hour12: true,
     });
   }, []);
 
@@ -29,7 +30,7 @@ function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
 
       const contentType = response.headers.get("content-type") || "";
@@ -52,8 +53,7 @@ function LoginPage() {
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      const message =
-        err instanceof Error && err.message ? err.message : "Login failed.";
+      const message = err instanceof Error && err.message ? err.message : "Login failed.";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -62,53 +62,86 @@ function LoginPage() {
 
   return (
     <div className="login-shell">
+      <div className="grid-pattern"></div>
       <div className="login-background">
         <div className="matrix-grid" />
         <div className="scan-line" />
         <div className="glow-orb" />
+        <div className="glow-orb-2" />
       </div>
 
       <Link className="login-back" to="/" aria-label="Back to landing page">
-        Back
+        <span>Back to home</span>
       </Link>
 
       <div className="login-card">
-        <div className="login-badge">SECURE ACCESS</div>
-        <h1>RateLimit Control</h1>
-        <p>Authorization required. Proceed with credentials.</p>
+        <div className="shine"></div>
+
+        <div className="login-badge">
+          <Shield size={16} />
+          <Zap size={16} />
+          SECURE ACCESS PORTAL
+        </div>
+
+        <h1>Welcome Back</h1>
+        <p>Enter your credentials to access the rate limiting dashboard and manage your API traffic</p>
 
         <form className="login-fields" onSubmit={handleSubmit}>
           <label>
-            <span>Operator ID</span>
+            <span>Username / Operator ID</span>
             <input
               type="text"
-              placeholder="id"
+              placeholder="Enter your username"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
               required
             />
           </label>
+
           <label>
-            <span>Passphrase</span>
+            <span>Password / Passphrase</span>
             <input
               type="password"
-              placeholder="......"
+              placeholder="************"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               required
             />
           </label>
-          {error ? <div className="login-error">{error}</div> : null}
+
+          {error && (
+            <div className="login-error">
+              <AlertCircle size={22} />
+              <span>{error}</span>
+            </div>
+          )}
+
           <button className="login-btn" type="submit" disabled={isSubmitting}>
-            <Lock size={16} />
-            {isSubmitting ? "Authenticating..." : "Initialize Session"}
+            {isSubmitting ? (
+              <>
+                <span className="spinner">...</span>
+                Authenticating...
+              </>
+            ) : (
+              <>
+                <LogIn size={22} />
+                Sign In to Dashboard
+              </>
+            )}
           </button>
         </form>
 
         <div className="login-footer">
-          <span className="login-timestamp">IST {timestamp}</span>
+          <span className="login-chip">
+            <Key size={16} />
+            Protected Area | Admin Only
+          </span>
+          <span className="login-timestamp">
+            <Sparkles size={14} style={{ marginRight: "6px" }} />
+            IST {timestamp}
+          </span>
         </div>
       </div>
     </div>

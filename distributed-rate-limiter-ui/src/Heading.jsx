@@ -1,20 +1,19 @@
-import { Button, Badge } from "react-bootstrap";
-import APIModal from "./APIModal";
-import { Activity, Shield } from "lucide-react";
+import { Activity } from "lucide-react";
 
 function Heading() {
   
   return (
     <>
-      <nav className="navbar navbar-dark glass-navbar">
+      <nav className="navbar glass-navbar">
         <div className="container-fluid mt-3 px-4">
           <div className="d-flex flex-column">
             <div className="d-flex align-items-center gap-3">
               <div className="header-icon-wrapper">
-                <Activity size={24} className="text-primary" />
+                <Activity size={22} />
               </div>
               <div>
-                <h4 className="text-white mb-0 fw-bold">Distributed Rate Limiter</h4>
+                <h4 className="dashboard-heading-title mb-0">Distributed Rate Limiter</h4>
+                <p className="dashboard-heading-subtitle">Premium traffic control console</p>
               </div>
             </div>
           </div>

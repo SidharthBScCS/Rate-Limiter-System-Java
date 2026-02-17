@@ -8,6 +8,7 @@ import com.netflixclone.netflix_clone_backend.service.NetflixRateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -142,14 +143,14 @@ public class NetflixAuthController {
     }
 
     private Map<String, Object> toUserPayload(NetflixUser user) {
-        return Map.of(
-                "id", user.getId(),
-                "fullName", user.getFullName(),
-                "email", user.getEmail(),
-                "createdAt", user.getCreatedAt(),
-                "premium", user.isPremium(),
-                "premiumActivatedAt", user.getPremiumActivatedAt()
-        );
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id", user.getId());
+        payload.put("fullName", user.getFullName());
+        payload.put("email", user.getEmail());
+        payload.put("createdAt", user.getCreatedAt());
+        payload.put("premium", user.isPremium());
+        payload.put("premiumActivatedAt", user.getPremiumActivatedAt());
+        return payload;
     }
 
     private ResponseEntity<Map<String, Object>> tooManyRequests(NetflixRateLimiterService.Decision decision) {

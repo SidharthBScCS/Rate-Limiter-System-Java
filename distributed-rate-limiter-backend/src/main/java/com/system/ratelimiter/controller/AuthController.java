@@ -5,6 +5,7 @@ import com.system.ratelimiter.entity.AdminUser;
 import com.system.ratelimiter.repository.AdminUserRepository;
 import com.system.ratelimiter.service.AuthService;
 import jakarta.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import jakarta.servlet.http.HttpSession;
@@ -45,14 +46,9 @@ public class AuthController {
         }
         session.setAttribute("userId", admin.get().getUserId());
         AdminUser user = admin.get();
-        return ResponseEntity.ok(Map.of(
-                "message", "Login successful",
-                "userId", user.getUserId(),
-                "fullName", user.getFullName(),
-                "email", user.getEmail(),
-                "createdAt", user.getCreatedAt(),
-                "initials", initials(user.getFullName(), user.getUserId())
-        ));
+        Map<String, Object> body = adminPayload(user);
+        body.put("message", "Login successful");
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/admin/{userId}")
@@ -63,25 +59,14 @@ public class AuthController {
                     .body(Map.of("message", "Admin not found"));
         }
         AdminUser user = admin.get();
-        return ResponseEntity.ok(Map.of(
-                "userId", user.getUserId(),
-                "fullName", user.getFullName(),
-                "email", user.getEmail(),
-                "createdAt", user.getCreatedAt(),
-                "initials", initials(user.getFullName(), user.getUserId())
-        ));
+        return ResponseEntity.ok(adminPayload(user));
     }
 
     @GetMapping("/admins")
     public ResponseEntity<Map<String, Object>> listAdmins() {
         var admins = adminUserRepository.findAll()
                 .stream()
-                .map(user -> Map.of(
-                        "userId", user.getUserId(),
-                        "fullName", user.getFullName(),
-                        "email", user.getEmail(),
-                        "createdAt", user.getCreatedAt()
-                ))
+                .map(this::adminListItemPayload)
                 .toList();
         return ResponseEntity.ok(Map.of(
                 "count", admins.size(),
@@ -102,13 +87,7 @@ public class AuthController {
                     .body(Map.of("message", "Not authenticated"));
         }
         AdminUser user = admin.get();
-        return ResponseEntity.ok(Map.of(
-                "userId", user.getUserId(),
-                "fullName", user.getFullName(),
-                "email", user.getEmail(),
-                "createdAt", user.getCreatedAt(),
-                "initials", initials(user.getFullName(), user.getUserId())
-        ));
+        return ResponseEntity.ok(adminPayload(user));
     }
 
     @PostMapping("/logout")
@@ -127,5 +106,24 @@ public class AuthController {
             return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
         }
         return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+
+    private Map<String, Object> adminPayload(AdminUser user) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("userId", user.getUserId());
+        payload.put("fullName", user.getFullName());
+        payload.put("email", user.getEmail());
+        payload.put("createdAt", user.getCreatedAt());
+        payload.put("initials", initials(user.getFullName(), user.getUserId()));
+        return payload;
+    }
+
+    private Map<String, Object> adminListItemPayload(AdminUser user) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("userId", user.getUserId());
+        payload.put("fullName", user.getFullName());
+        payload.put("email", user.getEmail());
+        payload.put("createdAt", user.getCreatedAt());
+        return payload;
     }
 }

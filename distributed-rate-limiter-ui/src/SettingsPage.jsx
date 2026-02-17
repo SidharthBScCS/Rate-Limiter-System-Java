@@ -1,238 +1,121 @@
 import "./SettingsPage.css";
 import { useEffect, useMemo, useState } from "react";
-import { 
-  User, 
-  Mail, 
-  CalendarClock, 
-  Shield,
-  Award,
-  AlertCircle,
-  Clock
-} from "lucide-react";
+import { User, Mail, CalendarClock, Shield } from "lucide-react";
 
 function SettingsPage() {
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
+      return cached && typeof cached === "object" ? cached : null;
+    } catch {
+      localStorage.removeItem("adminUser");
+      return null;
+    }
+  });
   const [loadError, setLoadError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    
-    const loadAdminData = async () => {
-      try {
-        // Check cache first
-        const cached = localStorage.getItem("adminUser");
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (parsed && typeof parsed === "object") {
-              setAdmin(parsed);
-            }
-          } catch {
-            localStorage.removeItem("adminUser");
-          }
-        }
+    let hasCachedAdmin = false;
 
-        // Fetch fresh data
-        const response = await fetch("/api/auth/me", { 
-          credentials: "include",
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("Unauthorized");
-          }
-          throw new Error(`HTTP ${response.status}`);
+    try {
+      const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
+      hasCachedAdmin = Boolean(cached && typeof cached === "object");
+    } catch {
+      localStorage.removeItem("adminUser");
+    }
+
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text);
         }
-        
-        const data = await response.json();
-        
+        return res.json();
+      })
+      .then((current) => {
         if (isMounted) {
-          setAdmin(data);
+          setAdmin(current);
           setLoadError("");
-          localStorage.setItem("adminUser", JSON.stringify(data));
+          localStorage.setItem("adminUser", JSON.stringify(current));
         }
-      } catch (err) {
-        console.error("Failed to load admin data:", err);
-        
-        if (isMounted) {
-          if (!admin) {
-            setLoadError("Unable to load profile. Please try again.");
-          }
-          
-          // Only redirect if no cached data and unauthorized
-          if (err.message === "Unauthorized" && !admin) {
-            window.location.href = "/login";
-          }
+      })
+      .catch((err) => {
+        console.error("LOAD ADMIN ERROR:", err);
+        if (isMounted && !hasCachedAdmin) {
+          setLoadError("Unable to load admin profile.");
+          window.location.href = "/login";
         }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadAdminData();
+      });
 
     return () => {
       isMounted = false;
-    };
+      };
   }, []);
 
-  const userInitials = useMemo(() => {
-    if (!admin?.fullName) return "AD";
-    
-    const nameParts = admin.fullName.trim().split(/\s+/);
-    if (nameParts.length === 1) {
-      return nameParts[0].slice(0, 2).toUpperCase();
-    }
-    return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+  const initials = useMemo(() => {
+    const name = admin?.fullName || admin?.userId || "A";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
   }, [admin]);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
-  const getMemberSince = (dateString) => {
-    if (!dateString) return "-";
-    
-    try {
-      const joinDate = new Date(dateString);
-      const now = new Date();
-      const months = Math.floor((now - joinDate) / (1000 * 60 * 60 * 24 * 30));
-      
-      if (months < 1) return "Less than a month";
-      if (months === 1) return "1 month";
-      return `${months} months`;
-    } catch {
-      return "-";
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="settings-page">
-        <div className="settings-loading">
-          <div className="loading-spinner" />
-          <p>Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="settings-page">
-      {/* Header Section */}
       <div className="settings-header">
-        <h1 className="page-title">Profile Settings</h1>
-        <p className="page-subtitle">
-          Manage your personal information and account details
-        </p>
+        <div>
+          <h1 className="page-title">Profile Settings</h1>
+          <p className="page-subtitle">Manage your personal information and security</p>
+        </div>
       </div>
 
-      {/* Profile Card */}
-      <div className="profile-card">
-        {/* Profile Header with Avatar */}
-        <div className="profile-header">
-          <div className="profile-avatar">
-            {userInitials}
-          </div>
-          <div className="profile-info">
-            <h4>{admin?.fullName || "Admin User"}</h4>
-            <span className="profile-role-badge">
-              <Shield size={14} />
-              Administrator
-            </span>
-            <p className="profile-email">
-              <Mail size={16} />
-              {admin?.email || "No email provided"}
-            </p>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {loadError && (
-          <div className="settings-error">
-            <AlertCircle size={18} />
-            {loadError}
-          </div>
-        )}
-
-        {/* Profile Details */}
-        <div className="settings-rows">
-          <div className="settings-row">
-            <span>
-              <User size={18} />
-              Full Name
-            </span>
-            <strong>{admin?.fullName || "—"}</strong>
-          </div>
-          
-          <div className="settings-row">
-            <span>
-              <Mail size={18} />
-              Email Address
-            </span>
-            <strong>{admin?.email || "—"}</strong>
-          </div>
-          
-          <div className="settings-row">
-            <span>
-              <Shield size={18} />
-              User ID
-            </span>
-            <strong>{admin?.userId || "—"}</strong>
-          </div>
-          
-          <div className="settings-row">
-            <span>
-              <Award size={18} />
-              Member Since
-            </span>
-            <div 
-              className="date-with-tooltip" 
-              data-full-date={formatDate(admin?.createdAt)}
-            >
-              <Clock size={14} />
-              {getMemberSince(admin?.createdAt)}
+      <div className="settings-grid">
+        <div className="settings-card profile-card">
+          <div className="profile-header">
+            <div className="profile-avatar">{initials}</div>
+            <div>
+              <h4>{admin?.fullName || "Admin User"}</h4>
+              <p>Admin • RateLimit Team</p>
             </div>
           </div>
-          
-          <div className="settings-row">
-            <span>
-              <CalendarClock size={18} />
-              Last Updated
-            </span>
-            <div 
-              className="date-with-tooltip" 
-              data-full-date={formatDate(admin?.updatedAt || admin?.createdAt)}
-            >
-              {admin?.updatedAt 
-                ? new Date(admin.updatedAt).toLocaleDateString('en-IN')
-                : "—"}
+
+          {loadError ? <div className="settings-error">{loadError}</div> : null}
+
+          <div className="settings-rows">
+            <div className="settings-row">
+              <span>
+                <User size={14} />
+                Full Name
+              </span>
+              <strong>{admin?.fullName || "-"}</strong>
+            </div>
+            <div className="settings-row">
+              <span>
+                <Mail size={14} />
+                Email
+              </span>
+              <strong>{admin?.email || "-"}</strong>
+            </div>
+            <div className="settings-row">
+              <span>
+                <Shield size={14} />
+                User ID
+              </span>
+              <strong>{admin?.userId || "-"}</strong>
+            </div>
+            <div className="settings-row">
+              <span>
+                <CalendarClock size={14} />
+                Created
+              </span>
+              <strong>{admin?.createdAt ? new Date(admin.createdAt).toLocaleString("en-IN") : "-"}</strong>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
 
-export default SettingsPage;/*  */
+export default SettingsPage;

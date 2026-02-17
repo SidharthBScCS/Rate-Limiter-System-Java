@@ -49,7 +49,11 @@ public class NetflixAuthService {
         if (user.isEmpty()) {
             throw new IllegalArgumentException("Invalid credentials");
         }
-        if (!passwordEncoder.matches(request.getPassword(), user.get().getPasswordHash())) {
+        String passwordHash = user.get().getPasswordHash();
+        if (passwordHash == null || passwordHash.isBlank()) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+        if (!passwordEncoder.matches(request.getPassword(), passwordHash)) {
             throw new IllegalArgumentException("Invalid credentials");
         }
         return user.get();

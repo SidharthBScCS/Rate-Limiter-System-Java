@@ -4,6 +4,7 @@ import com.system.ratelimiter.dto.ApiKeyRequest;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.repository.ApiKeyRepository;
 import java.util.UUID;
+import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class ApiKeyService {
     ) {
         this.apiKeyRepository = apiKeyRepository;
         this.requestStatsService = requestStatsService;
-        this.defaultAlgorithm = defaultAlgorithm;
+        this.defaultAlgorithm = normalizeOrDefault(defaultAlgorithm, "SLIDING_WINDOW");
         this.blockThreshold = Math.max(0L, blockThreshold);
     }
 
@@ -127,13 +128,27 @@ public class ApiKeyService {
     }
 
     private String resolveAlgorithm(String algorithm) {
-        String value = algorithm == null ? "" : algorithm.trim().toUpperCase();
+        String value = algorithm == null ? "" : algorithm.trim().toUpperCase(Locale.ROOT);
         if (value.isEmpty()) {
-            value = defaultAlgorithm == null ? "" : defaultAlgorithm.trim().toUpperCase();
+            return defaultAlgorithm;
         }
-        return switch (value) {
-            case "TOKEN_BUCKET", "SLIDING_WINDOW", "FIXED_WINDOW", "LEAKY_BUCKET", "COMBINED" -> value;
-            default -> "SLIDING_WINDOW";
-        };
+        if (isSupportedAlgorithm(value)) {
+            return value;
+        }
+        throw new IllegalArgumentException("Algorithm must be one of TOKEN_BUCKET, FIXED_WINDOW, SLIDING_WINDOW");
+    }
+
+    private String normalizeOrDefault(String algorithm, String fallback) {
+        String value = algorithm == null ? "" : algorithm.trim().toUpperCase(Locale.ROOT);
+        if (value.isEmpty()) {
+            return fallback;
+        }
+        return isSupportedAlgorithm(value) ? value : fallback;
+    }
+
+    private boolean isSupportedAlgorithm(String algorithm) {
+        return "TOKEN_BUCKET".equals(algorithm)
+                || "FIXED_WINDOW".equals(algorithm)
+                || "SLIDING_WINDOW".equals(algorithm);
     }
 }

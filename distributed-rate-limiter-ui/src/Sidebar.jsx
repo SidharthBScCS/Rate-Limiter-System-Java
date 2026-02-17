@@ -6,7 +6,7 @@ import {
     LogOut,
     ChevronRight,
     Shield,
-    Bell
+    Sparkles
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -15,26 +15,16 @@ import './Sidebar.css';
 function Sidebar() {
     const location = useLocation();
     const [hoverItem, setHoverItem] = useState(null);
-    const [adminData, setAdminData] = useState({
-        name: "",
-        initials: "AD",
-        role: "Administrator",
-        email: ""
-    });
+    const [adminName, setAdminName] = useState("");
+    const [adminInitials, setAdminInitials] = useState("AD");
 
-    const handleLogout = async () => {
-        try {
-            await fetch("/api/auth/logout", { 
-                method: "POST", 
-                credentials: "include" 
+    const handleLogout = () => {
+        fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+            .catch(() => {})
+            .finally(() => {
+                localStorage.removeItem("adminUser");
+                window.location.href = "/login";
             });
-        } catch (error) {
-            console.error("Logout error:", error);
-        } finally {
-            localStorage.removeItem("adminUser");
-            sessionStorage.clear();
-            window.location.href = "/login";
-        }
     };
 
     const menuItems = [
@@ -42,128 +32,96 @@ function Sidebar() {
             id: "dashboard", 
             icon: <LayoutGrid size={20} />, 
             label: "Dashboard",
-            to: "/dashboard",
-            badge: null
+            to: "/dashboard"
         },
         { 
             id: "limits", 
             icon: <Scale size={20} />, 
             label: "Rules & Limits",
-            to: "/rules-limits",
-            badge: "Active"
+            to: "/rules-limits"
         },
         { 
             id: "analytics", 
             icon: <BarChart3 size={20} />, 
             label: "Analytics",
-            to: "/analytics",
-            badge: "12"
+            to: "/analytics"
         },
         { 
             id: "settings", 
             icon: <Settings size={20} />, 
             label: "Settings",
-            to: "/settings",
-            badge: null
+            to: "/settings"
         },
     ];
 
-    const getInitials = (name) => {
-        if (!name) return "AD";
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
-
     useEffect(() => {
         let isMounted = true;
-        let hasCachedAdmin = false;
 
-        // Check cached data
+        let hasCachedAdmin = false;
         try {
             const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
             if (cached && typeof cached === "object") {
                 hasCachedAdmin = true;
-                setAdminData({
-                    name: cached.fullName || cached.userId || "",
-                    initials: cached.initials || getInitials(cached.fullName) || "AD",
-                    role: cached.role || "Administrator",
-                    email: cached.email || ""
-                });
+                setAdminName(cached.fullName || cached.userId || "");
+                setAdminInitials(cached.initials || "AD");
             }
         } catch {
             localStorage.removeItem("adminUser");
         }
 
-        // Fetch fresh data
-        const fetchAdminData = async () => {
-            try {
-                const response = await fetch("/api/auth/me", { 
-                    credentials: "include",
-                    headers: {
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+        fetch("/api/auth/me", { credentials: "include" })
+            .then(async (res) => {
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text);
                 }
-                
-                const data = await response.json();
-                
+                return res.json();
+            })
+            .then((data) => {
                 if (isMounted) {
-                    const userData = {
-                        name: data.fullName || data.userId || "",
-                        initials: data.initials || getInitials(data.fullName) || "AD",
-                        role: data.role || "Administrator",
-                        email: data.email || ""
-                    };
-                    
-                    setAdminData(userData);
+                    setAdminName(data.fullName || data.userId || "");
+                    setAdminInitials(data.initials || "AD");
                     localStorage.setItem("adminUser", JSON.stringify(data));
                 }
-            } catch (error) {
-                console.error("Failed to fetch admin data:", error);
-                
-                if (isMounted && !hasCachedAdmin) {
-                    // Redirect to login only if no cached data
+            })
+            .catch(() => {
+                if (isMounted) {
+                    if (!hasCachedAdmin) {
+                        setAdminName("");
+                        setAdminInitials("AD");
+                    }
+                }
+                if (!hasCachedAdmin) {
                     window.location.href = "/login";
                 }
-            }
-        };
-
-        fetchAdminData();
+            });
 
         return () => {
             isMounted = false;
         };
     }, []);
 
+
     return (
         <div className="sidebar-container">
-            {/* User Profile */}
+
+            {/* User Profile with Gradient */}
             <div className="user-profile">
                 <div className="user-avatar">
-                    {adminData.initials}
+                    {adminInitials}
                     <div className="online-indicator">
                         <div className="online-dot" />
                     </div>
                 </div>
                 
                 <div className="user-info">
-                    <h6 className="user-name">
-                        {adminData.name || "Admin User"}
-                    </h6>
-                    <div className="user-role">
-                        {adminData.role}
+                    <h6 className="user-name">{adminName || "ADMIN USER"}</h6>
+                    <div className="user-details">
                     </div>
                 </div>
             </div>
 
-            {/* Navigation Menu */}
+            {/* Navigation Menu with Hover Effects */}
             <div className="nav-menu">
                 {menuItems.map((item) => (
                     <NavLink
@@ -171,15 +129,10 @@ function Sidebar() {
                         to={item.to}
                         onMouseEnter={() => setHoverItem(item.id)}
                         onMouseLeave={() => setHoverItem(null)}
-                        className={({ isActive }) => 
-                            `nav-item ${isActive ? 'active' : ''}`
-                        }
-                        end={item.to === '/dashboard'}
+                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                     >
                         <div className="nav-item-content">
-                            <div className={`nav-icon ${
-                                location.pathname === item.to ? 'active' : ''
-                            }`}>
+                            <div className={`nav-icon ${location.pathname === item.to ? 'active' : ''}`}>
                                 {item.icon}
                             </div>
                             <span className="nav-label">{item.label}</span>
@@ -187,50 +140,50 @@ function Sidebar() {
                         
                         <div className="nav-item-right">
                             {item.badge && (
-                                <span className={`nav-badge ${
-                                    item.badge === 'Active' ? 'active' : 'count'
-                                }`}>
+                                <span className={`nav-badge ${item.badge === 'Active' ? 'active' : 'count'}`}>
                                     {item.badge}
                                 </span>
                             )}
                             
-                            <ChevronRight 
-                                size={16} 
-                                className="nav-chevron"
-                                style={{
-                                    opacity: location.pathname === item.to || 
-                                             hoverItem === item.id ? 1 : 0
-                                }}
-                            />
+                            {(location.pathname === item.to || hoverItem === item.id) && (
+                                <ChevronRight 
+                                    size={16} 
+                                    className="nav-chevron"
+                                />
+                            )}
                         </div>
 
                         {/* Hover Glow Effect */}
-                        {hoverItem === item.id && 
-                         location.pathname !== item.to && (
+                        {hoverItem === item.id && location.pathname !== item.to && (
                             <div className="nav-hover-glow" />
                         )}
                     </NavLink>
                 ))}
             </div>
 
-            {/* Footer */}
+            {/* Logout Button with Glow Effect */}
             <div className="sidebar-footer">
                 <button 
                     className="logout-btn"
                     onClick={handleLogout}
-                    aria-label="Logout"
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
                 >
-                    <span className="logout-icon">
+                    <div className="logout-icon">
                         <LogOut size={18} />
-                    </span>
+                    </div>
                     <span>Logout</span>
                 </button>
                 
                 {/* Version Info */}
                 <div className="version-info">
-                    <span className="version-badge">
-                        Mini-Project-II • v1.0.0
-                    </span>
+                    <small>Mini-Project-II</small>
                 </div>
             </div>
 

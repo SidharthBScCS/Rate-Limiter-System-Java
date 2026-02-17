@@ -3,7 +3,6 @@ package com.system.ratelimiter.service;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.repository.ApiKeyRepository;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -17,37 +16,29 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DistributedRateLimiterService {
 
-    private static final String TOKEN_BUCKET_SCRIPT = """
+    private static final String FIXED_WINDOW = "FIXED_WINDOW";
+    private static final String SLIDING_WINDOW = "SLIDING_WINDOW";
+    private static final String TOKEN_BUCKET = "TOKEN_BUCKET";
+
+    private static final String FIXED_WINDOW_SCRIPT = """
             local now = tonumber(ARGV[1])
-            local capacity = tonumber(ARGV[2])
-            local refillPerSecond = tonumber(ARGV[3])
+            local windowMs = tonumber(ARGV[2])
+            local limit = tonumber(ARGV[3])
             local cost = tonumber(ARGV[4])
-            local ttlMs = tonumber(ARGV[5])
 
-            if refillPerSecond <= 0 then refillPerSecond = 0.000001 end
-
-            local state = redis.call('HMGET', KEYS[1], 'tokens', 'last_refill')
-            local tokens = tonumber(state[1])
-            local lastRefill = tonumber(state[2])
-
-            if tokens == nil then tokens = capacity end
-            if lastRefill == nil then lastRefill = now end
-            if now < lastRefill then lastRefill = now end
-
-            local elapsed = (now - lastRefill) / 1000.0
-            tokens = math.min(capacity, tokens + elapsed * refillPerSecond)
-
-            if tokens < cost then
-                local deficit = cost - tokens
-                local retrySeconds = math.ceil(deficit / refillPerSecond)
-                redis.call('HSET', KEYS[1], 'tokens', tostring(tokens), 'last_refill', tostring(now))
-                redis.call('PEXPIRE', KEYS[1], ttlMs)
+            local current = tonumber(redis.call('GET', KEYS[1]) or '0')
+            if current + cost > limit then
+                local elapsed = now % windowMs
+                local retryMs = windowMs - elapsed
+                if retryMs < 1 then retryMs = 1 end
+                local retrySeconds = math.ceil(retryMs / 1000.0)
                 return {0, retrySeconds, 1}
             end
 
-            tokens = tokens - cost
-            redis.call('HSET', KEYS[1], 'tokens', tostring(tokens), 'last_refill', tostring(now))
-            redis.call('PEXPIRE', KEYS[1], ttlMs)
+            local updated = redis.call('INCRBY', KEYS[1], cost)
+            if updated == cost then
+                redis.call('PEXPIRE', KEYS[1], windowMs)
+            end
             return {1, 0, 0}
             """;
 
@@ -79,57 +70,37 @@ public class DistributedRateLimiterService {
             return {1, 0, 0}
             """;
 
-    private static final String FIXED_WINDOW_SCRIPT = """
-            local current = tonumber(redis.call('GET', KEYS[1]) or '0')
-            local limit = tonumber(ARGV[1])
-            local cost = tonumber(ARGV[2])
-            local ttlMs = tonumber(ARGV[3])
-
-            if current + cost > limit then
-                local remainTtl = redis.call('PTTL', KEYS[1])
-                if remainTtl < 1 then remainTtl = ttlMs end
-                local retrySeconds = math.ceil(remainTtl / 1000.0)
-                return {0, retrySeconds, 3}
-            end
-
-            local updated = redis.call('INCRBY', KEYS[1], cost)
-            if updated == cost then
-                redis.call('PEXPIRE', KEYS[1], ttlMs)
-            end
-            return {1, 0, 0}
-            """;
-
-    private static final String LEAKY_BUCKET_SCRIPT = """
+    private static final String TOKEN_BUCKET_SCRIPT = """
             local now = tonumber(ARGV[1])
             local capacity = tonumber(ARGV[2])
-            local leakPerSecond = tonumber(ARGV[3])
+            local refillPerMs = tonumber(ARGV[3])
             local cost = tonumber(ARGV[4])
-            local ttlMs = tonumber(ARGV[5])
 
-            if leakPerSecond <= 0 then leakPerSecond = 0.000001 end
+            local tokens = tonumber(redis.call('HGET', KEYS[1], 'tokens'))
+            local last = tonumber(redis.call('HGET', KEYS[1], 'last_ms'))
 
-            local state = redis.call('HMGET', KEYS[1], 'level', 'last_leak')
-            local level = tonumber(state[1])
-            local lastLeak = tonumber(state[2])
+            if tokens == nil then tokens = capacity end
+            if last == nil then last = now end
 
-            if level == nil then level = 0 end
-            if lastLeak == nil then lastLeak = now end
-            if now < lastLeak then lastLeak = now end
-
-            local elapsed = (now - lastLeak) / 1000.0
-            local leaked = elapsed * leakPerSecond
-            level = math.max(0, level - leaked)
-
-            if level + cost > capacity then
-                local overflow = (level + cost) - capacity
-                local retrySeconds = math.ceil(overflow / leakPerSecond)
-                redis.call('HSET', KEYS[1], 'level', tostring(level), 'last_leak', tostring(now))
-                redis.call('PEXPIRE', KEYS[1], ttlMs)
-                return {0, retrySeconds, 5}
+            if now > last then
+                local delta = now - last
+                tokens = math.min(capacity, tokens + (delta * refillPerMs))
             end
 
-            level = level + cost
-            redis.call('HSET', KEYS[1], 'level', tostring(level), 'last_leak', tostring(now))
+            local ttlMs = math.ceil(capacity / refillPerMs)
+            if ttlMs < 1000 then ttlMs = 1000 end
+
+            if tokens < cost then
+                local needed = cost - tokens
+                local retryMs = math.ceil(needed / refillPerMs)
+                if retryMs < 1 then retryMs = 1 end
+                redis.call('HSET', KEYS[1], 'tokens', tokens, 'last_ms', now)
+                redis.call('PEXPIRE', KEYS[1], ttlMs)
+                return {0, math.ceil(retryMs / 1000.0), 3}
+            end
+
+            tokens = tokens - cost
+            redis.call('HSET', KEYS[1], 'tokens', tokens, 'last_ms', now)
             redis.call('PEXPIRE', KEYS[1], ttlMs)
             return {1, 0, 0}
             """;
@@ -139,14 +110,12 @@ public class DistributedRateLimiterService {
     private final RequestStatsService requestStatsService;
     private final MeterRegistry meterRegistry;
     private final String redisPrefix;
-    private final String defaultAlgorithm;
-    private final double refillPerSecond;
-    private final double capacityMultiplier;
     private final long blockThreshold;
-    private final DefaultRedisScript<List> tokenBucketScript;
-    private final DefaultRedisScript<List> slidingWindowScript;
+    private final double tokenBucketRefillPerSecond;
+    private final double tokenBucketCapacityMultiplier;
     private final DefaultRedisScript<List> fixedWindowScript;
-    private final DefaultRedisScript<List> leakyBucketScript;
+    private final DefaultRedisScript<List> slidingWindowScript;
+    private final DefaultRedisScript<List> tokenBucketScript;
 
     public DistributedRateLimiterService(
             StringRedisTemplate redisTemplate,
@@ -154,36 +123,30 @@ public class DistributedRateLimiterService {
             RequestStatsService requestStatsService,
             MeterRegistry meterRegistry,
             @Value("${ratelimiter.redis-prefix:ratelimiter}") String redisPrefix,
-            @Value("${ratelimiter.default-algorithm:SLIDING_WINDOW}") String defaultAlgorithm,
-            @Value("${ratelimiter.token-bucket.refill-per-second:1.0}") double refillPerSecond,
-            @Value("${ratelimiter.token-bucket.capacity-multiplier:1.0}") double capacityMultiplier,
-            @Value("${ratelimiter.block-threshold:10}") long blockThreshold
+            @Value("${ratelimiter.block-threshold:10}") long blockThreshold,
+            @Value("${ratelimiter.token-bucket.refill-per-second:1.0}") double tokenBucketRefillPerSecond,
+            @Value("${ratelimiter.token-bucket.capacity-multiplier:1.0}") double tokenBucketCapacityMultiplier
     ) {
         this.redisTemplate = redisTemplate;
         this.apiKeyRepository = apiKeyRepository;
         this.requestStatsService = requestStatsService;
         this.meterRegistry = meterRegistry;
         this.redisPrefix = redisPrefix == null || redisPrefix.isBlank() ? "ratelimiter" : redisPrefix.trim();
-        this.defaultAlgorithm = normalizeAlgorithm(defaultAlgorithm);
-        this.refillPerSecond = refillPerSecond;
-        this.capacityMultiplier = capacityMultiplier;
         this.blockThreshold = Math.max(0L, blockThreshold);
-
-        this.tokenBucketScript = new DefaultRedisScript<>();
-        this.tokenBucketScript.setScriptText(TOKEN_BUCKET_SCRIPT);
-        this.tokenBucketScript.setResultType(List.class);
-
-        this.slidingWindowScript = new DefaultRedisScript<>();
-        this.slidingWindowScript.setScriptText(SLIDING_WINDOW_SCRIPT);
-        this.slidingWindowScript.setResultType(List.class);
+        this.tokenBucketRefillPerSecond = tokenBucketRefillPerSecond;
+        this.tokenBucketCapacityMultiplier = tokenBucketCapacityMultiplier;
 
         this.fixedWindowScript = new DefaultRedisScript<>();
         this.fixedWindowScript.setScriptText(FIXED_WINDOW_SCRIPT);
         this.fixedWindowScript.setResultType(List.class);
 
-        this.leakyBucketScript = new DefaultRedisScript<>();
-        this.leakyBucketScript.setScriptText(LEAKY_BUCKET_SCRIPT);
-        this.leakyBucketScript.setResultType(List.class);
+        this.slidingWindowScript = new DefaultRedisScript<>();
+        this.slidingWindowScript.setScriptText(SLIDING_WINDOW_SCRIPT);
+        this.slidingWindowScript.setResultType(List.class);
+
+        this.tokenBucketScript = new DefaultRedisScript<>();
+        this.tokenBucketScript.setScriptText(TOKEN_BUCKET_SCRIPT);
+        this.tokenBucketScript.setResultType(List.class);
     }
 
     @Transactional
@@ -202,8 +165,9 @@ public class DistributedRateLimiterService {
                 .orElseThrow(() -> new IllegalArgumentException("API key not found"));
 
         long currentTotal = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
-        if (currentTotal >= blockThreshold) {
-            Decision decision = new Decision(false, 60, "HARD_BLOCK_THRESHOLD_EXCEEDED", normalizeAlgorithm(apiKey.getAlgorithm()));
+        String algorithm = resolveAlgorithm(requestedAlgorithm, apiKey.getAlgorithm());
+        if (blockThreshold > 0 && currentTotal >= blockThreshold) {
+            Decision decision = new Decision(false, 60, "HARD_BLOCK_THRESHOLD_EXCEEDED", algorithm);
             updateStats(apiKey, false);
             meterRegistry.counter(
                     "ratelimiter_requests_total",
@@ -217,31 +181,13 @@ public class DistributedRateLimiterService {
 
         int cost = Math.max(1, tokens);
         String routeKey = normalizeRoute(route);
-        String storedAlgorithm = normalizeAlgorithm(apiKey.getAlgorithm());
-        if (storedAlgorithm.isBlank()) {
-            storedAlgorithm = defaultAlgorithm;
-            apiKey.setAlgorithm(storedAlgorithm);
-        }
-
-        String requestAlgorithm = normalizeAlgorithm(requestedAlgorithm);
-        String algorithm = requestAlgorithm.isBlank() ? storedAlgorithm : requestAlgorithm;
-
-        if (!requestAlgorithm.isBlank() && !storedAlgorithm.equals(requestAlgorithm)) {
-            throw new IllegalArgumentException(
-                    "Requested algorithm does not match API key algorithm. expected="
-                            + storedAlgorithm
-                            + ", received="
-                            + requestAlgorithm
-            );
-        }
+        apiKey.setAlgorithm(algorithm);
 
         Decision decision;
         try {
             decision = switch (algorithm) {
-                case "TOKEN_BUCKET" -> tokenBucketDecision(apiKey, routeKey, cost);
-                case "FIXED_WINDOW" -> fixedWindowDecision(apiKey, routeKey, cost);
-                case "LEAKY_BUCKET" -> leakyBucketDecision(apiKey, routeKey, cost);
-                case "COMBINED" -> combinedDecision(apiKey, routeKey, cost);
+                case FIXED_WINDOW -> fixedWindowDecision(apiKey, routeKey, cost);
+                case TOKEN_BUCKET -> tokenBucketDecision(apiKey, routeKey, cost);
                 default -> slidingWindowDecision(apiKey, routeKey, cost);
             };
         } catch (RedisSystemException ex) {
@@ -256,34 +202,24 @@ public class DistributedRateLimiterService {
                 "result",
                 decision.allowed() ? "allowed" : "blocked"
         ).increment();
+
         return new Decision(decision.allowed(), decision.retryAfterSeconds(), decision.reason(), algorithm);
     }
 
-    private Decision combinedDecision(ApiKey apiKey, String route, int cost) {
-        Decision token = tokenBucketDecision(apiKey, route, cost);
-        if (!token.allowed()) {
-            return token;
-        }
-        return slidingWindowDecision(apiKey, route, cost);
-    }
-
-    private Decision tokenBucketDecision(ApiKey apiKey, String route, int cost) {
-        int capacity = Math.max(1, (int) Math.round(apiKey.getRateLimit() * Math.max(0.1, capacityMultiplier)));
-        double windowSeconds = Math.max(1.0, apiKey.getWindowSeconds() == null ? 60.0 : apiKey.getWindowSeconds().doubleValue());
-        double dynamicRefillPerSecond = Math.max(1.0, apiKey.getRateLimit()) / windowSeconds;
-        double refill = Math.max(0.000001, dynamicRefillPerSecond * Math.max(0.1, refillPerSecond));
-        long ttlMs = Math.max(windowMs(apiKey), Duration.ofMinutes(2).toMillis());
-        String bucketKey = redisPrefix + ":bucket:" + apiKey.getApiKey() + ":" + route;
+    private Decision fixedWindowDecision(ApiKey apiKey, String route, int cost) {
+        long now = System.currentTimeMillis();
+        long windowMs = windowMs(apiKey);
+        long bucketStart = now - (now % windowMs);
+        String windowKey = redisPrefix + ":fixed:" + apiKey.getApiKey() + ":" + route + ":" + bucketStart;
         List<Long> result = redisTemplate.execute(
-                tokenBucketScript,
-                List.of(bucketKey),
-                Long.toString(System.currentTimeMillis()),
-                Integer.toString(capacity),
-                Double.toString(refill),
-                Integer.toString(cost),
-                Long.toString(ttlMs)
+                fixedWindowScript,
+                List.of(windowKey),
+                Long.toString(now),
+                Long.toString(windowMs),
+                Integer.toString(Math.max(1, apiKey.getRateLimit())),
+                Integer.toString(cost)
         );
-        return toDecision(result, "TOKEN_BUCKET_EXCEEDED", "TOKEN_BUCKET");
+        return toDecision(result, "FIXED_WINDOW_EXCEEDED", FIXED_WINDOW);
     }
 
     private Decision slidingWindowDecision(ApiKey apiKey, String route, int cost) {
@@ -297,40 +233,27 @@ public class DistributedRateLimiterService {
                 Integer.toString(cost),
                 UUID.randomUUID().toString()
         );
-        return toDecision(result, "SLIDING_WINDOW_EXCEEDED", "SLIDING_WINDOW");
+        return toDecision(result, "SLIDING_WINDOW_EXCEEDED", SLIDING_WINDOW);
     }
 
-    private Decision fixedWindowDecision(ApiKey apiKey, String route, int cost) {
-        long now = System.currentTimeMillis();
-        long windowMs = windowMs(apiKey);
-        long bucket = now / windowMs;
-        String fixedKey = redisPrefix + ":fixed:" + apiKey.getApiKey() + ":" + route + ":" + bucket;
+    private Decision tokenBucketDecision(ApiKey apiKey, String route, int cost) {
+        String bucketKey = redisPrefix + ":bucket:" + apiKey.getApiKey() + ":" + route;
+        int limit = Math.max(1, apiKey.getRateLimit());
+        int windowSeconds = Math.max(1, apiKey.getWindowSeconds() == null ? 60 : apiKey.getWindowSeconds());
+        double computedRefillPerSecond = tokenBucketRefillPerSecond > 0
+                ? tokenBucketRefillPerSecond
+                : ((double) limit / (double) windowSeconds);
+        double refillPerMs = Math.max(0.0001, computedRefillPerSecond / 1000.0);
+        int capacity = Math.max(1, (int) Math.ceil(limit * Math.max(0.1, tokenBucketCapacityMultiplier)));
         List<Long> result = redisTemplate.execute(
-                fixedWindowScript,
-                List.of(fixedKey),
-                Integer.toString(Math.max(1, apiKey.getRateLimit())),
-                Integer.toString(cost),
-                Long.toString(windowMs)
-        );
-        return toDecision(result, "FIXED_WINDOW_EXCEEDED", "FIXED_WINDOW");
-    }
-
-    private Decision leakyBucketDecision(ApiKey apiKey, String route, int cost) {
-        int capacity = Math.max(1, apiKey.getRateLimit());
-        double windowSeconds = Math.max(1.0, apiKey.getWindowSeconds() == null ? 60.0 : apiKey.getWindowSeconds().doubleValue());
-        double leakPerSecond = Math.max(0.000001, Math.max(1.0, apiKey.getRateLimit()) / windowSeconds);
-        long ttlMs = Math.max(windowMs(apiKey), Duration.ofMinutes(2).toMillis());
-        String bucketKey = redisPrefix + ":leaky:" + apiKey.getApiKey() + ":" + route;
-        List<Long> result = redisTemplate.execute(
-                leakyBucketScript,
+                tokenBucketScript,
                 List.of(bucketKey),
                 Long.toString(System.currentTimeMillis()),
                 Integer.toString(capacity),
-                Double.toString(leakPerSecond),
-                Integer.toString(cost),
-                Long.toString(ttlMs)
+                Double.toString(refillPerMs),
+                Integer.toString(cost)
         );
-        return toDecision(result, "LEAKY_BUCKET_EXCEEDED", "LEAKY_BUCKET");
+        return toDecision(result, "TOKEN_BUCKET_EXCEEDED", TOKEN_BUCKET);
     }
 
     private Decision toDecision(List<Long> result, String defaultReason, String algorithm) {
@@ -342,10 +265,9 @@ public class DistributedRateLimiterService {
         long code = result.get(2) == null ? 4L : result.get(2);
         String reason = switch ((int) code) {
             case 0 -> "ALLOWED";
-            case 1 -> "TOKEN_BUCKET_EXCEEDED";
+            case 1 -> "FIXED_WINDOW_EXCEEDED";
             case 2 -> "SLIDING_WINDOW_EXCEEDED";
-            case 3 -> "FIXED_WINDOW_EXCEEDED";
-            case 5 -> "LEAKY_BUCKET_EXCEEDED";
+            case 3 -> "TOKEN_BUCKET_EXCEEDED";
             default -> defaultReason;
         };
         return allowed
@@ -393,14 +315,31 @@ public class DistributedRateLimiterService {
         if (algorithm == null) {
             return "";
         }
-        String value = algorithm.trim().toUpperCase(Locale.ROOT);
-        if (value.isEmpty()) {
-            return "";
+        return algorithm.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private String resolveAlgorithm(String requestedAlgorithm, String configuredAlgorithm) {
+        String requested = normalizeAlgorithm(requestedAlgorithm);
+        if (!requested.isBlank()) {
+            if (isSupportedAlgorithm(requested)) {
+                return requested;
+            }
+            throw new IllegalArgumentException(
+                    "Algorithm must be one of TOKEN_BUCKET, FIXED_WINDOW, SLIDING_WINDOW"
+            );
         }
-        return switch (value) {
-            case "TOKEN_BUCKET", "SLIDING_WINDOW", "FIXED_WINDOW", "LEAKY_BUCKET", "COMBINED" -> value;
-            default -> (defaultAlgorithm == null || defaultAlgorithm.isBlank()) ? "SLIDING_WINDOW" : defaultAlgorithm;
-        };
+
+        String configured = normalizeAlgorithm(configuredAlgorithm);
+        if (isSupportedAlgorithm(configured)) {
+            return configured;
+        }
+        return SLIDING_WINDOW;
+    }
+
+    private boolean isSupportedAlgorithm(String algorithm) {
+        return TOKEN_BUCKET.equals(algorithm)
+                || FIXED_WINDOW.equals(algorithm)
+                || SLIDING_WINDOW.equals(algorithm);
     }
 
     public record Decision(boolean allowed, int retryAfterSeconds, String reason, String algorithm) {}

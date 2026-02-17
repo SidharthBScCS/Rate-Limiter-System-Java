@@ -16,8 +16,8 @@ public class RateLimitCheckRequest {
     private Integer tokens = 1;
 
     @Pattern(
-            regexp = "TOKEN_BUCKET|SLIDING_WINDOW|FIXED_WINDOW|LEAKY_BUCKET|COMBINED",
-            message = "Algorithm must be TOKEN_BUCKET, SLIDING_WINDOW, FIXED_WINDOW, LEAKY_BUCKET, or COMBINED"
+            regexp = "TOKEN_BUCKET|FIXED_WINDOW|SLIDING_WINDOW",
+            message = "Algorithm must be one of TOKEN_BUCKET, FIXED_WINDOW, SLIDING_WINDOW"
     )
     private String algorithm;
 

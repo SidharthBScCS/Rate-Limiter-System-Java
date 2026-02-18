@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: netflix-clone-backend
+    runtime: java
+    plan: free
+    rootDir: netflix-clone-backend
+    buildCommand: ./mvnw -DskipTests clean package
+    startCommand: java -Dserver.port=$PORT -jar target/netflix-clone-backend-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: PORT
+        value: 8082
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: 6379
+      - key: REDIS_USERNAME
+        value: ""
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_SSL_ENABLED
+        value: "true"
+      - key: RATELIMITER_BASE_URL
+        value: http://localhost:8080
+      - key: SESSION_COOKIE_SAMESITE
+        value: None
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: SESSION_COOKIE_DOMAIN
+        sync: false
+      - key: CORS_ALLOWED_ORIGIN_PATTERNS
+        sync: false

@@ -1,6 +1,5 @@
 package com.netflixclone.netflix_clone_backend.service;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -199,9 +198,8 @@ public class NetflixRateLimiterService {
         }
 
         long bucketTtlMillis() {
-            // Keep bucket state long enough to refill to full capacity and preserve bursts.
-            long refillMillis = (long) Math.ceil((Math.max(1, bucketCapacity) / Math.max(0.000001, bucketRefillPerSecond)) * 1000.0);
-            return Math.max(windowMillis(), refillMillis) + Duration.ofMinutes(1).toMillis();
+            // Force bucket reset on the same cadence as the sliding window.
+            return windowMillis();
         }
     }
 

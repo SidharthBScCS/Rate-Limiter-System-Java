@@ -80,13 +80,9 @@ function LandingPage({
       <header className="landing__header">
         <h1 className="landing__brand">NETFLIX</h1>
       </header>
+
       <div className="landing__card">
-        <p className="landing__title">{isCreateMode ? "Create Account" : "Welcome Back"}</p>
-        <p className="landing__subtitle">
-          {isCreateMode
-            ? "Enter your name to create your account."
-            : "Sign in with your email and password."}
-        </p>
+        <p className="landing__title">{isCreateMode ? "Create Account" : "Sign In"}</p>
 
         <form className="landing__form" onSubmit={handleLogin}>
           {isCreateMode ? (
@@ -110,6 +106,7 @@ function LandingPage({
             onChange={(event) => setPassword(event.target.value)}
           />
           {error ? <p className="landing__error">{error}</p> : null}
+
           <button
             type="submit"
             className="landing__button landing__button--primary"
@@ -119,7 +116,7 @@ function LandingPage({
           </button>
           <button
             type="button"
-            className="landing__button landing__button--tertiary"
+            className="landing__button landing__button--ghost"
             onClick={handleCreateClick}
             disabled={isSubmitting}
           >
@@ -128,11 +125,11 @@ function LandingPage({
           {isCreateMode ? (
             <button
               type="button"
-              className="landing__button landing__button--secondary"
+              className="landing__button landing__button--subtle"
               onClick={handleBackToLogin}
               disabled={isSubmitting}
             >
-              Back to Login
+              Back to Sign In
             </button>
           ) : null}
         </form>

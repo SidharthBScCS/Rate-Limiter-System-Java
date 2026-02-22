@@ -4,10 +4,15 @@
   place-items: center;
   position: relative;
   background:
-    linear-gradient(to top, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.56)),
+    linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.55)),
     url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1800&q=80") center / cover no-repeat,
     #000;
-  overflow: hidden;
+}
+
+.landing__overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 0%, rgba(0, 0, 0, 0.65) 75%, rgba(0, 0, 0, 0.85) 100%);
 }
 
 .landing__header {
@@ -15,45 +20,29 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 2;
   padding: 22px 4%;
+  z-index: 2;
 }
 
 .landing__brand {
-  margin: 0;
-  color: var(--brand-red);
-  font-size: 2.05rem;
-  letter-spacing: 0.04em;
+  color: var(--netflix-red);
+  font-size: 2.1rem;
   font-weight: 900;
-}
-
-.landing__overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, transparent 0%, rgba(0, 0, 0, 0.58) 78%, rgba(0, 0, 0, 0.78) 100%);
-  pointer-events: none;
+  letter-spacing: 0.03em;
 }
 
 .landing__card {
   width: min(92vw, 450px);
-  padding: 48px 56px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.76);
+  padding: 52px 56px;
   border-radius: 4px;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  z-index: 2;
 }
 
 .landing__title {
-  margin: 0;
   font-size: 2rem;
   font-weight: 700;
-}
-
-.landing__subtitle {
-  margin: 8px 0 18px;
-  color: #b3b3b3;
-  font-size: 0.96rem;
+  margin-bottom: 18px;
 }
 
 .landing__form {
@@ -63,59 +52,52 @@
 
 .landing__form input {
   height: 50px;
-  padding: 0 14px;
   border-radius: 4px;
   border: 1px solid #333;
   background: #333;
   color: #fff;
-  outline: none;
+  padding: 0 14px;
 }
 
 .landing__form input:focus {
   border-color: #777;
+  outline: none;
 }
 
 .landing__error {
-  margin: 0;
   color: #ffa00a;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
 }
 
 .landing__button {
-  width: 100%;
   height: 46px;
-  border: none;
+  border: 0;
   border-radius: 4px;
-  cursor: pointer;
-  font-weight: 700;
   font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .landing__button--primary {
   margin-top: 10px;
-  background: var(--brand-red);
-  color: #fff;
-}
-
-.landing__button--tertiary {
-  border: 1px solid #555;
-  background: transparent;
-  color: #fff;
-}
-
-.landing__button--secondary {
-  border: 1px solid #555;
-  background: #1f1f1f;
+  background: var(--netflix-red);
   color: #fff;
 }
 
 .landing__button--primary:hover {
-  filter: brightness(1.08);
+  background: #f40612;
 }
 
-.landing__button--secondary:hover,
-.landing__button--tertiary:hover {
-  background: #2a2a2a;
+.landing__button--ghost,
+.landing__button--subtle {
+  background: #1f1f1f;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+.landing__button--ghost:hover,
+.landing__button--subtle:hover {
+  background: #2b2b2b;
 }
 
 .landing__button:disabled {
@@ -123,9 +105,9 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .landing__card {
-    padding: 32px 24px;
+    padding: 34px 22px;
   }
 
   .landing__brand {
@@ -133,6 +115,6 @@
   }
 
   .landing__title {
-    font-size: 1.65rem;
+    font-size: 1.7rem;
   }
 }

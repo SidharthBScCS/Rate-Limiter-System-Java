@@ -11,7 +11,7 @@ function Navigator({
   const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef(null);
   const navItems = ["Home", "TV Shows", "Movies", "New & Popular", "My List"];
-  const userName = currentUser?.name || currentUser?.email || "user_name";
+  const userName = currentUser?.name || currentUser?.email || "User";
   const avatarUrl = `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(userName)}`;
 
   useEffect(() => {
@@ -29,9 +29,7 @@ function Navigator({
   }, []);
 
   useEffect(() => {
-    const onScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const onScroll = () => setIsScrolled(window.scrollY > 30);
     onScroll();
     window.addEventListener("scroll", onScroll);
     return () => {
@@ -43,14 +41,14 @@ function Navigator({
     <header className={`nav ${isScrolled ? "nav--solid" : ""}`}>
       <div className="nav__left">
         <h1 className="nav__logo">NETFLIX</h1>
-        <nav className="nav__links">
+        <nav className="nav__links" aria-label="Primary">
           {navItems.map((item) => (
             <a
               key={item}
               href="#"
               className={activeNav === item ? "active" : ""}
-              onClick={(e) => {
-                e.preventDefault();
+              onClick={(event) => {
+                event.preventDefault();
                 onNavClick(item);
               }}
             >
@@ -86,34 +84,31 @@ function Navigator({
             />
           </svg>
         </button>
+
         <div className="nav__profile-wrap" ref={menuRef}>
           <button
             className="nav__profile"
             aria-label="Open profile menu"
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen((value) => !value)}
           >
             <span className="nav__avatar">
               <img src={avatarUrl} alt={`${userName} profile`} className="nav__avatar-image" />
             </span>
-            {menuOpen ? <span className="nav__caret" /> : null}
           </button>
+
           {menuOpen ? (
             <div className="nav__dropdown">
-              <div className="nav__dropdown-user">
-                <span className="nav__dropdown-avatar">
-                  <img src={avatarUrl} alt={`${userName} profile`} className="nav__avatar-image" />
-                </span>
-                <span className="nav__dropdown-name">{userName}</span>
-              </div>
+              <div className="nav__dropdown-user">{userName}</div>
               <button
                 type="button"
-                className="nav__dropdown-logout"
+                className="nav__dropdown-item"
                 onClick={() => {
                   setMenuOpen(false);
                   onLogout();
                 }}
               >
-                Logout
+                Sign out of Netflix
               </button>
             </div>
           ) : null}

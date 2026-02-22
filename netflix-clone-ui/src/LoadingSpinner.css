@@ -3,7 +3,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 260px;
+  min-height: 280px;
   padding: 40px;
 }
 
@@ -15,8 +15,8 @@
 
 .netflix-spinner div {
   position: absolute;
-  width: 18px;
-  background: var(--brand-red);
+  width: 16px;
+  background: var(--netflix-red);
   animation: netflix-spinner 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
 }
 
@@ -32,19 +32,18 @@
 
 .netflix-spinner div:nth-child(3) {
   left: 64px;
-  animation-delay: 0s;
 }
 
 .spinner-label {
-  margin-top: 20px;
+  margin-top: 16px;
+  color: #cfcfcf;
   text-align: center;
-  color: #b3b3b3;
 }
 
 .spinner-subtitle {
-  margin-top: 8px;
-  font-size: 0.84rem;
-  color: #808080;
+  margin-top: 6px;
+  color: #8a8a8a;
+  font-size: 0.82rem;
 }
 
 @keyframes netflix-spinner {

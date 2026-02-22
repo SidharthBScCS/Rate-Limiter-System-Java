@@ -5,20 +5,17 @@ function Footer() {
   const footerLinks = [
     "FAQ",
     "Help Center",
+    "Account",
+    "Media Center",
+    "Investor Relations",
+    "Jobs",
+    "Ways to Watch",
     "Terms of Use",
-    "Privacy",
-    "Cookie Preferences",
-    "Corporate Information",
-    "Contact Us",
-    "Speed Test",
   ];
 
   return (
     <footer className="footer">
-      <p>
-        Questions? <a href="#">Contact us</a>
-      </p>
-
+      <p className="footer__contact">Questions? Contact us.</p>
       <div className="footer__links">
         {footerLinks.map((label) => (
           <a key={label} href="#">
@@ -26,9 +23,7 @@ function Footer() {
           </a>
         ))}
       </div>
-
-      <small>Netflix UI Clone . React . Mock Catalog . {currentYear} . Demo</small>
-      <div className="footer__note">Non-commercial educational project</div>
+      <small>Netflix UI Clone Demo . {currentYear}</small>
     </footer>
   );
 }

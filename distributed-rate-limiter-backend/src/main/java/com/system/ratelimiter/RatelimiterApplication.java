@@ -22,7 +22,7 @@ public class RatelimiterApplication {
 	}
 
 	private static void normalizeDbConfig() {
-		String dbUrl = firstNonBlank("DB_URL", "JDBC_DATABASE_URL", "DATABASE_URL");
+		String dbUrl = firstNonBlank("DB_URL", "JDBC_DATABASE_URL", "DATABASE_URL", "SPRING_DATASOURCE_URL");
 		if (isBlank(dbUrl)) {
 			dbUrl = buildJdbcUrlFromPgParts();
 		}
@@ -32,22 +32,30 @@ public class RatelimiterApplication {
 			System.setProperty("spring.datasource.url", normalized);
 			System.setProperty("jakarta.persistence.jdbc.url", normalized);
 
-			if (isBlank(firstNonBlank("DB_DRIVER"))) {
-				if (normalized.startsWith("jdbc:postgresql:")) {
-					System.setProperty("DB_DRIVER", "org.postgresql.Driver");
-					System.setProperty("spring.datasource.driver-class-name", "org.postgresql.Driver");
-				} else if (normalized.startsWith("jdbc:mysql:")) {
-					System.setProperty("DB_DRIVER", "com.mysql.cj.jdbc.Driver");
-					System.setProperty("spring.datasource.driver-class-name", "com.mysql.cj.jdbc.Driver");
-				}
+			if (normalized.startsWith("jdbc:postgresql:")) {
+				System.setProperty("DB_DRIVER", "org.postgresql.Driver");
+				System.setProperty("spring.datasource.driver-class-name", "org.postgresql.Driver");
+			} else if (normalized.startsWith("jdbc:mysql:")) {
+				System.setProperty("DB_DRIVER", "com.mysql.cj.jdbc.Driver");
+				System.setProperty("spring.datasource.driver-class-name", "com.mysql.cj.jdbc.Driver");
 			}
 		} else if (isBlank(firstNonBlank("spring.datasource.url", "jakarta.persistence.jdbc.url"))) {
 			System.setProperty("spring.datasource.url", DEFAULT_LOCAL_DB_URL);
 			System.setProperty("jakarta.persistence.jdbc.url", DEFAULT_LOCAL_DB_URL);
 		}
 
-		String user = firstNonBlank("DB_USERNAME", "PGUSER", "DATABASE_USER", "POSTGRES_USER");
-		String pass = firstNonBlank("DB_PASSWORD", "PGPASSWORD", "DATABASE_PASSWORD", "POSTGRES_PASSWORD");
+		String user = firstNonBlank(
+				"DB_USERNAME",
+				"SPRING_DATASOURCE_USERNAME",
+				"PGUSER",
+				"DATABASE_USER",
+				"POSTGRES_USER");
+		String pass = firstNonBlank(
+				"DB_PASSWORD",
+				"SPRING_DATASOURCE_PASSWORD",
+				"PGPASSWORD",
+				"DATABASE_PASSWORD",
+				"POSTGRES_PASSWORD");
 		setIfMissing("DB_USERNAME", user);
 		setIfMissing("DB_PASSWORD", pass);
 		if (!isBlank(user)) {

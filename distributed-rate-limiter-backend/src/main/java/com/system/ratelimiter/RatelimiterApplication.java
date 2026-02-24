@@ -27,11 +27,6 @@ public class RatelimiterApplication {
 		if (dbUrl != null) {
 			String normalized = normalizeDbUrl(dbUrl);
 			System.setProperty("DB_URL", normalized);
-			if (normalized.startsWith("jdbc:postgresql:")) {
-				setIfMissing("DB_DIALECT", "org.hibernate.dialect.PostgreSQLDialect");
-			} else if (normalized.startsWith("jdbc:mysql:")) {
-				setIfMissing("DB_DIALECT", "org.hibernate.dialect.MySQLDialect");
-			}
 
 			if (isBlank(firstNonBlank("DB_DRIVER"))) {
 				if (normalized.startsWith("jdbc:postgresql:")) {

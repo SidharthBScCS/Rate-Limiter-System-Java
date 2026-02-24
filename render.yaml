@@ -1,11 +1,10 @@
 services:
   - type: web
     name: distributed-rate-limiter-backend
-    env: java
+    env: docker
     plan: free
     rootDir: distributed-rate-limiter-backend
-    buildCommand: ./mvnw -DskipTests clean package
-    startCommand: java -Dserver.port=$PORT -jar target/ratelimiter-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DB_DRIVER
         value: org.postgresql.Driver
@@ -34,11 +33,10 @@ services:
 
   - type: web
     name: netflix-clone-backend
-    env: java
+    env: docker
     plan: free
     rootDir: netflix-clone-backend
-    buildCommand: ./mvnw -DskipTests clean package
-    startCommand: java -Dserver.port=$PORT -jar target/netflix-clone-backend-0.0.1-SNAPSHOT.jar
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DB_DRIVER
         value: org.postgresql.Driver

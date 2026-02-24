@@ -26,22 +26,6 @@ function LoginPage() {
     setError("");
     setIsSubmitting(true);
 
-    // Stable single-admin fallback for production demo access.
-    if (username === "admin" && password === "admin*123*123") {
-      localStorage.setItem(
-        "adminUser",
-        JSON.stringify({
-          userId: "admin",
-          fullName: "System Admin",
-          email: "admin@ratelimiter.local",
-          initials: "AD",
-        })
-      );
-      navigate("/dashboard", { replace: true });
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), 12000);

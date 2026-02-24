@@ -5,10 +5,13 @@ import com.system.ratelimiter.entity.AdminUser;
 import com.system.ratelimiter.repository.AdminUserRepository;
 import com.system.ratelimiter.service.AuthService;
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,10 +31,22 @@ public class AuthController {
 
     private final AuthService authService;
     private final AdminUserRepository adminUserRepository;
+    private final String singleUserId;
+    private final String singleUserFullName;
+    private final String singleUserEmail;
 
-    public AuthController(AuthService authService, AdminUserRepository adminUserRepository) {
+    public AuthController(
+            AuthService authService,
+            AdminUserRepository adminUserRepository,
+            @Value("${auth.admin.username:admin}") String singleUserId,
+            @Value("${auth.admin.full-name:System Admin}") String singleUserFullName,
+            @Value("${auth.admin.email:admin@ratelimiter.local}") String singleUserEmail
+    ) {
         this.authService = authService;
         this.adminUserRepository = adminUserRepository;
+        this.singleUserId = singleUserId;
+        this.singleUserFullName = singleUserFullName;
+        this.singleUserEmail = singleUserEmail;
     }
 
     @PostMapping("/login")
@@ -41,35 +56,37 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Invalid credentials"));
         }
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(request.getUsername());
-        if (admin.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid credentials"));
-        }
-        session.setAttribute("userId", admin.get().getUserId());
-        AdminUser user = admin.get();
-        Map<String, Object> body = adminPayload(user);
+
+        Map<String, Object> body = adminPayload(resolveUserProfile(request.getUsername()));
+        session.setAttribute("userId", body.get("userId"));
         body.put("message", "Login successful");
         return ResponseEntity.ok(body);
     }
 
     @GetMapping("/admin/{userId}")
     public ResponseEntity<Map<String, Object>> getAdmin(@PathVariable("userId") String userId) {
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(userId);
-        if (admin.isEmpty()) {
+        Map<String, Object> user = resolveUserProfile(userId);
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "Admin not found"));
         }
-        AdminUser user = admin.get();
         return ResponseEntity.ok(adminPayload(user));
     }
 
     @GetMapping("/admins")
     public ResponseEntity<Map<String, Object>> listAdmins() {
-        var admins = adminUserRepository.findAll()
-                .stream()
-                .map(this::adminListItemPayload)
-                .toList();
+        List<Map<String, Object>> admins;
+        try {
+            admins = adminUserRepository.findAll()
+                    .stream()
+                    .map(this::adminListItemPayload)
+                    .toList();
+        } catch (DataAccessException ex) {
+            admins = List.of(adminListItemPayload(resolveUserProfile(singleUserId)));
+        }
+        if (admins.isEmpty()) {
+            admins = List.of(adminListItemPayload(resolveUserProfile(singleUserId)));
+        }
         return ResponseEntity.ok(Map.of(
                 "count", admins.size(),
                 "items", admins
@@ -83,12 +100,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Not authenticated"));
         }
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(String.valueOf(userId));
-        if (admin.isEmpty()) {
+
+        Map<String, Object> user = resolveUserProfile(String.valueOf(userId));
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Not authenticated"));
         }
-        AdminUser user = admin.get();
         return ResponseEntity.ok(adminPayload(user));
     }
 
@@ -132,6 +149,16 @@ public class AuthController {
         return payload;
     }
 
+    private Map<String, Object> adminPayload(Map<String, Object> user) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("userId", user.get("userId"));
+        payload.put("fullName", user.get("fullName"));
+        payload.put("email", user.get("email"));
+        payload.put("createdAt", user.get("createdAt"));
+        payload.put("initials", initials((String) user.get("fullName"), (String) user.get("userId")));
+        return payload;
+    }
+
     private Map<String, Object> adminListItemPayload(AdminUser user) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("userId", user.getUserId());
@@ -139,5 +166,39 @@ public class AuthController {
         payload.put("email", user.getEmail());
         payload.put("createdAt", user.getCreatedAt());
         return payload;
+    }
+
+    private Map<String, Object> adminListItemPayload(Map<String, Object> user) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("userId", user.get("userId"));
+        payload.put("fullName", user.get("fullName"));
+        payload.put("email", user.get("email"));
+        payload.put("createdAt", user.get("createdAt"));
+        return payload;
+    }
+
+    private Map<String, Object> resolveUserProfile(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return null;
+        }
+        try {
+            Optional<AdminUser> admin = adminUserRepository.findByUserId(userId);
+            if (admin.isPresent()) {
+                return adminPayload(admin.get());
+            }
+        } catch (DataAccessException ignored) {
+            // Fall back to configured single user profile below.
+        }
+
+        if (!singleUserId.equals(userId)) {
+            return null;
+        }
+
+        Map<String, Object> fallback = new LinkedHashMap<>();
+        fallback.put("userId", singleUserId);
+        fallback.put("fullName", singleUserFullName);
+        fallback.put("email", singleUserEmail);
+        fallback.put("createdAt", Instant.now());
+        return fallback;
     }
 }

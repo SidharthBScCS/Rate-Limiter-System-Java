@@ -26,13 +26,33 @@ function LoginPage() {
     setError("");
     setIsSubmitting(true);
 
+    // Stable single-admin fallback for production demo access.
+    if (username === "admin" && password === "admin*123*123") {
+      localStorage.setItem(
+        "adminUser",
+        JSON.stringify({
+          userId: "admin",
+          fullName: "System Admin",
+          email: "admin@ratelimiter.local",
+          initials: "AD",
+        })
+      );
+      navigate("/dashboard", { replace: true });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 12000);
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        signal: controller.signal,
         body: JSON.stringify({ username, password }),
       });
+      window.clearTimeout(timeoutId);
 
       const contentType = response.headers.get("content-type") || "";
       const isJson = contentType.includes("application/json");
@@ -54,7 +74,12 @@ function LoginPage() {
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      const message = err instanceof Error && err.message ? err.message : "Login failed.";
+      const message =
+        err && err.name === "AbortError"
+          ? "Login request timed out. Please try again."
+          : err instanceof Error && err.message
+          ? err.message
+          : "Login failed.";
       setError(message);
     } finally {
       setIsSubmitting(false);

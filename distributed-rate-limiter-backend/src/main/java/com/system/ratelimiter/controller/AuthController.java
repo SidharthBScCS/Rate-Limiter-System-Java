@@ -9,9 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,6 +96,18 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> logout(HttpSession session) {
         session.invalidate();
         return ResponseEntity.ok(Map.of("message", "Logged out"));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<Map<String, Object>> handleDataAccess(DataAccessException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of("message", "Authentication database unavailable"));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Authentication failed unexpectedly"));
     }
 
     private String initials(String fullName, String fallback) {

@@ -19,6 +19,9 @@ public class NetflixCloneBackendApplication {
 
 	private static void normalizeDbConfig() {
 		String dbUrl = firstNonBlank("DB_URL", "JDBC_DATABASE_URL", "DATABASE_URL");
+		if (isBlank(dbUrl)) {
+			dbUrl = buildJdbcUrlFromPgParts();
+		}
 		if (dbUrl != null) {
 			String normalized = normalizeDbUrl(dbUrl);
 			System.setProperty("DB_URL", normalized);
@@ -86,7 +89,21 @@ public class NetflixCloneBackendApplication {
 		if (value.startsWith("postgresql://")) {
 			return "jdbc:postgresql://" + value.substring("postgresql://".length());
 		}
+		if (!value.contains("://") && value.contains("/")) {
+			return "jdbc:postgresql://" + value;
+		}
 		return value;
+	}
+
+	private static String buildJdbcUrlFromPgParts() {
+		String host = firstNonBlank("PGHOST", "POSTGRES_HOST");
+		String database = firstNonBlank("PGDATABASE", "POSTGRES_DB");
+		if (isBlank(host) || isBlank(database)) {
+			return null;
+		}
+		String port = firstNonBlank("PGPORT", "POSTGRES_PORT");
+		String safePort = isBlank(port) ? "5432" : port.trim();
+		return "jdbc:postgresql://" + host.trim() + ":" + safePort + "/" + database.trim() + "?sslmode=require";
 	}
 
 	private static void setIfMissing(String key, String value) {

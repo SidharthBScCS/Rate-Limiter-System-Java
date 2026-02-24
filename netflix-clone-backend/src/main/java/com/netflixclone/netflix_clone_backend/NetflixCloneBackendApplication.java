@@ -20,7 +20,7 @@ public class NetflixCloneBackendApplication {
 	}
 
 	private static void normalizeDbConfig() {
-		String dbUrl = firstNonBlank("DB_URL", "JDBC_DATABASE_URL", "DATABASE_URL", "SPRING_DATASOURCE_URL");
+		String dbUrl = firstNonPlaceholder("SPRING_DATASOURCE_URL", "JDBC_DATABASE_URL", "DATABASE_URL", "DB_URL");
 		if (isBlank(dbUrl)) {
 			dbUrl = buildJdbcUrlFromPgParts();
 		}
@@ -39,20 +39,20 @@ public class NetflixCloneBackendApplication {
 			}
 		}
 
-		String user = firstNonBlank(
-				"DB_USERNAME",
+		String user = firstNonPlaceholder(
 				"SPRING_DATASOURCE_USERNAME",
 				"PGUSER",
 				"DATABASE_USER",
-				"POSTGRES_USER");
-		String pass = firstNonBlank(
-				"DB_PASSWORD",
+				"POSTGRES_USER",
+				"DB_USERNAME");
+		String pass = firstNonPlaceholder(
 				"SPRING_DATASOURCE_PASSWORD",
 				"PGPASSWORD",
 				"DATABASE_PASSWORD",
-				"POSTGRES_PASSWORD");
-		setIfMissing("DB_USERNAME", user);
-		setIfMissing("DB_PASSWORD", pass);
+				"POSTGRES_PASSWORD",
+				"DB_PASSWORD");
+		setIfMissingOrPlaceholder("DB_USERNAME", user);
+		setIfMissingOrPlaceholder("DB_PASSWORD", pass);
 		if (!isBlank(user)) {
 			System.setProperty("spring.datasource.username", user);
 			System.setProperty("jakarta.persistence.jdbc.user", user);
@@ -127,10 +127,10 @@ public class NetflixCloneBackendApplication {
 			if (uri.getUserInfo() != null) {
 				String[] parts = uri.getUserInfo().split(":", 2);
 				if (parts.length > 0 && !isBlank(parts[0])) {
-					setIfMissing("DB_USERNAME", decodeUrlPart(parts[0]));
+					setIfMissingOrPlaceholder("DB_USERNAME", decodeUrlPart(parts[0]));
 				}
 				if (parts.length == 2 && !isBlank(parts[1])) {
-					setIfMissing("DB_PASSWORD", decodeUrlPart(parts[1]));
+					setIfMissingOrPlaceholder("DB_PASSWORD", decodeUrlPart(parts[1]));
 				}
 			}
 
@@ -176,6 +176,26 @@ public class NetflixCloneBackendApplication {
 		}
 	}
 
+	private static void setIfMissingOrPlaceholder(String key, String value) {
+		if (isBlank(value) || isPlaceholderValue(value)) {
+			return;
+		}
+		String current = firstNonBlank(key);
+		if (isBlank(current) || isPlaceholderValue(current)) {
+			System.setProperty(key, value);
+		}
+	}
+
+	private static String firstNonPlaceholder(String... keys) {
+		for (String key : keys) {
+			String value = firstNonBlank(key);
+			if (!isBlank(value) && !isPlaceholderValue(value)) {
+				return value;
+			}
+		}
+		return null;
+	}
+
 	private static String firstNonBlank(String... keys) {
 		for (String key : keys) {
 			String systemValue = System.getProperty(key);
@@ -192,5 +212,19 @@ public class NetflixCloneBackendApplication {
 
 	private static boolean isBlank(String value) {
 		return value == null || value.trim().isEmpty();
+	}
+
+	private static boolean isPlaceholderValue(String value) {
+		if (value == null) {
+			return false;
+		}
+		String normalized = value.trim().toLowerCase();
+		return normalized.contains("<host>")
+				|| normalized.contains("<db>")
+				|| normalized.contains("<database>")
+				|| normalized.contains("<user>")
+				|| normalized.contains("your_")
+				|| "db user".equals(normalized)
+				|| "db password".equals(normalized);
 	}
 }

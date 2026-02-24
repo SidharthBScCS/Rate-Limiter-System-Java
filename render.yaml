@@ -1,5 +1,38 @@
 services:
   - type: web
+    name: distributed-rate-limiter-backend
+    runtime: java
+    plan: free
+    rootDir: distributed-rate-limiter-backend
+    buildCommand: ./mvnw -DskipTests clean package
+    startCommand: java -Dserver.port=$PORT -jar target/ratelimiter-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: 6379
+      - key: REDIS_USERNAME
+        value: ""
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_SSL_ENABLED
+        value: "true"
+      - key: FRONTEND_BASE_URL
+        value: https://distributed-rate-limiter-ui.onrender.com
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: SESSION_COOKIE_DOMAIN
+        value: ".onrender.com"
+
+  - type: web
     name: netflix-clone-backend
     runtime: java
     plan: free
@@ -7,8 +40,6 @@ services:
     buildCommand: ./mvnw -DskipTests clean package
     startCommand: java -Dserver.port=$PORT -jar target/netflix-clone-backend-0.0.1-SNAPSHOT.jar
     envVars:
-      - key: PORT
-        value: 8082
       - key: DB_DRIVER
         value: org.postgresql.Driver
       - key: DB_URL
@@ -28,12 +59,42 @@ services:
       - key: REDIS_SSL_ENABLED
         value: "true"
       - key: RATELIMITER_BASE_URL
-        value: http://localhost:8080
+        value: https://distributed-rate-limiter-backend.onrender.com
       - key: SESSION_COOKIE_SAMESITE
         value: None
       - key: SESSION_COOKIE_SECURE
         value: "true"
       - key: SESSION_COOKIE_DOMAIN
-        sync: false
+        value: ".onrender.com"
       - key: CORS_ALLOWED_ORIGIN_PATTERNS
-        sync: false
+        value: https://*.onrender.com
+
+  - type: web
+    name: distributed-rate-limiter-ui
+    runtime: static
+    plan: free
+    rootDir: distributed-rate-limiter-ui
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_RATE_LIMITER_API_BASE_URL
+        value: https://distributed-rate-limiter-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: netflix-clone-ui
+    runtime: static
+    plan: free
+    rootDir: netflix-clone-ui
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_NETFLIX_AUTH_BASE_URL
+        value: https://netflix-clone-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -3,6 +3,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useEffect, useState } from "react";
 import { Activity, ShieldCheck, Shield, Zap } from "lucide-react";
 import './Cards.css';
+import { apiUrl } from "./apiBase";
 
 function Card({ refreshTick }) {
   const [stats, setStats] = useState({
@@ -17,7 +18,7 @@ function Card({ refreshTick }) {
   useEffect(() => {
     let isMounted = true;
 
-    fetch("/api/view/dashboard", { credentials: "include" })
+    fetch(apiUrl("/api/view/dashboard"), { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();

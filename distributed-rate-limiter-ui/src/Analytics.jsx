@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './Analytics.css';
 import { LineChart, Activity, ShieldCheck, ShieldX } from 'lucide-react';
+import { apiUrl } from './apiBase';
 
 function Analytics() {
     const [view, setView] = useState({
@@ -16,7 +17,7 @@ function Analytics() {
     useEffect(() => {
         let isMounted = true;
 
-        fetch("/api/analytics/view", { credentials: "include" })
+        fetch(apiUrl("/api/analytics/view"), { credentials: "include" })
             .then(async (res) => {
                 if (!res.ok) {
                     const text = await res.text();

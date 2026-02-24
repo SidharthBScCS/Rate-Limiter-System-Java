@@ -14,6 +14,7 @@ import {
   Plus,
 } from "lucide-react";
 import "./Table_Box.css";
+import { apiUrl } from "./apiBase";
 
 function deriveStatusMeta(item) {
   const sourceStatus = String(item.status ?? "NORMAL").toUpperCase();
@@ -52,7 +53,7 @@ function Main_Box({ refreshTick }) {
   const loadDashboard = () => {
     setLoading(true);
     let isMounted = true;
-    fetch("/api/view/dashboard", { credentials: "include" })
+    fetch(apiUrl("/api/view/dashboard"), { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();

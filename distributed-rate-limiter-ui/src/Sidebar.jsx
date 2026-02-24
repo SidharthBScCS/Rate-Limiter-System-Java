@@ -11,6 +11,7 @@ import {
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import './Sidebar.css';
+import { apiUrl } from "./apiBase";
 
 function Sidebar() {
     const location = useLocation();
@@ -19,7 +20,7 @@ function Sidebar() {
     const [adminInitials, setAdminInitials] = useState("AD");
 
     const handleLogout = () => {
-        fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+        fetch(apiUrl("/api/auth/logout"), { method: "POST", credentials: "include" })
             .catch(() => {})
             .finally(() => {
                 localStorage.removeItem("adminUser");
@@ -69,7 +70,7 @@ function Sidebar() {
             localStorage.removeItem("adminUser");
         }
 
-        fetch("/api/auth/me", { credentials: "include" })
+        fetch(apiUrl("/api/auth/me"), { credentials: "include" })
             .then(async (res) => {
                 if (!res.ok) {
                     const text = await res.text();

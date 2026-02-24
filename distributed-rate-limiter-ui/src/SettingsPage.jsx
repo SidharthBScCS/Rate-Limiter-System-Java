@@ -1,6 +1,7 @@
 import "./SettingsPage.css";
 import { useEffect, useMemo, useState } from "react";
 import { User, Mail, CalendarClock, Shield } from "lucide-react";
+import { apiUrl } from "./apiBase";
 
 function SettingsPage() {
   const [admin, setAdmin] = useState(() => {
@@ -25,7 +26,7 @@ function SettingsPage() {
       localStorage.removeItem("adminUser");
     }
 
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch(apiUrl("/api/auth/me"), { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           const text = await res.text();

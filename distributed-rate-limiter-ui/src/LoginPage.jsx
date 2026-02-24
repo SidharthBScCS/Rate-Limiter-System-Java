@@ -2,6 +2,7 @@ import "./LoginPage.css";
 import { LogIn, Shield, Key, AlertCircle, Sparkles, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { apiUrl } from "./apiBase";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -26,7 +27,7 @@ function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

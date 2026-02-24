@@ -1,6 +1,7 @@
 import { Modal, Button, Form, Toast, ToastContainer } from "react-bootstrap";
 import { useState } from "react";
 import { Key, User, Clock, Hash, Zap, Shield } from "lucide-react";
+import { apiUrl } from "./apiBase";
 
 function APIModal({ show, handleClose, onCreated }) {
   const [userName, setUserName] = useState("");
@@ -22,7 +23,7 @@ function APIModal({ show, handleClose, onCreated }) {
       algorithm,
     };
 
-    fetch("/api", {
+    fetch(apiUrl("/api"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

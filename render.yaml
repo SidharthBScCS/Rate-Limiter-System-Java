@@ -70,7 +70,6 @@ services:
   - type: web
     name: distributed-rate-limiter-ui
     env: static
-    plan: free
     rootDir: distributed-rate-limiter-ui
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -85,7 +84,6 @@ services:
   - type: web
     name: netflix-clone-ui
     env: static
-    plan: free
     rootDir: netflix-clone-ui
     buildCommand: npm ci && npm run build
     staticPublishPath: dist

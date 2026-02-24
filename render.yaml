@@ -1,7 +1,7 @@
 services:
   - type: web
     name: distributed-rate-limiter-backend
-    runtime: java
+    env: java
     plan: free
     rootDir: distributed-rate-limiter-backend
     buildCommand: ./mvnw -DskipTests clean package
@@ -34,7 +34,7 @@ services:
 
   - type: web
     name: netflix-clone-backend
-    runtime: java
+    env: java
     plan: free
     rootDir: netflix-clone-backend
     buildCommand: ./mvnw -DskipTests clean package
@@ -71,7 +71,7 @@ services:
 
   - type: web
     name: distributed-rate-limiter-ui
-    runtime: static
+    env: static
     plan: free
     rootDir: distributed-rate-limiter-ui
     buildCommand: npm ci && npm run build
@@ -86,7 +86,7 @@ services:
 
   - type: web
     name: netflix-clone-ui
-    runtime: static
+    env: static
     plan: free
     rootDir: netflix-clone-ui
     buildCommand: npm ci && npm run build

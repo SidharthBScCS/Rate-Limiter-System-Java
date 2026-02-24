@@ -1,6 +1,8 @@
 package com.system.ratelimiter;
 
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -25,6 +27,11 @@ public class RatelimiterApplication {
 		if (dbUrl != null) {
 			String normalized = normalizeDbUrl(dbUrl);
 			System.setProperty("DB_URL", normalized);
+			if (normalized.startsWith("jdbc:postgresql:")) {
+				setIfMissing("DB_DIALECT", "org.hibernate.dialect.PostgreSQLDialect");
+			} else if (normalized.startsWith("jdbc:mysql:")) {
+				setIfMissing("DB_DIALECT", "org.hibernate.dialect.MySQLDialect");
+			}
 
 			if (isBlank(firstNonBlank("DB_DRIVER"))) {
 				if (normalized.startsWith("jdbc:postgresql:")) {
@@ -83,16 +90,53 @@ public class RatelimiterApplication {
 		if (value.startsWith("jdbc:")) {
 			return value;
 		}
-		if (value.startsWith("postgres://")) {
-			return "jdbc:postgresql://" + value.substring("postgres://".length());
-		}
-		if (value.startsWith("postgresql://")) {
-			return "jdbc:postgresql://" + value.substring("postgresql://".length());
+		if (value.startsWith("postgres://") || value.startsWith("postgresql://")) {
+			return normalizePostgresUri(value);
 		}
 		if (!value.contains("://") && value.contains("/")) {
 			return "jdbc:postgresql://" + value;
 		}
 		return value;
+	}
+
+	private static String normalizePostgresUri(String raw) {
+		try {
+			URI uri = URI.create(raw);
+			String host = uri.getHost();
+			if (isBlank(host)) {
+				return raw;
+			}
+
+			if (uri.getUserInfo() != null) {
+				String[] parts = uri.getUserInfo().split(":", 2);
+				if (parts.length > 0 && !isBlank(parts[0])) {
+					setIfMissing("DB_USERNAME", decodeUrlPart(parts[0]));
+				}
+				if (parts.length == 2 && !isBlank(parts[1])) {
+					setIfMissing("DB_PASSWORD", decodeUrlPart(parts[1]));
+				}
+			}
+
+			StringBuilder jdbc = new StringBuilder("jdbc:postgresql://").append(host);
+			if (uri.getPort() > 0) {
+				jdbc.append(':').append(uri.getPort());
+			}
+			String path = uri.getPath();
+			if (isBlank(path) || "/".equals(path)) {
+				path = "/postgres";
+			}
+			jdbc.append(path);
+			if (!isBlank(uri.getQuery())) {
+				jdbc.append('?').append(uri.getQuery());
+			}
+			return jdbc.toString();
+		} catch (IllegalArgumentException ignored) {
+			return raw;
+		}
+	}
+
+	private static String decodeUrlPart(String value) {
+		return URLDecoder.decode(value, StandardCharsets.UTF_8);
 	}
 
 	private static String buildJdbcUrlFromPgParts() {

@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Search,
   Filter,
-  Plus,
 } from "lucide-react";
 import "./Table_Box.css";
 import { apiUrl } from "./apiBase";
@@ -135,15 +134,6 @@ function Main_Box({ refreshTick }) {
             </p>
           </div>
           <div className="table-header-actions">
-            <Button
-              variant="outline-primary"
-              size="sm"
-              className="refresh-btn"
-              onClick={() => window.dispatchEvent(new CustomEvent("open-api-modal"))}
-            >
-              <Plus size={16} />
-              Add API
-            </Button>
             {loadError && (
               <Button
                 variant="outline-warning"
@@ -264,7 +254,7 @@ function Main_Box({ refreshTick }) {
                         <Key size={48} />
                       </div>
                       <h4>No Matching API Keys</h4>
-                      <p>Adjust search/filter settings or create a new API key.</p>
+                      <p>Adjust search/filter settings and try again.</p>
                     </div>
                   </td>
                 </tr>

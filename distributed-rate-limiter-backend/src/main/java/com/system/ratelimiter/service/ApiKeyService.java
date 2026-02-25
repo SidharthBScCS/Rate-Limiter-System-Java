@@ -1,9 +1,7 @@
 package com.system.ratelimiter.service;
 
-import com.system.ratelimiter.dto.ApiKeyRequest;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.repository.ApiKeyRepository;
-import java.util.UUID;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,36 +24,6 @@ public class ApiKeyService {
         this.requestStatsService = requestStatsService;
         this.defaultAlgorithm = normalizeOrDefault(defaultAlgorithm, "SLIDING_WINDOW");
         this.blockThreshold = Math.max(0L, blockThreshold);
-    }
-
-    public ApiKey create(ApiKeyRequest request) {
-        String algorithm = resolveAlgorithm(request.getAlgorithm());
-        if (request.getRateLimit() != null && request.getRateLimit() > 100) {
-            ApiKey blocked = new ApiKey();
-            blocked.setUserName(request.getUserName());
-            blocked.setRateLimit(request.getRateLimit());
-            blocked.setWindowSeconds(request.getWindowSeconds());
-            blocked.setAlgorithm(algorithm);
-            blocked.setApiKey(UUID.randomUUID().toString());
-            blocked.setStatus("Blocked");
-            blocked.setTotalRequests(0L);
-            blocked.setAllowedRequests(0L);
-            blocked.setBlockedRequests(0L);
-            return apiKeyRepository.save(blocked);
-        }
-
-        ApiKey apiKey = new ApiKey();
-        apiKey.setUserName(request.getUserName());
-        apiKey.setRateLimit(request.getRateLimit());
-        apiKey.setWindowSeconds(request.getWindowSeconds());
-        apiKey.setAlgorithm(algorithm);
-        apiKey.setApiKey(UUID.randomUUID().toString());
-        apiKey.setStatus("Normal");
-        apiKey.setTotalRequests(0L);
-        apiKey.setAllowedRequests(0L);
-        apiKey.setBlockedRequests(0L);
-        ApiKey saved = apiKeyRepository.save(apiKey);
-        return saved;
     }
 
     public java.util.List<ApiKey> getAll() {

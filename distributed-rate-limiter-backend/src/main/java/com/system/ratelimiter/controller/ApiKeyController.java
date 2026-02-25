@@ -1,5 +1,4 @@
 package com.system.ratelimiter.controller;
-import com.system.ratelimiter.dto.ApiKeyRequest;
 import com.system.ratelimiter.dto.RateLimitCheckRequest;
 import com.system.ratelimiter.dto.RateLimitDecisionResponse;
 import com.system.ratelimiter.entity.ApiKey;
@@ -41,18 +40,6 @@ public class ApiKeyController {
         this.apiKeyService = apiKeyService;
         this.requestStatsService = requestStatsService;
         this.distributedRateLimiterService = distributedRateLimiterService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> createApiKey(@Valid @RequestBody ApiKeyRequest request) {
-        ApiKey created = apiKeyService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "message", "API Key created successfully",
-                        "id", created.getId(),
-                        "userName", created.getUserName(),
-                        "algorithm", created.getAlgorithm()
-                ));
     }
 
     @GetMapping

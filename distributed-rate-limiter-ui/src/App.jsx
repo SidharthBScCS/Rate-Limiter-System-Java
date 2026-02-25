@@ -7,18 +7,12 @@ import RulesLimits from "./RulesLimits";
 import SettingsPage from "./SettingsPage";
 import LandingPage from "./LandingPage";
 import LoginPage from "./LoginPage";
-import { useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 function App() {
-  const [refreshTick, setRefreshTick] = useState(0);
   const location = useLocation();
   const isFullWidthPage =
     location.pathname === "/" || location.pathname === "/login";
-
-  const handleCreated = () => {
-    setRefreshTick((v) => v + 1);
-  };
 
   return (
     <>
@@ -32,9 +26,9 @@ function App() {
             path="/dashboard"
             element={
               <>
-                <Heading onCreated={handleCreated} />
-                <Card refreshTick={refreshTick} />
-                <Table_Box refreshTick={refreshTick} />
+                <Heading />
+                <Card refreshTick={0} />
+                <Table_Box refreshTick={0} />
               </>
             }
           />

@@ -1,6 +1,4 @@
-import { Button, Badge } from "react-bootstrap";
-import APIModal from "./APIModal";
-import { Activity, Shield } from "lucide-react";
+import { Activity } from "lucide-react";
 
 function Heading() {
   

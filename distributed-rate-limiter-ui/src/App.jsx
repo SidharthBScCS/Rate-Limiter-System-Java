@@ -7,16 +7,39 @@ import RulesLimits from "./RulesLimits";
 import SettingsPage from "./SettingsPage";
 import LandingPage from "./LandingPage";
 import LoginPage from "./LoginPage";
+import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
 function App() {
   const location = useLocation();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const isFullWidthPage =
     location.pathname === "/" || location.pathname === "/login";
 
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
   return (
     <>
-      {!isFullWidthPage ? <Sidebar /> : null}
+      {!isFullWidthPage ? (
+        <>
+          <button
+            type="button"
+            className="mobile-nav-toggle"
+            aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMobileNavOpen((v) => !v)}
+          >
+            {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <div
+            className={`mobile-nav-overlay ${mobileNavOpen ? "open" : ""}`}
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <Sidebar isMobileOpen={mobileNavOpen} onNavigate={() => setMobileNavOpen(false)} />
+        </>
+      ) : null}
 
       <div className={`right-content ${isFullWidthPage ? "full-width" : ""}`}>
         <Routes>

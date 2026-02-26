@@ -782,6 +782,12 @@
   .sidebar-container {
     transform: translateX(-100%);
     pointer-events: none;
+    transition: transform 0.25s ease;
+  }
+
+  .sidebar-container.mobile-open {
+    transform: translateX(0);
+    pointer-events: auto;
   }
 }
 

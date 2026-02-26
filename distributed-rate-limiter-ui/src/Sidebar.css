@@ -780,6 +780,8 @@
 
 @media (max-width: 1024px) {
   .sidebar-container {
+    z-index: 70;
+    width: min(82vw, 320px);
     transform: translateX(-100%);
     pointer-events: none;
     transition: transform 0.25s ease;

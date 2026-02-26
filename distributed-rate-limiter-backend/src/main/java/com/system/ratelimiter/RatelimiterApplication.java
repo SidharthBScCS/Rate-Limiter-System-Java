@@ -46,16 +46,16 @@ public class RatelimiterApplication {
 
 		String user = firstNonPlaceholder(
 				"SPRING_DATASOURCE_USERNAME",
-				"PGUSER",
-				"DATABASE_USER",
-				"POSTGRES_USER",
 				"DB_USERNAME");
 		String pass = firstNonPlaceholder(
 				"SPRING_DATASOURCE_PASSWORD",
-				"PGPASSWORD",
-				"DATABASE_PASSWORD",
-				"POSTGRES_PASSWORD",
 				"DB_PASSWORD");
+
+		// On local machines, generic "user" with empty password commonly comes from stale shell config.
+		// Force sensible localhost defaults in that broken combination.
+		if ("user".equalsIgnoreCase(user == null ? "" : user.trim()) && isBlank(pass)) {
+			user = "root";
+		}
 		setIfMissingOrPlaceholder("DB_USERNAME", user);
 		setIfMissingOrPlaceholder("DB_PASSWORD", pass);
 		if (!isBlank(user)) {

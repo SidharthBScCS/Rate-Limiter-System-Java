@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+    private static final String SINGLE_ADMIN_USERNAME = "admin";
+    private static final String SINGLE_ADMIN_PASSWORD = "admin@123";
+
     private final AdminUserRepository adminUserRepository;
 
     public AuthService(AdminUserRepository adminUserRepository) {
@@ -17,6 +20,10 @@ public class AuthService {
 
     public boolean authenticate(String username, String password) {
         if (username == null || username.isBlank() || password == null) {
+            return false;
+        }
+
+        if (!Objects.equals(SINGLE_ADMIN_USERNAME, username) || !Objects.equals(SINGLE_ADMIN_PASSWORD, password)) {
             return false;
         }
 

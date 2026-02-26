@@ -12,7 +12,7 @@ function Heading() {
                 <Activity size={24} className="text-primary" />
               </div>
               <div>
-                <h4 className="text-white mb-0 fw-bold">Distributed Rate Limiter</h4>
+                <h4 className="text-white mb-0 fw-bold app-title">Distributed Rate Limiter</h4>
               </div>
             </div>
           </div>

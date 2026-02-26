@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestController
-@CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*", "https://*.onrender.com"}, allowCredentials = "true")
+@CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"}, allowCredentials = "true")
 @RequestMapping("/api")
 public class ApiKeyController {
 

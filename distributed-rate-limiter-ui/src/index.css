@@ -367,7 +367,7 @@ body::before {
   .right-content {
     margin-left: 0;
     width: 100%;
-    padding: 1.5rem;
+    padding: 4rem 0.85rem 1.1rem;
   }
 
   .right-content.full-width {
@@ -376,6 +376,23 @@ body::before {
   
   .grid-2, .grid-3, .grid-4 {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-title {
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+
+  .glass-navbar {
+    border-radius: 12px;
+    margin-bottom: 0.7rem;
+  }
+
+  .header-icon-wrapper {
+    width: 38px;
+    height: 38px;
   }
 }
 

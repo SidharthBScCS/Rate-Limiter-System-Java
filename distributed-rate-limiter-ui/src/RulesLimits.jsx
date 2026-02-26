@@ -147,7 +147,7 @@ function RulesLimits() {
           {routeRules.length} active route rules
         </span>
         <div className="modern-table-container rules-table-container">
-          <div className="table-wrapper">
+          <div className="table-wrapper rules-table-desktop">
             <table className="modern-table rules-table">
               <thead>
                 <tr>
@@ -196,6 +196,35 @@ function RulesLimits() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="rules-mobile-list">
+            {routeRules.map((rule) => (
+              <div key={`mobile-${rule.name}`} className="rules-mobile-card">
+                <div className="rules-mobile-card-top">
+                  <div className="rule-name">
+                    <span>{rule.name}</span>
+                    <small>{rule.path}</small>
+                  </div>
+                  <span className={`status-pill ${rule.tone}`}>
+                    {rule.tone === "active" && <CheckCircle2 size={14} />}
+                    {rule.tone === "warning" && <AlertTriangle size={14} />}
+                    {rule.tone === "blocked" && <Ban size={14} />}
+                    {rule.status}
+                  </span>
+                </div>
+                <div className="rules-mobile-metrics">
+                  <span className="rule-metric">{rule.limit}</span>
+                  <span className="rule-metric">{rule.window}</span>
+                  <span className="rule-metric">Burst {rule.burst}</span>
+                </div>
+                <div className="rules-mobile-footer">
+                  <span className="algorithm-pill">{rule.algorithm}</span>
+                  <button type="button" className="table-action-btn">
+                    Edit
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

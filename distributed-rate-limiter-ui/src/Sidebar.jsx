@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import './Sidebar.css';
 import { apiUrl } from "./apiBase";
 
-function Sidebar({ isMobileOpen = false, onNavigate }) {
+function Sidebar({ isMobileOpen = false }) {
     const location = useLocation();
     const [hoverItem, setHoverItem] = useState(null);
     const [adminName, setAdminName] = useState("");
@@ -128,9 +128,6 @@ function Sidebar({ isMobileOpen = false, onNavigate }) {
                     <NavLink
                         key={item.id}
                         to={item.to}
-                        onClick={() => {
-                            if (onNavigate) onNavigate();
-                        }}
                         onMouseEnter={() => setHoverItem(item.id)}
                         onMouseLeave={() => setHoverItem(null)}
                         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}

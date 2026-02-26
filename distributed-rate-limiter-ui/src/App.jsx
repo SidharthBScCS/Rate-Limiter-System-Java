@@ -37,7 +37,7 @@ function App() {
             className={`mobile-nav-overlay ${mobileNavOpen ? "open" : ""}`}
             onClick={() => setMobileNavOpen(false)}
           />
-          <Sidebar isMobileOpen={mobileNavOpen} onNavigate={() => setMobileNavOpen(false)} />
+          <Sidebar isMobileOpen={mobileNavOpen} />
         </>
       ) : null}
 

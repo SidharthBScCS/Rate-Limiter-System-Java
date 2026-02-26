@@ -197,7 +197,7 @@ function Main_Box({ refreshTick }) {
       )}
 
       <div className="modern-table-container">
-        <div className="table-wrapper">
+        <div className="table-wrapper desktop-table-view">
           <table className="modern-table">
             <thead>
               <tr>
@@ -334,6 +334,72 @@ function Main_Box({ refreshTick }) {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="mobile-api-list">
+          {filteredApiKeys.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <Key size={48} />
+              </div>
+              <h4>No Matching API Keys</h4>
+              <p>Adjust search/filter settings and try again.</p>
+            </div>
+          ) : (
+            filteredApiKeys.map((item) => {
+              const apiKeyValue = item.apiKeyFull ?? "";
+              const requestCount = Number(item.requestCount ?? 0);
+              const statusMeta = deriveStatusMeta(item);
+              const usagePercentage = Number(item.usagePercentage ?? 0);
+              const usageColor = item.usageColor ?? "#10b981";
+
+              return (
+                <div key={item.id ?? item.apiKeyDisplay} className="mobile-api-card">
+                  <div className="mobile-api-card-top">
+                    <code>{item.apiKeyDisplay}</code>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="copy-btn"
+                      onClick={() => copyToClipboard(apiKeyValue)}
+                      title="Copy API Key"
+                    >
+                      <Copy size={14} />
+                    </Button>
+                  </div>
+                  <div className="mobile-api-meta">
+                    <span>{item.userName}</span>
+                    <span className="algorithm-pill">{item.algorithm ?? "SLIDING_WINDOW"}</span>
+                  </div>
+                  <div className="mobile-api-meta">
+                    <span>{item.rateLimit} req</span>
+                    <span>{item.windowSeconds}s window</span>
+                  </div>
+                  <div className="requests-cell">
+                    <div className="requests-info">
+                      <span className="request-count">{requestCount}</span>
+                      <span className="request-percentage" style={{ color: usageColor }}>
+                        {usagePercentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="usage-bar">
+                      <div
+                        className="usage-progress"
+                        style={{
+                          width: `${usagePercentage}%`,
+                          backgroundColor: usageColor,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="mobile-api-status">
+                    <span className="status-pill" style={{ color: statusMeta.color }}>
+                      {statusMeta.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

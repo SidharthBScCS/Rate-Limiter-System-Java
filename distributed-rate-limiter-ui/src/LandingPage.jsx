@@ -1,6 +1,6 @@
 import "./LandingPage.css";
 import { Link } from "react-router-dom";
-import { Github, LogIn, Zap, Shield, Activity, Users, Code, Star } from "lucide-react";
+import { Github, LogIn, Zap, Shield, Activity, Users, Code } from "lucide-react";
 
 function LandingPage() {
   return (
@@ -148,44 +148,6 @@ function LandingPage() {
         </div>
       </section>
 
-      <div className="divider"></div>
-
-      <section className="student-section">
-        <h2>Meet the Engineering Team</h2>
-        <div className="student-grid">
-          <article className="student-card">
-            <Star size={24} style={{ color: '#facc15', marginBottom: '16px' }} />
-            <p className="student-name">Sidharth</p>
-            <p className="student-meta">Lead Backend Architect</p>
-            <p className="student-meta">2401720003 | BSc CS</p>
-            <p className="student-meta">Java | Spring | Redis</p>
-          </article>
-          
-          <article className="student-card">
-            <Star size={24} style={{ color: '#22c55e', marginBottom: '16px' }} />
-            <p className="student-name">Ankit Kumar Yadav</p>
-            <p className="student-meta">Lead Frontend Developer</p>
-            <p className="student-meta">2401720012 | BSc CS</p>
-            <p className="student-meta">React | UI/UX</p>
-          </article>
-          
-          <article className="student-card">
-            <Star size={24} style={{ color: '#facc15', marginBottom: '16px' }} />
-            <p className="student-name">Diwakar</p>
-            <p className="student-meta">Data Analyst</p>
-            <p className="student-meta">2401720013 | BSc CS</p>
-            <p className="student-meta">Analytics</p>
-          </article>
-          
-          <article className="student-card">
-            <Star size={24} style={{ color: '#22c55e', marginBottom: '16px' }} />
-            <p className="student-name">Palak Kashyap</p>
-            <p className="student-meta">Data Analyst</p>
-            <p className="student-meta">2401840007 | BSc DS</p>
-            <p className="student-meta">Analytics</p>
-          </article>
-        </div>
-      </section>
     </div>
   );
 }

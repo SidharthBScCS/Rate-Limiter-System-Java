@@ -130,7 +130,8 @@ function LandingPage() {
             <li><strong>Backend:</strong> Java + Spring Boot </li>
             <li><strong>Frontend:</strong> React + BootStrap</li>
             <li><strong>Data Store:</strong> Redis for distributed rate limiting</li>
-            <li><strong>Database:</strong> MySQL for configuration and user data</li>
+            <li><strong>Database:</strong> PostgreSQL for configuration and user data</li>
+            <li><strong>Testing:</strong> Postman for API testing</li>
             <li><strong>Monitoring:</strong> Prometheus + Grafana integration ready</li>
           </ul>
         </div>

@@ -1,15 +1,12 @@
 package com.system.ratelimiter.controller;
 
 import com.system.ratelimiter.dto.LoginRequest;
-import com.system.ratelimiter.entity.AdminUser;
-import com.system.ratelimiter.repository.AdminUserRepository;
 import com.system.ratelimiter.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,16 +18,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class LoginPageController {
 
     private final AuthService authService;
-    private final AdminUserRepository adminUserRepository;
+    private final String adminUsername;
     private final String frontendBaseUrl;
 
     public LoginPageController(
             AuthService authService,
-            AdminUserRepository adminUserRepository,
+            @Value("${auth.admin.username:admin}") String adminUsername,
             @Value("${frontend.base-url:http://localhost:5173}") String frontendBaseUrl
     ) {
         this.authService = authService;
-        this.adminUserRepository = adminUserRepository;
+        this.adminUsername = adminUsername;
         this.frontendBaseUrl = frontendBaseUrl;
     }
 
@@ -52,14 +49,7 @@ public class LoginPageController {
             return "login";
         }
 
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(request.getUsername());
-        if (admin.isEmpty()) {
-            model.addAttribute("error", "Invalid credentials.");
-            model.addAttribute("serverTime", currentIstTime());
-            return "login";
-        }
-
-        session.setAttribute("userId", admin.get().getUserId());
+        session.setAttribute("userId", adminUsername);
         return "redirect:" + frontendBaseUrl + "/dashboard";
     }
 

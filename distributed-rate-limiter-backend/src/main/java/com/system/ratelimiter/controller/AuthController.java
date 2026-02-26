@@ -1,15 +1,13 @@
 package com.system.ratelimiter.controller;
 
 import com.system.ratelimiter.dto.LoginRequest;
-import com.system.ratelimiter.entity.AdminUser;
-import com.system.ratelimiter.repository.AdminUserRepository;
 import com.system.ratelimiter.service.AuthService;
 import jakarta.validation.Valid;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.dao.DataAccessException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -27,11 +25,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final AdminUserRepository adminUserRepository;
+    private final String adminUsername;
+    private final String adminFullName;
+    private final String adminEmail;
+    private final Instant createdAt;
 
-    public AuthController(AuthService authService, AdminUserRepository adminUserRepository) {
+    public AuthController(
+            AuthService authService,
+            @Value("${auth.admin.username:admin}") String adminUsername,
+            @Value("${auth.admin.full-name:System Admin}") String adminFullName,
+            @Value("${auth.admin.email:admin@ratelimiter.local}") String adminEmail
+    ) {
         this.authService = authService;
-        this.adminUserRepository = adminUserRepository;
+        this.adminUsername = adminUsername;
+        this.adminFullName = adminFullName;
+        this.adminEmail = adminEmail;
+        this.createdAt = Instant.now();
     }
 
     @PostMapping("/login")
@@ -42,35 +51,24 @@ public class AuthController {
                     .body(Map.of("message", "Invalid credentials"));
         }
 
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(request.getUsername());
-        if (admin.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid credentials"));
-        }
-
-        AdminUser user = admin.get();
-        session.setAttribute("userId", user.getUserId());
-        Map<String, Object> body = adminPayload(user);
+        session.setAttribute("userId", adminUsername);
+        Map<String, Object> body = adminPayload();
         body.put("message", "Login successful");
         return ResponseEntity.ok(body);
     }
 
     @GetMapping("/admin/{userId}")
     public ResponseEntity<Map<String, Object>> getAdmin(@PathVariable("userId") String userId) {
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(userId);
-        if (admin.isEmpty()) {
+        if (!adminUsername.equals(userId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "Admin not found"));
         }
-        return ResponseEntity.ok(adminPayload(admin.get()));
+        return ResponseEntity.ok(adminPayload());
     }
 
     @GetMapping("/admins")
     public ResponseEntity<Map<String, Object>> listAdmins() {
-        var admins = adminUserRepository.findAll()
-                .stream()
-                .map(this::adminListItemPayload)
-                .toList();
+        var admins = java.util.List.of(adminListItemPayload());
         return ResponseEntity.ok(Map.of(
                 "count", admins.size(),
                 "items", admins
@@ -84,25 +82,17 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Not authenticated"));
         }
-
-        Optional<AdminUser> admin = adminUserRepository.findByUserId(String.valueOf(userId));
-        if (admin.isEmpty()) {
+        if (!adminUsername.equals(String.valueOf(userId))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Not authenticated"));
         }
-        return ResponseEntity.ok(adminPayload(admin.get()));
+        return ResponseEntity.ok(adminPayload());
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(HttpSession session) {
         session.invalidate();
         return ResponseEntity.ok(Map.of("message", "Logged out"));
-    }
-
-    @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<Map<String, Object>> handleDataAccess(DataAccessException ex) {
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(Map.of("message", "Authentication database unavailable"));
     }
 
     @ExceptionHandler(Exception.class)
@@ -123,22 +113,22 @@ public class AuthController {
         return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
     }
 
-    private Map<String, Object> adminPayload(AdminUser user) {
+    private Map<String, Object> adminPayload() {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("userId", user.getUserId());
-        payload.put("fullName", user.getFullName());
-        payload.put("email", user.getEmail());
-        payload.put("createdAt", user.getCreatedAt());
-        payload.put("initials", initials(user.getFullName(), user.getUserId()));
+        payload.put("userId", adminUsername);
+        payload.put("fullName", adminFullName);
+        payload.put("email", adminEmail);
+        payload.put("createdAt", createdAt);
+        payload.put("initials", initials(adminFullName, adminUsername));
         return payload;
     }
 
-    private Map<String, Object> adminListItemPayload(AdminUser user) {
+    private Map<String, Object> adminListItemPayload() {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("userId", user.getUserId());
-        payload.put("fullName", user.getFullName());
-        payload.put("email", user.getEmail());
-        payload.put("createdAt", user.getCreatedAt());
+        payload.put("userId", adminUsername);
+        payload.put("fullName", adminFullName);
+        payload.put("email", adminEmail);
+        payload.put("createdAt", createdAt);
         return payload;
     }
 }

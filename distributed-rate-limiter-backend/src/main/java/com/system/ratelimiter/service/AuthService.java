@@ -1,33 +1,27 @@
 package com.system.ratelimiter.service;
 
-import com.system.ratelimiter.entity.AdminUser;
-import com.system.ratelimiter.repository.AdminUserRepository;
 import java.util.Objects;
-import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    private static final String SINGLE_ADMIN_USERNAME = "admin";
-    private static final String SINGLE_ADMIN_PASSWORD = "admin@123";
+    private final String adminUsername;
+    private final String adminPassword;
 
-    private final AdminUserRepository adminUserRepository;
-
-    public AuthService(AdminUserRepository adminUserRepository) {
-        this.adminUserRepository = adminUserRepository;
+    public AuthService(
+            @Value("${auth.admin.username:admin}") String adminUsername,
+            @Value("${auth.admin.password:admin@123}") String adminPassword
+    ) {
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
     }
 
     public boolean authenticate(String username, String password) {
         if (username == null || username.isBlank() || password == null) {
             return false;
         }
-
-        if (!Objects.equals(SINGLE_ADMIN_USERNAME, username) || !Objects.equals(SINGLE_ADMIN_PASSWORD, password)) {
-            return false;
-        }
-
-        Optional<AdminUser> user = adminUserRepository.findByUserId(username);
-        return user.filter(admin -> Objects.equals(admin.getPassword(), password)).isPresent();
+        return Objects.equals(adminUsername, username) && Objects.equals(adminPassword, password);
     }
 }

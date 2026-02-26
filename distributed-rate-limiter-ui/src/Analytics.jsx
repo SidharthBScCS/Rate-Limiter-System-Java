@@ -79,7 +79,7 @@ function Analytics() {
                 <div className="header-top">
                     <div>
                         <h1 className="page-title">API Analytics Dashboard</h1>
-                        <p className="page-subtitle">API key totals from MySQL</p>
+                        <p className="page-subtitle">API key totals from PostgreSQL</p>
                     </div>
                 </div>
                 <div className="analytics-kpis">

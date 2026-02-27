@@ -71,12 +71,12 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count[1m]))",
+          "expr": "sum(rate(ratelimiter_requests_total[1m]))",
           "legendFormat": "Total RPS",
           "refId": "A"
         }
       ],
-      "title": "Request Rate",
+      "title": "Rate Limiter Request Rate",
       "type": "timeseries"
     },
     {
@@ -190,22 +190,22 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"2..\"}[1m]))",
-          "legendFormat": "2xx",
+          "expr": "sum(rate(ratelimiter_requests_total{result=\"allowed\"}[1m]))",
+          "legendFormat": "Allowed",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[1m]))",
-          "legendFormat": "4xx",
+          "expr": "sum(rate(ratelimiter_requests_total{result=\"blocked\"}[1m]))",
+          "legendFormat": "Blocked",
           "refId": "B"
         },
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m]))",
-          "legendFormat": "5xx",
+          "expr": "sum(rate(ratelimiter_requests_total{result=\"blocked\"}[1m])) by (algorithm)",
+          "legendFormat": "{{algorithm}} blocked",
           "refId": "C"
         }
       ],
-      "title": "Response Status Rates",
+      "title": "Limiter Decisions",
       "type": "timeseries"
     }
   ],

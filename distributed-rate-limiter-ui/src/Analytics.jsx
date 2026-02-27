@@ -4,6 +4,16 @@ import { LineChart, ExternalLink } from "lucide-react";
 
 function Analytics() {
   const grafanaDashboardUrl = (import.meta.env.VITE_GRAFANA_DASHBOARD_URL || "").trim();
+  const grafanaEmbedUrl = (() => {
+    if (!grafanaDashboardUrl) return "";
+    try {
+      const url = new URL(grafanaDashboardUrl);
+      url.searchParams.set("kiosk", "tv");
+      return url.toString();
+    } catch {
+      return grafanaDashboardUrl;
+    }
+  })();
 
   return (
     <div className="analytics-page dark-theme">
@@ -23,7 +33,7 @@ function Analytics() {
               <LineChart size={18} />
               Grafana Dashboard
             </h4>
-            {grafanaDashboardUrl ? (
+            {grafanaEmbedUrl ? (
               <a className="grafana-open-link" href={grafanaDashboardUrl} target="_blank" rel="noreferrer">
                 Open in Grafana
                 <ExternalLink size={14} />
@@ -31,9 +41,9 @@ function Analytics() {
             ) : null}
           </div>
 
-          {grafanaDashboardUrl ? (
+          {grafanaEmbedUrl ? (
             <div className="grafana-frame-wrap">
-              <iframe title="Grafana Analytics" src={grafanaDashboardUrl} className="grafana-frame" loading="lazy" />
+              <iframe title="Grafana Analytics" src={grafanaEmbedUrl} className="grafana-frame" loading="lazy" />
             </div>
           ) : (
             <div className="grafana-empty">

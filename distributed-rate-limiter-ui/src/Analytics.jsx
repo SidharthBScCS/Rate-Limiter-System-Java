@@ -4,6 +4,7 @@ import { LineChart, ExternalLink } from "lucide-react";
 
 function Analytics() {
   const grafanaDashboardUrl = (import.meta.env.VITE_GRAFANA_DASHBOARD_URL || "").trim();
+  const [embedBlocked, setEmbedBlocked] = React.useState(false);
   const grafanaEmbedUrl = (() => {
     if (!grafanaDashboardUrl) return "";
     try {
@@ -43,7 +44,18 @@ function Analytics() {
 
           {grafanaEmbedUrl ? (
             <div className="grafana-frame-wrap">
-              <iframe title="Grafana Analytics" src={grafanaEmbedUrl} className="grafana-frame" loading="lazy" />
+              <iframe
+                title="Grafana Analytics"
+                src={grafanaEmbedUrl}
+                className="grafana-frame"
+                loading="lazy"
+                onError={() => setEmbedBlocked(true)}
+              />
+              {embedBlocked ? (
+                <div className="grafana-empty">
+                  Embedding is blocked by Grafana security headers. Use <code>Open in Grafana</code>.
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="grafana-empty">

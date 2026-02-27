@@ -26,6 +26,13 @@ function SettingsPage() {
       localStorage.removeItem("adminUser");
     }
 
+    if (!hasCachedAdmin) {
+      window.location.href = "/login";
+      return () => {
+        isMounted = false;
+      };
+    }
+
     fetch(apiUrl("/api/auth/me"), { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
@@ -42,9 +49,12 @@ function SettingsPage() {
         }
       })
       .catch((err) => {
-        console.error("LOAD ADMIN ERROR:", err);
-        if (isMounted && !hasCachedAdmin) {
-          setLoadError("Unable to load admin profile.");
+        if (isMounted) {
+          const unauthorized = err instanceof Error && /401|Not authenticated/i.test(err.message);
+          if (!unauthorized) {
+            setLoadError("Unable to load admin profile.");
+          }
+          localStorage.removeItem("adminUser");
           window.location.href = "/login";
         }
       });

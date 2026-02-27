@@ -59,15 +59,24 @@ function Sidebar({ isMobileOpen = false }) {
         let isMounted = true;
 
         let hasCachedAdmin = false;
+        let cachedAdmin = null;
         try {
             const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
             if (cached && typeof cached === "object") {
                 hasCachedAdmin = true;
+                cachedAdmin = cached;
                 setAdminName(cached.fullName || cached.userId || "");
                 setAdminInitials(cached.initials || "AD");
             }
         } catch {
             localStorage.removeItem("adminUser");
+        }
+
+        if (!hasCachedAdmin) {
+            window.location.href = "/login";
+            return () => {
+                isMounted = false;
+            };
         }
 
         fetch(apiUrl("/api/auth/me"), { credentials: "include" })
@@ -87,14 +96,13 @@ function Sidebar({ isMobileOpen = false }) {
             })
             .catch(() => {
                 if (isMounted) {
-                    if (!hasCachedAdmin) {
+                    if (!cachedAdmin) {
                         setAdminName("");
                         setAdminInitials("AD");
                     }
                 }
-                if (!hasCachedAdmin) {
-                    window.location.href = "/login";
-                }
+                localStorage.removeItem("adminUser");
+                window.location.href = "/login";
             });
 
         return () => {

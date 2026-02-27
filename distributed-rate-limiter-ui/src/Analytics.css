@@ -1,7 +1,7 @@
 /* Analytics.css - Dark Theme for PostgreSQL Analytics */
 
 .analytics-page.dark-theme {
-    padding: 8px 10px 16px;
+    padding: 8px 4px 12px;
     background: transparent;
     min-height: auto;
     color: #e2e8f0;
@@ -693,7 +693,7 @@
 }
 
 .grafana-card {
-    padding: 16px;
+    padding: 12px;
 }
 
 .grafana-open-link {
@@ -724,9 +724,17 @@
 .grafana-frame {
     display: block;
     width: 100%;
-    height: 520px;
+    height: calc(100vh - 260px);
+    min-height: 620px;
     border: 0;
     background: #0b1020;
+}
+
+@media (max-width: 1024px) {
+    .grafana-frame {
+        height: 72vh;
+        min-height: 520px;
+    }
 }
 
 .grafana-empty {
@@ -740,4 +748,39 @@
 
 .grafana-empty code {
     color: #bfdbfe;
+}
+
+.analytics-page.dark-theme.page-full-bleed.analytics-full {
+    padding: 0;
+    width: 100%;
+    margin: 0;
+    min-height: 100vh;
+}
+
+.grafana-full-section {
+    position: relative;
+    height: 100vh;
+}
+
+.grafana-frame-wrap--full {
+    height: 100%;
+    border-radius: 0;
+    border: 0;
+}
+
+.grafana-frame--full {
+    height: 100%;
+    min-height: 0;
+}
+
+@media (max-width: 1024px) {
+    .analytics-page.dark-theme.page-full-bleed.analytics-full {
+        width: 100%;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    .grafana-full-section {
+        height: 100vh;
+    }
 }

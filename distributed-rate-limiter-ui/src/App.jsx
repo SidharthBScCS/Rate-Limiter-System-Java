@@ -26,6 +26,7 @@ function App() {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const isAuthenticated = hasAuthenticatedUser();
+  const isAnalyticsPage = location.pathname === "/analytics";
   const isFullWidthPage =
     location.pathname === "/" || location.pathname === "/login";
   const showSidebar = !isFullWidthPage && isAuthenticated;
@@ -54,7 +55,7 @@ function App() {
         </>
       ) : null}
 
-      <div className={`right-content ${isFullWidthPage ? "full-width" : ""}`}>
+      <div className={`right-content ${isFullWidthPage ? "full-width" : ""} ${isAnalyticsPage ? "analytics-layout" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route

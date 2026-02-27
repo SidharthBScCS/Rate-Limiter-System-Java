@@ -8,18 +8,6 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true
-      },
-      '/grafana': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/grafana/, ''),
-        configure: (proxy) => {
-          proxy.on('proxyRes', (proxyRes) => {
-            delete proxyRes.headers['x-frame-options'];
-            delete proxyRes.headers['content-security-policy'];
-          });
-        }
       }
     }
   }

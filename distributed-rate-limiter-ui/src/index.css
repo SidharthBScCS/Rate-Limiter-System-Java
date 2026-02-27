@@ -145,10 +145,20 @@ body::before {
   padding: 0;
 }
 
+.right-content.analytics-layout {
+  padding: 0;
+}
+
 .right-content > * {
   max-width: 1240px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.right-content > .page-full-bleed {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .right-content.full-width > * {
@@ -371,6 +381,10 @@ body::before {
   }
 
   .right-content.full-width {
+    padding: 0;
+  }
+
+  .right-content.analytics-layout {
     padding: 0;
   }
   

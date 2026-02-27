@@ -1,4 +1,4 @@
-﻿import { Button, Spinner } from "react-bootstrap";
+﻿import { Button, Spinner, Modal, Form } from "react-bootstrap";
 import { useEffect, useMemo, useState } from "react";
 import {
   Copy,
@@ -48,6 +48,18 @@ function Main_Box({ refreshTick }) {
   const [searchText, setSearchText] = useState("");
   const [algorithmFilter, setAlgorithmFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
+
+  // Create API key modal state
+  const [showCreate, setShowCreate] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createdKey, setCreatedKey] = useState(null);
+  const [createForm, setCreateForm] = useState({
+    userName: "",
+    rateLimit: 100,
+    windowSeconds: 60,
+    algorithm: "SLIDING_WINDOW",
+  });
 
   const loadDashboard = () => {
     setLoading(true);
@@ -144,6 +156,20 @@ function Main_Box({ refreshTick }) {
                 Refresh
               </Button>
             )}
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setCreateError("");
+                setCreatedKey(null);
+                setShowCreate(true);
+              }}
+              className="create-btn"
+              style={{ marginLeft: 8 }}
+            >
+              Create API Key
+            </Button>
           </div>
         </div>
       </div>
@@ -401,6 +427,109 @@ function Main_Box({ refreshTick }) {
           )}
         </div>
       </div>
+
+      {/* Create API Key Modal */}
+      <Modal show={showCreate} onHide={() => setShowCreate(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Create API Key</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {createdKey ? (
+            <div style={{ textAlign: "center" }}>
+              <p>Your API key was created successfully.</p>
+              <code style={{ display: "block", wordBreak: "break-all", marginBottom: 8 }}>{createdKey}</code>
+              <div>
+                <Button variant="outline-primary" size="sm" onClick={() => copyToClipboard(createdKey)}>
+                  Copy
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {createError && <div className="form-error">{createError}</div>}
+              <Form>
+                <Form.Group className="mb-2">
+                  <Form.Label>User Name</Form.Label>
+                  <Form.Control
+                    value={createForm.userName}
+                    onChange={(e) => setCreateForm({ ...createForm, userName: e.target.value })}
+                    placeholder="Owner / user name"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Rate Limit (requests)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={createForm.rateLimit}
+                    onChange={(e) => setCreateForm({ ...createForm, rateLimit: Number(e.target.value) })}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Window Seconds</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={createForm.windowSeconds}
+                    onChange={(e) => setCreateForm({ ...createForm, windowSeconds: Number(e.target.value) })}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Form.Label>Algorithm</Form.Label>
+                  <Form.Select
+                    value={createForm.algorithm}
+                    onChange={(e) => setCreateForm({ ...createForm, algorithm: e.target.value })}
+                  >
+                    <option value="SLIDING_WINDOW">Sliding Window</option>
+                    <option value="TOKEN_BUCKET">Token Bucket</option>
+                    <option value="FIXED_WINDOW">Fixed Window</option>
+                  </Form.Select>
+                </Form.Group>
+              </Form>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCreate(false)} disabled={createSubmitting}>
+            Close
+          </Button>
+          {!createdKey && (
+            <Button
+              variant="primary"
+              onClick={async () => {
+                setCreateError("");
+                setCreateSubmitting(true);
+                try {
+                  const res = await fetch(apiUrl("/api/keys"), {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(createForm),
+                  });
+                  const text = await res.text();
+                  if (!res.ok) {
+                    try {
+                      const json = JSON.parse(text);
+                      throw new Error(json.message || text || res.statusText);
+                    } catch (e) {
+                      throw new Error(text || res.statusText);
+                    }
+                  }
+                  const data = JSON.parse(text);
+                  setCreatedKey(data.apiKey ?? data.apiKeyFull ?? "");
+                  // refresh dashboard list
+                  loadDashboard();
+                } catch (err) {
+                  setCreateError(err.message || "Unable to create API key.");
+                } finally {
+                  setCreateSubmitting(false);
+                }
+              }}
+              disabled={createSubmitting}
+            >
+              {createSubmitting ? <Spinner size="sm" animation="border" /> : "Create"}
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

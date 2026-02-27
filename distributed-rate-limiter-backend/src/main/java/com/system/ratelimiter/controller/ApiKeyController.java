@@ -1,5 +1,6 @@
 package com.system.ratelimiter.controller;
 import com.system.ratelimiter.dto.RateLimitCheckRequest;
+import com.system.ratelimiter.dto.CreateApiKeyRequest;
 import com.system.ratelimiter.dto.RateLimitDecisionResponse;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.entity.RequestStats;
@@ -123,6 +124,17 @@ public class ApiKeyController {
                     .body(body);
         }
         return ResponseEntity.ok(body);
+    }
+
+    @PostMapping("/keys")
+    public ResponseEntity<ApiKey> createApiKey(@Valid @RequestBody CreateApiKeyRequest request) {
+        ApiKey created = apiKeyService.createApiKey(
+                request.getUserName(),
+                request.getRateLimit(),
+                request.getWindowSeconds(),
+                request.getAlgorithm()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

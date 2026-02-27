@@ -5,6 +5,7 @@ import com.system.ratelimiter.repository.ApiKeyRepository;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import java.util.UUID;
 
 @Service
 public class ApiKeyService {
@@ -24,6 +25,27 @@ public class ApiKeyService {
         this.requestStatsService = requestStatsService;
         this.defaultAlgorithm = normalizeOrDefault(defaultAlgorithm, "SLIDING_WINDOW");
         this.blockThreshold = Math.max(0L, blockThreshold);
+    }
+
+    public ApiKey createApiKey(String userName, Integer rateLimit, Integer windowSeconds, String algorithm) {
+        if (userName == null || userName.trim().isEmpty()) throw new IllegalArgumentException("userName is required");
+        if (rateLimit == null || rateLimit <= 0) throw new IllegalArgumentException("rateLimit must be > 0");
+        if (windowSeconds == null || windowSeconds <= 0) throw new IllegalArgumentException("windowSeconds must be > 0");
+
+        ApiKey apiKey = new ApiKey();
+        apiKey.setUserName(userName.trim());
+        apiKey.setRateLimit(rateLimit);
+        apiKey.setWindowSeconds(windowSeconds);
+        apiKey.setAlgorithm(normalizeOrDefault(algorithm, defaultAlgorithm));
+        // generate a random API key token
+        String token = UUID.randomUUID().toString().replace("-", "");
+        apiKey.setApiKey(token);
+        apiKey.setStatus("Normal");
+        apiKey.setTotalRequests(0L);
+        apiKey.setAllowedRequests(0L);
+        apiKey.setBlockedRequests(0L);
+
+        return apiKeyRepository.save(apiKey);
     }
 
     public java.util.List<ApiKey> getAll() {

@@ -515,8 +515,16 @@ function Main_Box({ refreshTick }) {
                   }
                   const data = JSON.parse(text);
                   setCreatedKey(data.apiKey ?? data.apiKeyFull ?? "");
-                  // refresh dashboard list
-                  loadDashboard();
+                  // refresh dashboard list immediately
+                  try {
+                    const dashRes = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
+                    if (dashRes.ok) {
+                      const dashData = await dashRes.json();
+                      setApiKeys(Array.isArray(dashData.apiKeys) ? dashData.apiKeys : []);
+                    }
+                  } catch (dashErr) {
+                    console.error("Failed to refresh dashboard:", dashErr);
+                  }
                 } catch (err) {
                   setCreateError(err.message || "Unable to create API key.");
                 } finally {

@@ -129,12 +129,11 @@ public class ApiKeyService {
         }
         String user = apiKey.getUserName() == null ? "" : apiKey.getUserName().trim().toLowerCase(Locale.ROOT);
         String key = apiKey.getApiKey() == null ? "" : apiKey.getApiKey().trim().toLowerCase(Locale.ROOT);
+        // avoid hiding legitimate test keys; only filter out obvious demo/sample placeholders
         return !(user.startsWith("demo")
                 || user.startsWith("sample")
-                || user.startsWith("test")
                 || key.startsWith("demo")
-                || key.startsWith("sample")
-                || key.startsWith("test"));
+                || key.startsWith("sample"));
     }
 
     private String normalizeOrDefault(String algorithm, String fallback) {

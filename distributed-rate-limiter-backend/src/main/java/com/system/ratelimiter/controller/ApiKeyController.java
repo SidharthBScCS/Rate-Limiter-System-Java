@@ -44,7 +44,7 @@ public class ApiKeyController {
 
     @GetMapping
     public ResponseEntity<List<ApiKey>> listApiKeys() {
-        return ResponseEntity.ok(apiKeyService.getAll());
+        return ResponseEntity.ok(apiKeyService.getAllRealKeys());
     }
 
     @GetMapping("/stats")
@@ -59,7 +59,7 @@ public class ApiKeyController {
 
     @GetMapping("/view/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardView() {
-        List<ApiKey> allKeys = apiKeyService.getAll();
+        List<ApiKey> allKeys = apiKeyService.getAllRealKeys();
         long total = allKeys.stream().mapToLong(k -> k.getTotalRequests() == null ? 0L : k.getTotalRequests()).sum();
         long allowed = allKeys.stream().mapToLong(k -> k.getAllowedRequests() == null ? 0L : k.getAllowedRequests()).sum();
         long blocked = allKeys.stream().mapToLong(k -> k.getBlockedRequests() == null ? 0L : k.getBlockedRequests()).sum();

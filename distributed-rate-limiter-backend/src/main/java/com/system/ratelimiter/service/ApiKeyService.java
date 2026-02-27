@@ -81,8 +81,14 @@ public class ApiKeyService {
         return apiKeys;
     }
 
+    public java.util.List<ApiKey> getAllRealKeys() {
+        return getAll().stream()
+                .filter(this::isRealKey)
+                .toList();
+    }
+
     public java.util.List<java.util.Map<String, Object>> getApiKeyStats() {
-        java.util.List<ApiKey> apiKeys = getAll();
+        java.util.List<ApiKey> apiKeys = getAllRealKeys();
 
         return apiKeys.stream()
                 .map(apiKey -> java.util.Map.<String, Object>of(
@@ -93,6 +99,20 @@ public class ApiKeyService {
                         "algorithm", apiKey.getAlgorithm() == null ? resolveAlgorithm(null) : apiKey.getAlgorithm()
                 ))
                 .toList();
+    }
+
+    private boolean isRealKey(ApiKey apiKey) {
+        if (apiKey == null) {
+            return false;
+        }
+        String user = apiKey.getUserName() == null ? "" : apiKey.getUserName().trim().toLowerCase(Locale.ROOT);
+        String key = apiKey.getApiKey() == null ? "" : apiKey.getApiKey().trim().toLowerCase(Locale.ROOT);
+        return !(user.startsWith("demo")
+                || user.startsWith("sample")
+                || user.startsWith("test")
+                || key.startsWith("demo")
+                || key.startsWith("sample")
+                || key.startsWith("test"));
     }
 
     private String resolveAlgorithm(String algorithm) {

@@ -10,6 +10,9 @@ function Analytics() {
     try {
       const url = new URL(grafanaDashboardUrl);
       url.searchParams.set("kiosk", "tv");
+      if (url.hostname === "localhost" && url.port === "3000") {
+        return `/grafana${url.pathname}${url.search}`;
+      }
       return url.toString();
     } catch {
       return grafanaDashboardUrl;

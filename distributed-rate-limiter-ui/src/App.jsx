@@ -11,11 +11,24 @@ import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
+function hasAuthenticatedUser() {
+  try {
+    const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
+    if (!cached || typeof cached !== "object") return false;
+    return Boolean(cached.userId || cached.fullName);
+  } catch {
+    localStorage.removeItem("adminUser");
+    return false;
+  }
+}
+
 function App() {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isAuthenticated = hasAuthenticatedUser();
   const isFullWidthPage =
     location.pathname === "/" || location.pathname === "/login";
+  const showSidebar = !isFullWidthPage && isAuthenticated;
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -23,7 +36,7 @@ function App() {
 
   return (
     <>
-      {!isFullWidthPage ? (
+      {showSidebar ? (
         <>
           <button
             type="button"
@@ -44,20 +57,36 @@ function App() {
       <div className={`right-content ${isFullWidthPage ? "full-width" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+          />
           <Route
             path="/dashboard"
             element={
-              <>
-                <Heading />
-                <Card refreshTick={0} />
-                <Table_Box refreshTick={0} />
-              </>
+              isAuthenticated ? (
+                <>
+                  <Heading />
+                  <Card refreshTick={0} />
+                  <Table_Box refreshTick={0} />
+                </>
+              ) : (
+                <Navigate to="/login" replace />
+              )
             }
           />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/rules-limits" element={<RulesLimits />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/analytics"
+            element={isAuthenticated ? <Analytics /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/rules-limits"
+            element={isAuthenticated ? <RulesLimits /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/settings"
+            element={isAuthenticated ? <SettingsPage /> : <Navigate to="/login" replace />}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

@@ -36,16 +36,16 @@ function Sidebar({ isMobileOpen = false }) {
             to: "/dashboard"
         },
         { 
-            id: "limits", 
-            icon: <Scale size={20} />, 
-            label: "Rules & Limits",
-            to: "/rules-limits"
-        },
-        { 
             id: "analytics", 
             icon: <BarChart3 size={20} />, 
             label: "Analytics",
             to: "/analytics"
+        },
+        { 
+            id: "limits", 
+            icon: <Scale size={20} />, 
+            label: "Rules & Limits",
+            to: "/rules-limits"
         },
         { 
             id: "settings", 

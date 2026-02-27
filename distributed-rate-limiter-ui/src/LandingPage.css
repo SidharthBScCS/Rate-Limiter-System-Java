@@ -336,51 +336,6 @@
   border-color: rgba(34, 197, 94, 0.34);
 }
 
-.highlight-strip {
-  margin-top: -48px;
-  position: relative;
-  z-index: 12;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.highlight-item {
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  border-radius: 16px;
-  padding: 16px;
-  background: linear-gradient(165deg, rgba(13, 18, 38, 0.9), rgba(16, 23, 52, 0.92));
-  box-shadow: 0 24px 30px -24px rgba(15, 23, 42, 0.75);
-  color: #dbeafe;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.highlight-item:hover {
-  transform: translateY(-4px);
-  border-color: rgba(250, 204, 21, 0.48);
-}
-
-.highlight-label {
-  display: block;
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(191, 219, 254, 0.78);
-  margin-bottom: 8px;
-}
-
-.highlight-item strong {
-  display: block;
-  font-size: 1.48rem;
-  line-height: 1.1;
-  margin-bottom: 6px;
-  color: #fff;
-}
-
-.highlight-item small {
-  color: rgba(219, 234, 254, 0.82);
-}
-
 .panel-title {
   margin: 0 0 10px;
   display: flex;
@@ -502,10 +457,6 @@
     justify-content: center;
   }
 
-  .highlight-strip {
-    margin-top: 8px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 720px) {
@@ -546,11 +497,6 @@
   .overview-section {
     grid-template-columns: 1fr;
     margin-top: 64px;
-  }
-
-  .highlight-strip {
-    grid-template-columns: 1fr;
-    margin-top: 14px;
   }
 
   .overview-card {

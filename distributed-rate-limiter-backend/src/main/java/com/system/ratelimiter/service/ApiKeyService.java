@@ -96,7 +96,7 @@ public class ApiKeyService {
                         "totalRequests", apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests(),
                         "allowedRequests", apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests(),
                         "blockedRequests", apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests(),
-                        "algorithm", apiKey.getAlgorithm() == null ? resolveAlgorithm(null) : apiKey.getAlgorithm()
+                        "algorithm", normalizeOrDefault(apiKey.getAlgorithm(), defaultAlgorithm)
                 ))
                 .toList();
     }
@@ -113,17 +113,6 @@ public class ApiKeyService {
                 || key.startsWith("demo")
                 || key.startsWith("sample")
                 || key.startsWith("test"));
-    }
-
-    private String resolveAlgorithm(String algorithm) {
-        String value = algorithm == null ? "" : algorithm.trim().toUpperCase(Locale.ROOT);
-        if (value.isEmpty()) {
-            return defaultAlgorithm;
-        }
-        if (isSupportedAlgorithm(value)) {
-            return value;
-        }
-        throw new IllegalArgumentException("Algorithm must be one of TOKEN_BUCKET, FIXED_WINDOW, SLIDING_WINDOW");
     }
 
     private String normalizeOrDefault(String algorithm, String fallback) {

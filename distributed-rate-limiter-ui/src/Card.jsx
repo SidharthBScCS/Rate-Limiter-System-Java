@@ -39,10 +39,9 @@ function Card({ refreshTick }) {
           setLoadError("");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         if (isMounted) {
           setLoadError("Unable to load request stats.");
-          console.error("LOAD STATS ERROR:", err);
         }
       });
 

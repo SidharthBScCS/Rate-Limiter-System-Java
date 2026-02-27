@@ -111,29 +111,6 @@ function LandingPage() {
         </div>
       </main>
 
-      <section className="highlight-strip">
-        <article className="highlight-item">
-          <span className="highlight-label">Decision Latency</span>
-          <strong>~1ms</strong>
-          <small>per request check</small>
-        </article>
-        <article className="highlight-item">
-          <span className="highlight-label">Processing Capacity</span>
-          <strong>100K+</strong>
-          <small>requests / second</small>
-        </article>
-        <article className="highlight-item">
-          <span className="highlight-label">Algorithms</span>
-          <strong>3 Core</strong>
-          <small>Token, Sliding, Fixed</small>
-        </article>
-        <article className="highlight-item">
-          <span className="highlight-label">Availability Goal</span>
-          <strong>99.99%</strong>
-          <small>high uptime architecture</small>
-        </article>
-      </section>
-
       <section className="overview-section">
         <div className="overview-card">
           <h2>Project Overview</h2>

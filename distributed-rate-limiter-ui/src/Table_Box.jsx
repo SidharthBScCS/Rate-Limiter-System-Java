@@ -66,10 +66,9 @@ function Main_Box({ refreshTick }) {
           setLoadError("");
         }
       })
-      .catch((err) => {
+      .catch(() => {
         if (isMounted) {
           setLoadError("Unable to load API keys.");
-          console.error("LOAD API KEYS ERROR:", err);
         }
       })
       .finally(() => {

@@ -411,10 +411,10 @@ body::before {
 }
 
 .glass-navbar {
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  background: var(--surface-card);
-  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.3);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   margin-bottom: 0.9rem;
 }
 

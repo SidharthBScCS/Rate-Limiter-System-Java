@@ -16,7 +16,7 @@ function Analytics() {
   })();
 
   return (
-    <div className="analytics-page dark-theme page-full-bleed analytics-full">
+    <div className="analytics-page page-full-bleed">
       <section className="grafana-full-section">
         {grafanaEmbedUrl ? (
           <div className="grafana-frame-wrap grafana-frame-wrap--full">

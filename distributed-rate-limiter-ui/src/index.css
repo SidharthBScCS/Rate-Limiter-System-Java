@@ -147,6 +147,8 @@ body::before {
 
 .right-content.analytics-layout {
   padding: 0;
+  margin-left: 280px;
+  width: calc(100% - 280px);
 }
 
 .right-content > * {

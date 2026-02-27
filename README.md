@@ -28,12 +28,16 @@ Prometheus and Grafana.
 3. **Grafana**
    * Install Grafana from https://grafana.com/grafana/download.
    * Log in at `http://localhost:3000` (`admin/admin`).
-   * Add a Prometheus data source pointing at `http://localhost:9090`.
-     The bundled provisioning file `monitoring/grafana/provisioning/datasources`
-     uses `${GF_DATASOURCE_PROMETHEUS_URL}` so it works both inside Docker and
-     outside (defaulting to `localhost:9090`).
+   * Add a Prometheus data source pointing at `http://localhost:9090` (or
+     let the provisioning file do it automatically).
+     The YAML under `monitoring/grafana/provisioning/datasources` now sets
+     `uid: prometheus` and uses `${GF_DATASOURCE_PROMETHEUS_URL}`, so the
+     dashboard JSON can refer to `prometheus` directly. If you create the
+     data source manually, give it the UID or name **Prometheus**.
    * Import the dashboard located at
      `monitoring/grafana/dashboards/rate-limiter-overview.json`.
+     If you previously imported it and saw a blank panel or "New panel",
+     delete the old copy and re-import after updating the JSON.
    * Enable embedding by setting **Configuration → Preferences** (or
      add the following to `custom.ini`):
      ```ini
@@ -45,6 +49,13 @@ Prometheus and Grafana.
      enabled = true
      org_role = Viewer
      ```
+   * **Troubleshooting:**
+     - If panels say **No data**, make sure Prometheus is scraping your app
+       (see step 2) and that you've generated some load. Visit
+       `http://localhost:8080/actuator/prometheus` in a browser – you should
+       see metrics such as `ratelimiter_requests_total`.
+     - Refresh or re-import the dashboard after generating metrics.
+
 
 4. **Frontend**
    * Install dependencies and start the development server:

@@ -1,7 +1,7 @@
 import Sidebar from "./Sidebar";
-import Heading from "./Heading";
-import Card from "./Card";
-import Table_Box from "./Table_Box";
+import Header from "./Heading";
+import StatsCards from "./Card";
+import ApiTable from "./Table_Box";
 import Analytics from "./Analytics";
 import RulesLimits from "./RulesLimits";
 import SettingsPage from "./SettingsPage";
@@ -10,6 +10,7 @@ import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import "./App.css";
 
 function hasAuthenticatedUser() {
   try {
@@ -25,13 +26,26 @@ function hasAuthenticatedUser() {
 function App() {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
   const isAuthenticated = hasAuthenticatedUser();
   const isAnalyticsPage = location.pathname === "/analytics";
   const isFullWidthPage =
     location.pathname === "/" || location.pathname === "/login";
   const showSidebar = !isFullWidthPage && isAuthenticated;
 
+  // Refresh data periodically
   useEffect(() => {
+    const interval = setInterval(() => {
+      if (isAuthenticated && !isFullWidthPage) {
+        setRefreshTick(prev => prev + 1);
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, isFullWidthPage]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileNavOpen(false);
   }, [location.pathname]);
 
@@ -58,36 +72,71 @@ function App() {
       <div className={`right-content ${isFullWidthPage ? "full-width" : ""} ${isAnalyticsPage ? "analytics-layout" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          
           <Route
             path="/login"
             element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
           />
+          
           <Route
             path="/dashboard"
             element={
               isAuthenticated ? (
-                <>
-                  <Heading />
-                  <Card refreshTick={0} />
-                  <Table_Box refreshTick={0} />
-                </>
+                <div className="dashboard-page">
+                  <Header />
+                  <div className="dashboard-content">
+                    <StatsCards refreshTick={refreshTick} />
+                    <ApiTable refreshTick={refreshTick} />
+                  </div>
+                </div>
               ) : (
                 <Navigate to="/login" replace />
               )
             }
           />
+          
           <Route
             path="/analytics"
-            element={isAuthenticated ? <Analytics /> : <Navigate to="/login" replace />}
+            element={
+              isAuthenticated ? (
+                <div className="page-container">
+                  <Header />
+                  <Analytics />
+                </div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
           />
+          
           <Route
             path="/rules-limits"
-            element={isAuthenticated ? <RulesLimits /> : <Navigate to="/login" replace />}
+            element={
+              isAuthenticated ? (
+                <div className="page-container">
+                  <Header />
+                  <RulesLimits />
+                </div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
           />
+          
           <Route
             path="/settings"
-            element={isAuthenticated ? <SettingsPage /> : <Navigate to="/login" replace />}
+            element={
+              isAuthenticated ? (
+                <div className="page-container">
+                  <Header />
+                  <SettingsPage />
+                </div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
           />
+          
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

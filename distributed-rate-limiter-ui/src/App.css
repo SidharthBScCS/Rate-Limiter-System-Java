@@ -1,11 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 :root {
   --bg-primary: #0A0A0F;
   --bg-secondary: #12121A;
@@ -24,6 +18,12 @@
   --info: #3B82F6;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg-primary);
@@ -32,6 +32,7 @@ body {
   line-height: 1.5;
 }
 
+/* Layout */
 .app-layout {
   display: flex;
   min-height: 100vh;
@@ -40,13 +41,69 @@ body {
 .right-content {
   flex: 1;
   margin-left: 280px;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   background: var(--bg-primary);
   transition: margin 0.3s ease;
+  min-height: 100vh;
 }
 
 .right-content.full-width {
   margin-left: 0;
+  padding: 0;
+}
+
+.right-content.analytics-layout {
+  padding: 1.5rem 2rem;
+}
+
+/* Page Containers */
+.dashboard-page,
+.page-container {
+  width: 100%;
+}
+
+.dashboard-content {
+  margin-top: 2rem;
+}
+
+/* Mobile Navigation */
+.mobile-nav-toggle {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-toggle:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-hover);
+}
+
+.mobile-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-nav-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Scrollbar */
@@ -108,6 +165,20 @@ body {
 @media (max-width: 1024px) {
   .right-content {
     margin-left: 0;
-    padding: 1.5rem;
+    padding: 1rem;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
+  }
+
+  .right-content.analytics-layout {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    margin-top: 1rem;
   }
 }

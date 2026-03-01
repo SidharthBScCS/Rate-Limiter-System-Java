@@ -1,5 +1,5 @@
 import "./LoginPage.css";
-import { LogIn, AlertCircle, Shield, ArrowLeft, User, Lock } from "lucide-react";
+import { LogIn, AlertCircle, Shield, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiUrl } from "./apiBase";

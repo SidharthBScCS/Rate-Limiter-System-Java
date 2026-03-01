@@ -1,582 +1,244 @@
-﻿import { Button, Spinner, Modal, Form } from "react-bootstrap";
-import { useEffect, useMemo, useState } from "react";
-import {
+﻿import { useState, useEffect } from "react";
+import { 
+  Search, 
+  Filter, 
+  Download, 
+  Plus,
   Copy,
-  RefreshCw,
-  Activity,
-  Shield,
-  Clock,
-  User,
-  Key,
-  AlertCircle,
-  Search,
-  Filter,
-  ChevronUp,
-  ChevronDown,
+  Eye,
+  EyeOff,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import "./Table_Box.css";
 import { apiUrl } from "./apiBase";
+import "./Table_Box.css";
 
-function deriveStatusMeta(item) {
-  const sourceStatus = String(item.status ?? "NORMAL").toUpperCase();
-
-  if (sourceStatus === "BLOCKED") {
-    return {
-      label: "Blocked",
-      value: "BLOCKED",
-      color: item.statusColor ?? "#f87171",
-    };
-  }
-
-  if (sourceStatus === "WARNING") {
-    return {
-      label: "Warning",
-      value: "WARNING",
-      color: item.statusColor ?? "#fbbf24",
-    };
-  }
-
-  return {
-    label: "Normal",
-    value: "NORMAL",
-    color: item.statusColor ?? "#86efac",
-  };
-}
-
-function Main_Box({ refreshTick }) {
-  const [apiKeys, setApiKeys] = useState([]);
-  const [loadError, setLoadError] = useState("");
+function ApiTable({ refreshTick }) {
+  const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState("");
-  const [algorithmFilter, setAlgorithmFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState("ALL");
-
-  // sorting state: key corresponds to object property or special values
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-
-  // Create API key modal state
-  const [showCreate, setShowCreate] = useState(false);
-  const [createSubmitting, setCreateSubmitting] = useState(false);
-  const [createError, setCreateError] = useState("");
-  const [createdKey, setCreatedKey] = useState(null);
-  const [createForm, setCreateForm] = useState({
-    userName: "",
-    rateLimit: 100,
-    windowSeconds: 60,
-    algorithm: "SLIDING_WINDOW",
-  });
-
-  const loadDashboard = () => {
-    setLoading(true);
-    let isMounted = true;
-    fetch(apiUrl("/api/view/dashboard"), { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (isMounted) {
-          setApiKeys(Array.isArray(data.apiKeys) ? data.apiKeys : []);
-          setLoadError("");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setLoadError("Unable to load API keys.");
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  };
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [showKeys, setShowKeys] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
-    const cleanup = loadDashboard();
-    return cleanup;
+    fetchKeys();
   }, [refreshTick]);
 
-  const filteredApiKeys = useMemo(() => {
-    const query = searchText.trim().toLowerCase();
-    let items = apiKeys.filter((item) => {
-      const algorithm = String(item.algorithm ?? "SLIDING_WINDOW").toUpperCase();
-      const statusMeta = deriveStatusMeta(item);
-      const matchesAlgorithm = algorithmFilter === "ALL" || algorithm === algorithmFilter;
-      const matchesStatus = statusFilter === "ALL" || statusMeta.value === statusFilter;
-      if (!matchesAlgorithm || !matchesStatus) {
-        return false;
-      }
-      if (!query) {
-        return true;
-      }
-      const searchable = [item.userName, item.apiKeyDisplay, item.algorithm, statusMeta.label]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return searchable.includes(query);
-    });
-
-    // apply sorting configuration if set
-    if (sortConfig.key) {
-      items.sort((a, b) => {
-        let aVal = a[sortConfig.key];
-        let bVal = b[sortConfig.key];
-        if (aVal === undefined) aVal = "";
-        if (bVal === undefined) bVal = "";
-        if (typeof aVal === "string") aVal = aVal.toLowerCase();
-        if (typeof bVal === "string") bVal = bVal.toLowerCase();
-        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
+  const fetchKeys = async () => {
+    try {
+      const res = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
+      const data = await res.json();
+      setKeys(data.apiKeys || []);
+    // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      console.error("Failed to fetch keys");
+    } finally {
+      setLoading(false);
     }
-
-    return items;
-  }, [apiKeys, searchText, algorithmFilter, statusFilter, sortConfig]);
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
   };
 
-  const handleSort = (key) => {
-    setSortConfig((prev) => {
-      if (prev.key === key) {
-        // toggle direction
-        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
-      }
-      return { key, direction: "asc" };
-    });
-  };
+  const filteredKeys = keys.filter(key => {
+    const matchesSearch = key.userName?.toLowerCase().includes(search.toLowerCase()) ||
+                         key.apiKeyDisplay?.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = filter === "all" || key.status?.toLowerCase() === filter;
+    return matchesSearch && matchesFilter;
+  });
 
-  const sortIcon = (key) => {
-    if (sortConfig.key !== key) return null;
-    return sortConfig.direction === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
+  const totalPages = Math.ceil(filteredKeys.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedKeys = filteredKeys.slice(startIndex, startIndex + itemsPerPage);
+
+  const getStatusColor = (status) => {
+    switch(status?.toUpperCase()) {
+      case "BLOCKED": return { bg: "rgba(239, 68, 68, 0.1)", color: "#EF4444", dot: "#EF4444" };
+      case "WARNING": return { bg: "rgba(245, 158, 11, 0.1)", color: "#F59E0B", dot: "#F59E0B" };
+      default: return { bg: "rgba(16, 185, 129, 0.1)", color: "#10B981", dot: "#10B981" };
+    }
   };
 
   if (loading) {
-    return (
-      <div className="table-loading-container">
-        <div className="table-loading">
-          <Spinner animation="border" variant="primary" />
-          <p className="loading-text">Loading API keys...</p>
-        </div>
-      </div>
-    );
+    return <div className="table-skeleton" />;
   }
 
   return (
-    <div className="table-container">
-      <div className="table-header-card">
-        <div className="table-header-row">
-          <div>
-            <h4 className="table-title">API Keys Management</h4>
-            <p className="table-subtitle">
-              {filteredApiKeys.length} of {apiKeys.length} {apiKeys.length === 1 ? "API Key" : "API Keys"} •
-              <span className="table-health"> Rate Limiter Active</span>
-            </p>
-          </div>
-          <div className="table-header-actions">
-            {loadError && (
-              <Button
-                variant="outline-warning"
-                size="sm"
-                onClick={() => window.location.reload()}
-                className="refresh-btn"
-              >
-                <RefreshCw size={16} />
-                Refresh
-              </Button>
-            )}
-
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setCreateError("");
-                setCreatedKey(null);
-                setShowCreate(true);
-              }}
-              className="create-btn"
-              style={{ marginLeft: 8 }}
-            >
-              Create API Key
-            </Button>
-          </div>
+    <div className="api-table-container">
+      <div className="table-header">
+        <div>
+          <h2>API Keys</h2>
+          <p>Manage and monitor your API access keys</p>
         </div>
+        <button className="create-btn">
+          <Plus size={18} />
+          New API Key
+        </button>
       </div>
 
-      <div className="table-toolbar">
-        <div className="table-search-box">
+      <div className="table-filters">
+        <div className="search-box">
           <Search size={16} />
           <input
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search by user, API key, algorithm..."
+            type="text"
+            placeholder="Search by user or key..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="table-filter-group">
-          <div className="table-select-wrap">
-            <Filter size={14} />
-            <select value={algorithmFilter} onChange={(e) => setAlgorithmFilter(e.target.value)}>
-              <option value="ALL">All Algorithms</option>
-              <option value="SLIDING_WINDOW">Sliding Window</option>
-              <option value="TOKEN_BUCKET">Token Bucket</option>
-              <option value="FIXED_WINDOW">Fixed Window</option>
-              <option value="LEAKY_BUCKET">Leaky Bucket</option>
-              <option value="COMBINED">Combined</option>
-            </select>
-          </div>
-          <div className="table-select-wrap">
-            <Shield size={14} />
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="ALL">All Status</option>
-              <option value="NORMAL">Normal</option>
-              <option value="BLOCKED">Blocked</option>
-              <option value="WARNING">Warning</option>
-            </select>
-          </div>
+
+        <div className="filter-box">
+          <Filter size={16} />
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="all">All Status</option>
+            <option value="normal">Normal</option>
+            <option value="warning">Warning</option>
+            <option value="blocked">Blocked</option>
+          </select>
         </div>
+
+        <button className="icon-btn">
+          <Download size={16} />
+        </button>
       </div>
 
-      {loadError && (
-        <div className="table-error-alert">
-          <div className="table-error-content">
-            <div className="error-icon">
-              <AlertCircle size={20} />
-            </div>
-            <div className="table-error-body">
-              <h6 className="error-title">Error Loading Data</h6>
-              <p className="error-message">{loadError}</p>
-            </div>
-          </div>
+      <div className="table-wrapper">
+        <table className="api-table">
+          <thead>
+            <tr>
+              <th>API Key</th>
+              <th>User</th>
+              <th>Rate Limit</th>
+              <th>Window</th>
+              <th>Algorithm</th>
+              <th>Usage</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedKeys.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="empty-state">
+                  <div className="empty-content">
+                    <div className="empty-icon">🔑</div>
+                    <h3>No API keys found</h3>
+                    <p>Get started by creating your first API key</p>
+                    <button className="create-btn">
+                      <Plus size={16} />
+                      Create API Key
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              paginatedKeys.map((key) => {
+                const status = getStatusColor(key.status);
+                const usage = key.usagePercentage || 0;
+
+                return (
+                  <tr key={key.id} className="table-row">
+                    <td>
+                      <div className="key-cell">
+                        <code className="key-code">
+                          {showKeys[key.id] ? key.apiKeyFull : key.apiKeyDisplay}
+                        </code>
+                        <button 
+                          className="action-btn"
+                          onClick={() => setShowKeys(prev => ({ ...prev, [key.id]: !prev[key.id] }))}
+                        >
+                          {showKeys[key.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                        <button 
+                          className="action-btn"
+                          onClick={() => navigator.clipboard.writeText(key.apiKeyFull)}
+                        >
+                          <Copy size={14} />
+                        </button>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="user-name">{key.userName}</span>
+                    </td>
+                    <td>
+                      <span className="rate-value">{key.rateLimit}</span>
+                      <span className="rate-unit">/window</span>
+                    </td>
+                    <td>
+                      <span className="window-value">{key.windowSeconds}s</span>
+                    </td>
+                    <td>
+                      <span className="algo-badge">{key.algorithm}</span>
+                    </td>
+                    <td>
+                      <div className="usage-cell">
+                        <div className="usage-header">
+                          <span>{key.requestCount || 0}</span>
+                          <span style={{ color: usage > 80 ? '#EF4444' : '#10B981' }}>
+                            {usage.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="usage-bar">
+                          <div 
+                            className="usage-progress"
+                            style={{ 
+                              width: `${usage}%`,
+                              background: usage > 80 ? '#EF4444' : '#10B981'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="status-cell" style={{ background: status.bg }}>
+                        <span className="status-dot" style={{ background: status.dot }} />
+                        <span style={{ color: status.color }}>{key.status || "NORMAL"}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <button className="action-btn">
+                        <MoreVertical size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredKeys.length > 0 && (
+        <div className="table-pagination">
+          <button 
+            className="pagination-btn"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+          
+          <button 
+            className="pagination-btn"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       )}
-
-      <div className="modern-table-container">
-        <div className="table-wrapper desktop-table-view">
-          <table className="modern-table">
-            <thead>
-              <tr>
-                <th>
-                  <div className="table-header-cell">
-                    <Key size={16} />
-                    <span>API Key</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="table-header-cell">
-                    <User size={16} />
-                    <span>User</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="table-header-cell">
-                    <Activity size={16} />
-                    <span>Rate Limit</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="table-header-cell">
-                    <Clock size={16} />
-                    <span>Window</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="table-header-cell">
-                    <Shield size={16} />
-                    <span>Algorithm</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="table-header-cell">
-                    <Activity size={16} />
-                    <span>Requests</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="table-header-cell">
-                    <Shield size={16} />
-                    <span>Status</span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApiKeys.length === 0 ? (
-                <tr>
-                  <td colSpan="7">
-                    <div className="empty-state">
-                      <div className="empty-state-icon">
-                        <Key size={48} />
-                      </div>
-                      <h4>No Matching API Keys</h4>
-                      <p>Adjust search/filter settings and try again.</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredApiKeys.map((item) => {
-                  const apiKeyValue = item.apiKeyFull ?? "";
-                  const requestCount = Number(item.requestCount ?? 0);
-                  const statusMeta = deriveStatusMeta(item);
-                  const usagePercentage = Number(item.usagePercentage ?? 0);
-                  const usageColor = item.usageColor ?? "#10b981";
-
-                  return (
-                    <tr key={item.id ?? item.apiKeyDisplay} className="table-data-row">
-                      <td>
-                        <div className="api-key-cell">
-                          <div className="api-key-display">
-                            <code>{item.apiKeyDisplay}</code>
-                          </div>
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="copy-btn"
-                            onClick={() => copyToClipboard(apiKeyValue)}
-                            title="Copy API Key"
-                          >
-                            <Copy size={14} />
-                          </Button>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="owner-cell">
-                          <span className="owner-name">{item.userName}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="rate-limit-cell">
-                          <span className="rate-value">{item.rateLimit}</span>
-                          <span className="rate-unit">requests</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="window-cell">
-                          <span className="window-value">{item.windowSeconds}</span>
-                          <span className="window-unit">seconds</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="algorithm-pill">{item.algorithm ?? "SLIDING_WINDOW"}</span>
-                      </td>
-                      <td>
-                        <div className="requests-cell">
-                          <div className="requests-info">
-                            <span className="request-count">{requestCount}</span>
-                            <span className="request-percentage" style={{ color: usageColor }}>
-                              {usagePercentage.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="usage-bar">
-                            <div
-                              className="usage-progress"
-                              style={{
-                                width: `${usagePercentage}%`,
-                                backgroundColor: usageColor,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="status-pill" style={{ color: statusMeta.color }}>
-                          {statusMeta.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="mobile-api-list">
-          {filteredApiKeys.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <Key size={48} />
-              </div>
-              <h4>No Matching API Keys</h4>
-              <p>Adjust search/filter settings and try again.</p>
-            </div>
-          ) : (
-            filteredApiKeys.map((item) => {
-              const apiKeyValue = item.apiKeyFull ?? "";
-              const requestCount = Number(item.requestCount ?? 0);
-              const statusMeta = deriveStatusMeta(item);
-              const usagePercentage = Number(item.usagePercentage ?? 0);
-              const usageColor = item.usageColor ?? "#10b981";
-
-              return (
-                <div key={item.id ?? item.apiKeyDisplay} className="mobile-api-card">
-                  <div className="mobile-api-card-top">
-                    <code>{item.apiKeyDisplay}</code>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="copy-btn"
-                      onClick={() => copyToClipboard(apiKeyValue)}
-                      title="Copy API Key"
-                    >
-                      <Copy size={14} />
-                    </Button>
-                  </div>
-                  <div className="mobile-api-meta">
-                    <span>{item.userName}</span>
-                    <span className="algorithm-pill">{item.algorithm ?? "SLIDING_WINDOW"}</span>
-                  </div>
-                  <div className="mobile-api-meta">
-                    <span>{item.rateLimit} req</span>
-                    <span>{item.windowSeconds}s window</span>
-                  </div>
-                  <div className="requests-cell">
-                    <div className="requests-info">
-                      <span className="request-count">{requestCount}</span>
-                      <span className="request-percentage" style={{ color: usageColor }}>
-                        {usagePercentage.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="usage-bar">
-                      <div
-                        className="usage-progress"
-                        style={{
-                          width: `${usagePercentage}%`,
-                          backgroundColor: usageColor,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="mobile-api-status">
-                    <span className="status-pill" style={{ color: statusMeta.color }}>
-                      {statusMeta.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Create API Key Modal */}
-      <Modal show={showCreate} onHide={() => setShowCreate(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Create API Key</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {createdKey ? (
-            <div style={{ textAlign: "center" }}>
-              <p>Your API key was created successfully.</p>
-              <code style={{ display: "block", wordBreak: "break-all", marginBottom: 8 }}>{createdKey}</code>
-              <div>
-                <Button variant="outline-primary" size="sm" onClick={() => copyToClipboard(createdKey)}>
-                  Copy
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              {createError && <div className="form-error">{createError}</div>}
-              <Form>
-                <Form.Group className="mb-2">
-                  <Form.Label>User Name</Form.Label>
-                  <Form.Control
-                    value={createForm.userName}
-                    onChange={(e) => setCreateForm({ ...createForm, userName: e.target.value })}
-                    placeholder="Owner / user name"
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Rate Limit (requests)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={createForm.rateLimit}
-                    onChange={(e) => setCreateForm({ ...createForm, rateLimit: Number(e.target.value) })}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Window Seconds</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={createForm.windowSeconds}
-                    onChange={(e) => setCreateForm({ ...createForm, windowSeconds: Number(e.target.value) })}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2">
-                  <Form.Label>Algorithm</Form.Label>
-                  <Form.Select
-                    value={createForm.algorithm}
-                    onChange={(e) => setCreateForm({ ...createForm, algorithm: e.target.value })}
-                  >
-                    <option value="SLIDING_WINDOW">Sliding Window</option>
-                    <option value="TOKEN_BUCKET">Token Bucket</option>
-                    <option value="FIXED_WINDOW">Fixed Window</option>
-                  </Form.Select>
-                </Form.Group>
-              </Form>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCreate(false)} disabled={createSubmitting}>
-            Close
-          </Button>
-          {!createdKey && (
-            <Button
-              variant="primary"
-              onClick={async () => {
-                setCreateError("");
-                setCreateSubmitting(true);
-                try {
-                  const res = await fetch(apiUrl("/api/keys"), {
-                    method: "POST",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(createForm),
-                  });
-                  const text = await res.text();
-                  if (!res.ok) {
-                    try {
-                      const json = JSON.parse(text);
-                      throw new Error(json.message || text || res.statusText);
-                    } catch (e) {
-                      throw new Error(text || res.statusText);
-                    }
-                  }
-                  const data = JSON.parse(text);
-                  setCreatedKey(data.apiKey ?? data.apiKeyFull ?? "");
-                  // refresh dashboard list immediately
-                  try {
-                    const dashRes = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
-                    if (dashRes.ok) {
-                      const dashData = await dashRes.json();
-                      setApiKeys(Array.isArray(dashData.apiKeys) ? dashData.apiKeys : []);
-                    }
-                  } catch (dashErr) {
-                    console.error("Failed to refresh dashboard:", dashErr);
-                  }
-                } catch (err) {
-                  setCreateError(err.message || "Unable to create API key.");
-                } finally {
-                  setCreateSubmitting(false);
-                }
-              }}
-              disabled={createSubmitting}
-            >
-              {createSubmitting ? <Spinner size="sm" animation="border" /> : "Create"}
-            </Button>
-          )}
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 }
 
-export default Main_Box;
+export default ApiTable;

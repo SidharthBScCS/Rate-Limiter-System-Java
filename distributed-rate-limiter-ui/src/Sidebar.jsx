@@ -1,205 +1,144 @@
 import { 
-    LayoutGrid, 
-    Scale, 
-    BarChart3, 
-    Settings, 
-    LogOut,
-    ChevronRight,
-    Shield,
-    Sparkles
+  LayoutDashboard, 
+  KeyRound, 
+  BarChart3, 
+  Shield, 
+  Settings, 
+  LogOut,
+  ChevronRight,
+  HelpCircle,
+  Users
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import './Sidebar.css';
-import { apiUrl } from "./apiBase";
+import { useState } from "react";
+import "./Sidebar.css";
 
-function Sidebar({ isMobileOpen = false }) {
-    const location = useLocation();
-    const [hoverItem, setHoverItem] = useState(null);
-    const [adminName, setAdminName] = useState("");
-    const [adminInitials, setAdminInitials] = useState("AD");
+function Sidebar({ isMobileOpen }) {
+  const location = useLocation();
+  const [hoveredItem, setHoveredItem] = useState(null);
 
-    const handleLogout = () => {
-        fetch(apiUrl("/api/auth/logout"), { method: "POST", credentials: "include" })
-            .catch(() => {})
-            .finally(() => {
-                localStorage.removeItem("adminUser");
-                window.location.href = "/login";
-            });
-    };
+  const menuItems = [
+    { 
+      icon: LayoutDashboard, 
+      label: "Dashboard", 
+      path: "/dashboard",
+      badge: null
+    },
+    { 
+      icon: KeyRound, 
+      label: "API Keys", 
+      path: "/keys",
+      badge: "12"
+    },
+    { 
+      icon: BarChart3, 
+      label: "Analytics", 
+      path: "/analytics",
+      badge: null
+    },
+    { 
+      icon: Shield, 
+      label: "Rate Limits", 
+      path: "/limits",
+      badge: "3"
+    },
+    { 
+      icon: Users, 
+      label: "Team", 
+      path: "/team",
+      badge: null
+    },
+    { 
+      icon: Settings, 
+      label: "Settings", 
+      path: "/settings",
+      badge: null
+    },
+  ];
 
-    const menuItems = [
-        { 
-            id: "dashboard", 
-            icon: <LayoutGrid size={20} />, 
-            label: "Dashboard",
-            to: "/dashboard"
-        },
-        { 
-            id: "analytics", 
-            icon: <BarChart3 size={20} />, 
-            label: "Analytics",
-            to: "/analytics"
-        },
-        { 
-            id: "limits", 
-            icon: <Scale size={20} />, 
-            label: "Rules & Limits",
-            to: "/rules-limits"
-        },
-        { 
-            id: "settings", 
-            icon: <Settings size={20} />, 
-            label: "Settings",
-            to: "/settings"
-        },
-    ];
-
-    useEffect(() => {
-        let isMounted = true;
-
-        let hasCachedAdmin = false;
-        let cachedAdmin = null;
-        try {
-            const cached = JSON.parse(localStorage.getItem("adminUser") || "null");
-            if (cached && typeof cached === "object") {
-                hasCachedAdmin = true;
-                cachedAdmin = cached;
-                setAdminName(cached.fullName || cached.userId || "");
-                setAdminInitials(cached.initials || "AD");
-            }
-        } catch {
-            localStorage.removeItem("adminUser");
-        }
-
-        if (!hasCachedAdmin) {
-            window.location.href = "/login";
-            return () => {
-                isMounted = false;
-            };
-        }
-
-        fetch(apiUrl("/api/auth/me"), { credentials: "include" })
-            .then(async (res) => {
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
-                return res.json();
-            })
-            .then((data) => {
-                if (isMounted) {
-                    setAdminName(data.fullName || data.userId || "");
-                    setAdminInitials(data.initials || "AD");
-                    localStorage.setItem("adminUser", JSON.stringify(data));
-                }
-            })
-            .catch(() => {
-                if (isMounted) {
-                    if (!cachedAdmin) {
-                        setAdminName("");
-                        setAdminInitials("AD");
-                    }
-                }
-                localStorage.removeItem("adminUser");
-                window.location.href = "/login";
-            });
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-
-    return (
-        <div className={`sidebar-container ${isMobileOpen ? "mobile-open" : ""}`}>
-
-            {/* User Profile with Gradient */}
-            <div className="user-profile">
-                <div className="user-avatar">
-                    {adminInitials}
-                    <div className="online-indicator">
-                        <div className="online-dot" />
-                    </div>
-                </div>
-                
-                <div className="user-info">
-                    <h6 className="user-name">{adminName || "ADMIN USER"}</h6>
-                    <div className="user-details">
-                    </div>
-                </div>
-            </div>
-
-            {/* Navigation Menu with Hover Effects */}
-            <div className="nav-menu">
-                {menuItems.map((item) => (
-                    <NavLink
-                        key={item.id}
-                        to={item.to}
-                        onMouseEnter={() => setHoverItem(item.id)}
-                        onMouseLeave={() => setHoverItem(null)}
-                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                    >
-                        <div className="nav-item-content">
-                            <div className={`nav-icon ${location.pathname === item.to ? 'active' : ''}`}>
-                                {item.icon}
-                            </div>
-                            <span className="nav-label">{item.label}</span>
-                        </div>
-                        
-                        <div className="nav-item-right">
-                            {item.badge && (
-                                <span className={`nav-badge ${item.badge === 'Active' ? 'active' : 'count'}`}>
-                                    {item.badge}
-                                </span>
-                            )}
-                            
-                            {(location.pathname === item.to || hoverItem === item.id) && (
-                                <ChevronRight 
-                                    size={16} 
-                                    className="nav-chevron"
-                                />
-                            )}
-                        </div>
-
-                        {/* Hover Glow Effect */}
-                        {hoverItem === item.id && location.pathname !== item.to && (
-                            <div className="nav-hover-glow" />
-                        )}
-                    </NavLink>
-                ))}
-            </div>
-
-            {/* Logout Button with Glow Effect */}
-            <div className="sidebar-footer">
-                <button 
-                    className="logout-btn"
-                    onClick={handleLogout}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                    }}
-                >
-                    <div className="logout-icon">
-                        <LogOut size={18} />
-                    </div>
-                    <span>Logout</span>
-                </button>
-                
-                {/* Version Info */}
-                <div className="version-info">
-                    <small>Mini-Project-II</small>
-                </div>
-            </div>
-
-            {/* Decorative Corner */}
-            <div className="decorative-corner" />
+  return (
+    <aside className={`sidebar ${isMobileOpen ? "open" : ""}`}>
+      {/* Brand Section */}
+      <div className="sidebar-brand">
+        <div className="brand-logo">
+          <Shield size={28} className="logo-icon" />
         </div>
-    );
+        <div className="brand-info">
+          <h2>RateLimiter</h2>
+          <span>Enterprise Edition</span>
+        </div>
+      </div>
+
+      {/* User Profile */}
+      <div className="user-profile">
+        <div className="user-avatar">
+          <span>JD</span>
+          <div className="status-dot"></div>
+        </div>
+        <div className="user-details">
+          <h4>John Doe</h4>
+          <p>Administrator</p>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          const isHovered = hoveredItem === item.path;
+
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={`nav-item ${isActive ? "active" : ""}`}
+              onMouseEnter={() => setHoveredItem(item.path)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <div className="nav-content">
+                <div className={`nav-icon ${isActive ? "active" : ""}`}>
+                  <Icon size={20} />
+                </div>
+                <span className="nav-label">{item.label}</span>
+              </div>
+              
+              <div className="nav-right">
+                {item.badge && (
+                  <span className="nav-badge">{item.badge}</span>
+                )}
+                {(isActive || isHovered) && (
+                  <ChevronRight size={16} className="nav-chevron" />
+                )}
+              </div>
+
+              {isActive && <div className="active-indicator" />}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Footer */}
+      <div className="sidebar-footer">
+        <NavLink to="/help" className="nav-item help-item">
+          <HelpCircle size={20} />
+          <span>Help & Support</span>
+        </NavLink>
+
+        <button className="logout-btn">
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+
+        <div className="version-info">
+          <p>Version 2.0.0</p>
+        </div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div className="sidebar-glow"></div>
+    </aside>
+  );
 }
 
 export default Sidebar;

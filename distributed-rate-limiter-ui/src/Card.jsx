@@ -1,171 +1,114 @@
-import { Row, Col } from "react-bootstrap";
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import { useEffect, useState } from "react";
-import { Activity, ShieldCheck, Shield, Zap } from "lucide-react";
-import './Cards.css';
+import { 
+  Activity, 
+  CheckCircle, 
+  XCircle, 
+  TrendingUp,
+  TrendingDown,
+  MoreVertical 
+} from "lucide-react";
 import { apiUrl } from "./apiBase";
+import "./Cards.css";
 
-function Card({ refreshTick }) {
-  const [stats, setStats] = useState({
-    totalRequests: 0,
-    allowedRequests: 0,
-    blockedRequests: 0,
-    allowedPercent: 0,
-    blockedPercent: 0
-  });
-  const [loadError, setLoadError] = useState("");
+function StatsCards({ refreshTick }) {
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
-
-    fetch(apiUrl("/api/view/dashboard"), { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (isMounted) {
-          const next = data.stats ?? {};
-          setStats({
-            totalRequests: next.totalRequests ?? 0,
-            allowedRequests: next.allowedRequests ?? 0,
-            blockedRequests: next.blockedRequests ?? 0,
-            allowedPercent: next.allowedPercent ?? 0,
-            blockedPercent: next.blockedPercent ?? 0
-          });
-          setLoadError("");
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setLoadError("Unable to load request stats.");
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    fetchStats();
   }, [refreshTick]);
 
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat().format(num);
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
+      const data = await res.json();
+      setStats(data.stats || {});
+    // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      console.error("Failed to fetch stats");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // calculate display percentages for progress bars
-  const allowedPct = Math.min(100, Math.max(0, stats.allowedPercent));
-  const blockedPct = Math.min(100, Math.max(0, stats.blockedPercent));
+  const cards = [
+    {
+      title: "Total Requests",
+      value: stats.totalRequests || 0,
+      icon: Activity,
+      change: "+12.3%",
+      trend: "up",
+      color: "#8B5CF6",
+      bgColor: "rgba(139, 92, 246, 0.1)"
+    },
+    {
+      title: "Allowed Requests",
+      value: stats.allowedRequests || 0,
+      icon: CheckCircle,
+      change: `${stats.allowedPercent?.toFixed(1) || 0}%`,
+      trend: "up",
+      color: "#10B981",
+      bgColor: "rgba(16, 185, 129, 0.1)"
+    },
+    {
+      title: "Blocked Requests",
+      value: stats.blockedRequests || 0,
+      icon: XCircle,
+      change: `${stats.blockedPercent?.toFixed(1) || 0}%`,
+      trend: "down",
+      color: "#EF4444",
+      bgColor: "rgba(239, 68, 68, 0.1)"
+    }
+  ];
+
+  if (loading) {
+    return <div className="cards-skeleton" />;
+  }
 
   return (
-    <div className="stat-cards-container">
-      {loadError ? (
-        <div className="stat-alert" role="alert">
-          <i className="bi bi-exclamation-triangle"></i>
-          {loadError}
-        </div>
-      ) : null}
-      
-      <Row className="g-4">
+    <div className="stats-grid">
+      {cards.map((card, index) => {
+        const Icon = card.icon;
+        const formattedValue = new Intl.NumberFormat().format(card.value);
 
-        <Col md={4}>
-          <div className="stat-card stat-card-total">
-            <div className="stat-card-header">
-              <div className="stat-icon-container">
-                <Activity className="stat-icon" />
+        return (
+          <div 
+            key={index} 
+            className="stat-card"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <div className="card-header">
+              <div className="card-icon-wrapper" style={{ background: card.bgColor }}>
+                <Icon size={22} color={card.color} />
               </div>
-              
-              
+              <button className="card-menu">
+                <MoreVertical size={16} color="var(--text-muted)" />
+              </button>
             </div>
-            
-            <div>
-              <h6 className="stat-card-title">
-                Total Requests
-              </h6>
-              <h2 className="stat-card-value">
-                {formatNumber(stats.totalRequests)}
-              </h2>
-              
-              <div className="stat-card-footer">
-                <span className="stat-description">
-                  All traffic processed
-                </span>
-                <div className="stat-badge badge-total">
-                  <Zap size={12} className="me-1" />
-                  Live
-                </div>
-              </div>
-            </div>
-          </div>
-        </Col>
 
-        
-        <Col md={4}>
-          <div className="stat-card stat-card-allowed">
-            <div className="stat-card-header">
-              <div className="stat-icon-container">
-                <ShieldCheck className="stat-icon" />
-              </div>
+            <div className="card-body">
+              <h3 className="card-title">{card.title}</h3>
+              <p className="card-value">{formattedValue}</p>
             </div>
-            
-            <div>
-              <h6 className="stat-card-title">
-                Allowed Requests
-              </h6>
-              <h2 className="stat-card-value">
-                {formatNumber(stats.allowedRequests)}
-              </h2>
-              {/* progress bar for allowed % */}
-              <div className="progress-wrapper">
-                <div className="progress-bar allowed" style={{ width: `${allowedPct}%` }} />
-              </div>
-              <div className="stat-card-footer">
-                <span className="stat-description">
-                  Success rate
-                </span>
-                <div className="stat-badge badge-allowed">
-                  {Number(stats.allowedPercent).toFixed(1)}%
-                </div>
-              </div>
-            </div>
-          </div>
-        </Col>
 
-        
-        <Col md={4}>
-          <div className="stat-card stat-card-blocked">
-            <div className="stat-card-header">
-              <div className="stat-icon-container">
-                <Shield className="stat-icon" />
+            <div className="card-footer">
+              <div className={`trend-badge ${card.trend}`}>
+                {card.trend === "up" ? (
+                  <TrendingUp size={14} />
+                ) : (
+                  <TrendingDown size={14} />
+                )}
+                <span>{card.change}</span>
               </div>
+              <span className="period-text">vs last hour</span>
             </div>
-            
-            <div>
-              <h6 className="stat-card-title">
-                Blocked Requests
-              </h6>
-              <h2 className="stat-card-value">
-                {formatNumber(stats.blockedRequests)}
-              </h2>
-              {/* progress bar for blocked % */}
-              <div className="progress-wrapper">
-                <div className="progress-bar blocked" style={{ width: `${blockedPct}%` }} />
-              </div>
-              <div className="stat-card-footer">
-                <span className="stat-description">
-                  Block rate
-                </span>
-                <div className="stat-badge badge-blocked">
-                  {Number(stats.blockedPercent).toFixed(1)}%
-                </div>
-              </div>
-            </div>
+
+            <div className="card-glow" style={{ background: card.color }} />
           </div>
-        </Col>
-      </Row>
+        );
+      })}
     </div>
   );
 }
 
-export default Card;
+export default StatsCards;

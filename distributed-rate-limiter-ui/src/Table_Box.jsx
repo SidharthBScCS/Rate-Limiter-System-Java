@@ -11,6 +11,8 @@ import {
   AlertCircle,
   Search,
   Filter,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import "./Table_Box.css";
 import { apiUrl } from "./apiBase";
@@ -48,6 +50,9 @@ function Main_Box({ refreshTick }) {
   const [searchText, setSearchText] = useState("");
   const [algorithmFilter, setAlgorithmFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
+
+  // sorting state: key corresponds to object property or special values
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   // Create API key modal state
   const [showCreate, setShowCreate] = useState(false);
@@ -99,7 +104,7 @@ function Main_Box({ refreshTick }) {
 
   const filteredApiKeys = useMemo(() => {
     const query = searchText.trim().toLowerCase();
-    return apiKeys.filter((item) => {
+    let items = apiKeys.filter((item) => {
       const algorithm = String(item.algorithm ?? "SLIDING_WINDOW").toUpperCase();
       const statusMeta = deriveStatusMeta(item);
       const matchesAlgorithm = algorithmFilter === "ALL" || algorithm === algorithmFilter;
@@ -116,10 +121,42 @@ function Main_Box({ refreshTick }) {
         .toLowerCase();
       return searchable.includes(query);
     });
-  }, [apiKeys, searchText, algorithmFilter, statusFilter]);
+
+    // apply sorting configuration if set
+    if (sortConfig.key) {
+      items.sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+        if (aVal === undefined) aVal = "";
+        if (bVal === undefined) bVal = "";
+        if (typeof aVal === "string") aVal = aVal.toLowerCase();
+        if (typeof bVal === "string") bVal = bVal.toLowerCase();
+        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return items;
+  }, [apiKeys, searchText, algorithmFilter, statusFilter, sortConfig]);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        // toggle direction
+        return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const sortIcon = (key) => {
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
   };
 
   if (loading) {

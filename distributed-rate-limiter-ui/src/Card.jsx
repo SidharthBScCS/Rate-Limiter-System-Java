@@ -54,7 +54,9 @@ function Card({ refreshTick }) {
     return new Intl.NumberFormat().format(num);
   };
 
-  
+  // calculate display percentages for progress bars
+  const allowedPct = Math.min(100, Math.max(0, stats.allowedPercent));
+  const blockedPct = Math.min(100, Math.max(0, stats.blockedPercent));
 
   return (
     <div className="stat-cards-container">
@@ -114,7 +116,10 @@ function Card({ refreshTick }) {
               <h2 className="stat-card-value">
                 {formatNumber(stats.allowedRequests)}
               </h2>
-              
+              {/* progress bar for allowed % */}
+              <div className="progress-wrapper">
+                <div className="progress-bar allowed" style={{ width: `${allowedPct}%` }} />
+              </div>
               <div className="stat-card-footer">
                 <span className="stat-description">
                   Success rate
@@ -143,7 +148,10 @@ function Card({ refreshTick }) {
               <h2 className="stat-card-value">
                 {formatNumber(stats.blockedRequests)}
               </h2>
-              
+              {/* progress bar for blocked % */}
+              <div className="progress-wrapper">
+                <div className="progress-bar blocked" style={{ width: `${blockedPct}%` }} />
+              </div>
               <div className="stat-card-footer">
                 <span className="stat-description">
                   Block rate

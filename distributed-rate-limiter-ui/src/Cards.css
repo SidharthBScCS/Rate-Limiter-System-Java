@@ -147,6 +147,28 @@
   font-size: 0.8rem;
 }
 
+/* progress bars for card percentages */
+.progress-wrapper {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.15);
+  overflow: hidden;
+  margin: 0.5rem 0 0.8rem;
+}
+
+.progress-bar {
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+.progress-bar.allowed {
+  background: #10b981; /* emerald-500 */
+}
+
+.progress-bar.blocked {
+  background: #ef4444; /* red-500 */
+}
+
 .stat-badge {
   border-radius: 999px;
   padding: 0.28rem 0.6rem;

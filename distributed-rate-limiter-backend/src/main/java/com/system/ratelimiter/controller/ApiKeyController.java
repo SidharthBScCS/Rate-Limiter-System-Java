@@ -110,10 +110,11 @@ public class ApiKeyController {
                 request.getTokens() == null ? 1 : request.getTokens(),
                 request.getAlgorithm()
         );
+        String safeReason = normalizeReason(decision.allowed(), decision.reason());
         RateLimitDecisionResponse body = new RateLimitDecisionResponse(
                 decision.allowed(),
                 decision.retryAfterSeconds(),
-                decision.reason(),
+                safeReason,
                 decision.algorithm(),
                 request.getApiKey()
         );
@@ -123,6 +124,17 @@ public class ApiKeyController {
                     .body(body);
         }
         return ResponseEntity.ok(body);
+    }
+
+    private static String normalizeReason(boolean allowed, String reason) {
+        String value = reason == null ? "" : reason.trim();
+        if (allowed) {
+            return value.isEmpty() ? "ALLOWED" : value;
+        }
+        if (value.isEmpty() || "ALLOWED".equalsIgnoreCase(value)) {
+            return "RATE_LIMIT_EXCEEDED";
+        }
+        return value;
     }
 
     @PostMapping("/keys")

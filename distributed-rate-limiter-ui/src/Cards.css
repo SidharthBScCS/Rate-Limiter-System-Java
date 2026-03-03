@@ -18,8 +18,9 @@
 }
 
 .stat-card:hover {
-  border-color: var(--accent-primary);
-  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.15);
+  border-color: var(--border-color);
+  box-shadow: 0 10px 26px rgba(22, 27, 34, 0.5);
+  border-radius: 20px;
 }
 
 .card-header {
@@ -48,19 +49,21 @@
 }
 
 .card-title {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: var(--text-muted);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }
 
 .card-value {
-  font-size: 2.2rem;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .card-footer {
@@ -75,8 +78,9 @@
   gap: 0.25rem;
   padding: 0.25rem 0.75rem;
   border-radius: 30px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .trend-badge.up {

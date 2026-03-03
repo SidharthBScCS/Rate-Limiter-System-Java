@@ -37,8 +37,8 @@ function StatsCards({ refreshTick }) {
       icon: Activity,
       change: "+12.3%",
       trend: "up",
-      color: "#8B5CF6",
-      bgColor: "rgba(139, 92, 246, 0.1)"
+      color: "#8B949E",
+      bgColor: "rgba(139, 148, 158, 0.16)"
     },
     {
       title: "Allowed Requests",
@@ -46,8 +46,8 @@ function StatsCards({ refreshTick }) {
       icon: CheckCircle,
       change: `${stats.allowedPercent?.toFixed(1) || 0}%`,
       trend: "up",
-      color: "#10B981",
-      bgColor: "rgba(16, 185, 129, 0.1)"
+      color: "#3FB950",
+      bgColor: "rgba(63, 185, 80, 0.14)"
     },
     {
       title: "Blocked Requests",
@@ -55,8 +55,8 @@ function StatsCards({ refreshTick }) {
       icon: XCircle,
       change: `${stats.blockedPercent?.toFixed(1) || 0}%`,
       trend: "down",
-      color: "#EF4444",
-      bgColor: "rgba(239, 68, 68, 0.1)"
+      color: "#F85149",
+      bgColor: "rgba(248, 81, 73, 0.14)"
     }
   ];
 

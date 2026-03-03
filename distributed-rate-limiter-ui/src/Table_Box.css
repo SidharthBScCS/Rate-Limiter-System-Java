@@ -14,14 +14,17 @@
 }
 
 .table-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.35rem;
+  letter-spacing: -0.01em;
 }
 
 .table-header p {
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
@@ -30,19 +33,22 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--accent-gradient);
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
+  background: #238636;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+  border-radius: 6px;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.96rem;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .create-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+  background: #2ea043;
+  border-color: rgba(240, 246, 252, 0.1);
+  box-shadow: 0 0 transparent;
 }
 
 .table-wrapper {
@@ -60,13 +66,13 @@
 
 .api-table th {
   text-align: left;
-  padding: 0.85rem 0.65rem;
+  padding: 0.9rem 1rem;
   background: var(--bg-card);
   color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.72rem;
+  font-weight: 700;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.07em;
   border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
   overflow: hidden;
@@ -74,12 +80,14 @@
 }
 
 .api-table td {
-  padding: 0.85rem 0.65rem;
+  padding: 0.9rem 1rem;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
   overflow: hidden;
+  line-height: 1.45;
 }
 
 .table-row:hover {
@@ -94,11 +102,12 @@
 }
 
 .key-code {
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
   display: block;
   background: var(--bg-card);
   padding: 0.22rem 0.4rem;
   border-radius: 8px;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--accent-primary);
   border: 1px solid var(--border-color);
   line-height: 1.35;
@@ -123,7 +132,7 @@
 }
 
 .user-name {
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -133,7 +142,7 @@
 }
 
 .rate-unit, .window-unit {
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
   margin-left: 0.2rem;
 }
@@ -144,8 +153,8 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 30px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--text-secondary);
   max-width: 100%;
   overflow: hidden;
@@ -160,7 +169,8 @@
 .usage-header {
   display: flex;
   justify-content: flex-end;
-  font-size: 0.8rem;
+  font-size: 0.86rem;
+  font-weight: 700;
   margin-bottom: 0.3rem;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -184,8 +194,8 @@
   gap: 0.35rem;
   padding: 0.25rem 0.45rem;
   border-radius: 30px;
-  font-size: 0.72rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 700;
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
@@ -207,28 +217,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-}
-
-.empty-icon {
-  font-size: 3rem;
-  background: var(--bg-card);
-  width: 80px;
-  height: 80px;
-  border-radius: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-color);
+  gap: 0;
 }
 
 .empty-content h3 {
   color: var(--text-primary);
-  font-weight: 600;
-}
-
-.empty-content p {
-  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
 }
 
 .table-skeleton {
@@ -239,17 +236,106 @@
   animation: shimmer 1.5s infinite;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(1, 4, 9, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(480px, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.modal-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.create-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.create-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.create-form input,
+.create-form select {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.92rem;
+}
+
+.create-form input:focus,
+.create-form select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.create-error {
+  color: var(--danger);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.secondary-btn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 0.65rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background: var(--bg-hover);
+}
+
+.secondary-btn:disabled,
+.create-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .api-table th:nth-child(1),
-.api-table td:nth-child(1) { width: 24%; }
+.api-table td:nth-child(1) { width: 22%; }
 .api-table th:nth-child(2),
 .api-table td:nth-child(2) { width: 12%; }
 .api-table th:nth-child(3),
-.api-table td:nth-child(3) { width: 10%; }
+.api-table td:nth-child(3) { width: 12%; }
 .api-table th:nth-child(4),
-.api-table td:nth-child(4) { width: 8%; }
+.api-table td:nth-child(4) { width: 10%; }
 .api-table th:nth-child(5),
 .api-table td:nth-child(5) { width: 16%; }
 .api-table th:nth-child(6),
-.api-table td:nth-child(6) { width: 16%; }
+.api-table td:nth-child(6) { width: 14%; }
 .api-table th:nth-child(7),
 .api-table td:nth-child(7) { width: 14%; }

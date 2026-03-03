@@ -123,6 +123,19 @@ public class ApiKeyService {
                 .toList();
     }
 
+    public int deleteByUserName(String userName) {
+        if (userName == null || userName.trim().isEmpty()) {
+            throw new IllegalArgumentException("userName is required");
+        }
+        java.util.List<ApiKey> found = apiKeyRepository.findByUserName(userName.trim());
+        if (found.isEmpty()) {
+            return 0;
+        }
+        apiKeyRepository.deleteAll(found);
+        requestStatsService.syncWithApiKeys();
+        return found.size();
+    }
+
     private boolean isRealKey(ApiKey apiKey) {
         if (apiKey == null) {
             return false;

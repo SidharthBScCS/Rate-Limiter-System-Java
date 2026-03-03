@@ -19,10 +19,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @CrossOrigin(originPatterns = {"http://localhost:*", "http://127.0.0.1:*"}, allowCredentials = "true")
@@ -134,6 +136,15 @@ public class ApiKeyController {
                 request.getAlgorithm()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @DeleteMapping("/keys/user/{userName}")
+    public ResponseEntity<Map<String, Object>> deleteApiKeysByUserName(@PathVariable("userName") String userName) {
+        int deleted = apiKeyService.deleteByUserName(userName);
+        return ResponseEntity.ok(Map.of(
+                "userName", userName,
+                "deletedCount", deleted
+        ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

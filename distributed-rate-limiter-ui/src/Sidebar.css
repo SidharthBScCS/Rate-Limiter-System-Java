@@ -56,18 +56,20 @@
 }
 
 .brand-info h2 {
-  font-size: 1.2rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
 .brand-info span {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 /* User Profile */
@@ -154,7 +156,7 @@
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), transparent);
+  background: linear-gradient(90deg, rgba(63, 185, 80, 0.16), transparent);
   color: var(--accent-primary);
 }
 
@@ -185,8 +187,9 @@
 }
 
 .nav-label {
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .nav-right {
@@ -254,15 +257,16 @@
   border: 1px solid var(--border-color);
   border-radius: 12px;
   color: var(--danger);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 1rem;
 }
 
 .logout-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(248, 81, 73, 0.14);
   border-color: var(--danger);
   transform: translateY(-2px);
 }

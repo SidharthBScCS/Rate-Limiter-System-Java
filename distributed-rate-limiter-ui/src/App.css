@@ -89,6 +89,15 @@ body {
   margin-top: 0;
 }
 
+.auth-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 /* Mobile Navigation */
 .mobile-nav-toggle {
   position: fixed;

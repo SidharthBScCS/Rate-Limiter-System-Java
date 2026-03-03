@@ -3,15 +3,19 @@ import { Plus, Copy } from "lucide-react";
 import { apiUrl } from "./apiBase";
 import "./Table_Box.css";
 
-function ApiTable({ refreshTick }) {
+function ApiTable({ refreshTick, defaults, allowedAlgorithms }) {
+  const defaultAlgorithm = defaults?.algorithm || "";
+  const defaultRateLimit = String(defaults?.rateLimit ?? "");
+  const defaultWindowSeconds = String(defaults?.windowSeconds ?? "");
+  const algorithmOptions = Array.isArray(allowedAlgorithms) ? allowedAlgorithms : [];
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [formState, setFormState] = useState({
     userName: "",
-    rateLimit: "10",
-    windowSeconds: "60",
-    algorithm: "SLIDING_WINDOW",
+    rateLimit: defaultRateLimit,
+    windowSeconds: defaultWindowSeconds,
+    algorithm: defaultAlgorithm,
   });
   const [createError, setCreateError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,6 +23,17 @@ function ApiTable({ refreshTick }) {
   useEffect(() => {
     fetchKeys();
   }, [refreshTick]);
+
+  useEffect(() => {
+    if (!isCreateModalOpen) {
+      setFormState({
+        userName: "",
+        rateLimit: defaultRateLimit,
+        windowSeconds: defaultWindowSeconds,
+        algorithm: defaultAlgorithm,
+      });
+    }
+  }, [defaultAlgorithm, defaultRateLimit, defaultWindowSeconds, isCreateModalOpen]);
 
   const fetchKeys = async () => {
     try {
@@ -32,15 +47,15 @@ function ApiTable({ refreshTick }) {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case "BLOCKED":
-        return { bg: "rgba(248, 81, 73, 0.14)", color: "#F85149", dot: "#F85149" };
-      case "WARNING":
-        return { bg: "rgba(210, 153, 34, 0.14)", color: "#D29922", dot: "#D29922" };
-      default:
-        return { bg: "rgba(63, 185, 80, 0.14)", color: "#3FB950", dot: "#3FB950" };
+  const getStatusColor = (status, statusColor) => {
+    if (statusColor) {
+      return {
+        bg: `${statusColor}22`,
+        color: statusColor,
+        dot: statusColor,
+      };
     }
+    return { bg: "rgba(139, 148, 158, 0.14)", color: "#8B949E", dot: "#8B949E" };
   };
 
   if (loading) {
@@ -51,9 +66,9 @@ function ApiTable({ refreshTick }) {
     setCreateError("");
     setFormState({
       userName: "",
-      rateLimit: "10",
-      windowSeconds: "60",
-      algorithm: "SLIDING_WINDOW",
+      rateLimit: defaultRateLimit,
+      windowSeconds: defaultWindowSeconds,
+      algorithm: defaultAlgorithm,
     });
     setIsCreateModalOpen(true);
   };
@@ -147,8 +162,9 @@ function ApiTable({ refreshTick }) {
               </tr>
             ) : (
               keys.map((key) => {
-                const status = getStatusColor(key.status);
+                const status = getStatusColor(key.status, key.statusColor);
                 const usage = key.usagePercentage || 0;
+                const usageColor = key.usageColor || "#8B949E";
                 const fullApiKey = key.apiKey || key.apiKeyFull || key.apiKeyDisplay || "";
 
                 return (
@@ -181,7 +197,7 @@ function ApiTable({ refreshTick }) {
                       <div className="usage-cell">
                         <div className="usage-header">
                           <span>{key.requestCount || 0} req</span>
-                          <span style={{ color: usage > 80 ? "#F85149" : "#3FB950" }}>
+                          <span style={{ color: usageColor }}>
                             {usage.toFixed(1)}%
                           </span>
                         </div>
@@ -190,7 +206,7 @@ function ApiTable({ refreshTick }) {
                             className="usage-progress"
                             style={{
                               width: `${usage}%`,
-                              background: usage > 80 ? "#F85149" : "#3FB950",
+                              background: usageColor,
                             }}
                           />
                         </div>
@@ -253,9 +269,9 @@ function ApiTable({ refreshTick }) {
                   value={formState.algorithm}
                   onChange={(event) => updateField("algorithm", event.target.value)}
                 >
-                  <option value="SLIDING_WINDOW">SLIDING_WINDOW</option>
-                  <option value="TOKEN_BUCKET">TOKEN_BUCKET</option>
-                  <option value="FIXED_WINDOW">FIXED_WINDOW</option>
+                  {algorithmOptions.map((algorithm) => (
+                    <option key={algorithm} value={algorithm}>{algorithm}</option>
+                  ))}
                 </select>
               </label>
 

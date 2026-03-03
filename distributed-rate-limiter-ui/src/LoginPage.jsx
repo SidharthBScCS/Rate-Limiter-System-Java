@@ -1,7 +1,7 @@
 import "./LoginPage.css";
-import { LogIn, AlertCircle, Shield, ArrowLeft } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { apiUrl } from "./apiBase";
 
 function LoginPage() {
@@ -41,19 +41,16 @@ function LoginPage() {
       }
 
       if (payload && typeof payload === "object") {
-        localStorage.setItem("adminUser", JSON.stringify(payload));
-      } else {
-        localStorage.removeItem("adminUser");
+        window.dispatchEvent(new Event("auth-changed"));
       }
-
       navigate("/dashboard", { replace: true });
     } catch (err) {
       const message =
         err && err.name === "AbortError"
           ? "Login request timed out. Please try again."
           : err instanceof Error && err.message
-          ? err.message
-          : "Login failed.";
+            ? err.message
+            : "Login failed.";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -61,81 +58,41 @@ function LoginPage() {
   };
 
   return (
-    <div className="login-shell">
-      <Link className="login-back" to="/">
-        <ArrowLeft size={14} />
-        <span>Back</span>
-      </Link>
-
-      <div className="login-card">
-        {/* Left side - Login Form */}
-        <div className="login-left">
-          <div className="login-header">
-            <h1>Welcome back</h1>
-            <p>Enter your credentials to access the rate limiting dashboard</p>
-          </div>
-
-          {error && (
-            <div className="login-error">
-              <AlertCircle size={18} />
+    <div className="gh-login-shell">
+      <div className="gh-login-wrap">
+        <div className="gh-card">
+          {error ? (
+            <div className="gh-error">
+              <AlertCircle size={16} />
               <span>{error}</span>
             </div>
-          )}
+          ) : null}
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>USERNAME</label>
-              <input
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                autoComplete="username"
-                required
-              />
-            </div>
+          <form className="gh-form" onSubmit={handleSubmit}>
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
+              required
+            />
 
-            <div className="form-group">
-              <label>PASSWORD</label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </div>
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
 
-            <button className="login-btn" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <span className="spinner">⌛</span>
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <LogIn size={18} />
-                  Sign In
-                </>
-              )}
+            <button className="gh-submit" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
           </form>
-        </div>
-
-        {/* Right side - Brand/Feature Section */}
-        <div className="login-right">
-          <div className="brand-header">
-            <h2>Rate Limiting Dashboard</h2>
-            <p>Monitor, analyze, and manage your API traffic with enterprise-grade rate limiting</p>
-          </div>
-
-          <div className="feature-item">
-            <div className="feature-icon">
-              <Shield />
-            </div>
-            <span>Advanced rate limiting & throttling</span>
-          </div>
         </div>
       </div>
     </div>

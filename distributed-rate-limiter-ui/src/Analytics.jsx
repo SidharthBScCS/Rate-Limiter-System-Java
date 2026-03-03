@@ -1,13 +1,12 @@
 import React from "react";
 import "./Analytics.css";
 
-function Analytics() {
-  const grafanaDashboardUrl = (import.meta.env.VITE_GRAFANA_DASHBOARD_URL || "").trim();
+function Analytics({ grafanaDashboardUrl = "" }) {
   const [embedBlocked, setEmbedBlocked] = React.useState(false);
   const grafanaEmbedUrl = (() => {
-    if (!grafanaDashboardUrl) return "";
+    if (!grafanaDashboardUrl || !grafanaDashboardUrl.trim()) return "";
     try {
-      const url = new URL(grafanaDashboardUrl);
+      const url = new URL(grafanaDashboardUrl.trim());
       url.searchParams.set("kiosk", "tv");
       return url.toString();
     } catch {
@@ -35,7 +34,7 @@ function Analytics() {
           </div>
         ) : (
           <div className="grafana-empty">
-            Set <code>VITE_GRAFANA_DASHBOARD_URL</code> in UI environment to display Grafana here.
+            Grafana dashboard URL is not configured on backend.
           </div>
         )}
       </section>

@@ -31,9 +31,9 @@ function Sidebar({ isMobileOpen }) {
         credentials: "include",
       });
     } catch {
-      // Ignore API errors and clear client session anyway.
+      // Ignore API errors and still force a UI-side auth refresh.
     } finally {
-      localStorage.removeItem("adminUser");
+      window.dispatchEvent(new Event("auth-changed"));
       navigate("/login", { replace: true });
     }
   };

@@ -96,7 +96,7 @@ function App() {
             path="/analytics"
             element={
               isAuthenticated ? (
-                <div className="page-container">
+                <div className="page-container analytics-page-container">
                   <Analytics />
                 </div>
               ) : (

@@ -4,6 +4,8 @@ services:
     container_name: ratelimiter-prometheus
     ports:
       - "9090:9090"
+    environment:
+      PROMETHEUS_TARGET: host.docker.internal:8080
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     restart: unless-stopped

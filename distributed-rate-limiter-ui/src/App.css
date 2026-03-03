@@ -29,6 +29,14 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-sans);
   background: var(--bg-primary);
@@ -38,12 +46,6 @@ body {
   letter-spacing: 0.01em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Layout */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
 }
 
 .right-content {
@@ -80,6 +82,7 @@ body {
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
+  overflow-x: hidden;
 }
 
 .dashboard-content {
@@ -143,42 +146,6 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-secondary);
-}
-
-/* Utility Classes */
-.text-gradient {
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 1.5rem;
-  transition: all 0.2s ease;
-}
-
-.card:hover {
-  border-color: var(--accent-primary);
-  box-shadow: 0 8px 30px rgba(63, 185, 80, 0.15);
-}
-
-/* Animations */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.4s ease forwards;
 }
 
 /* Responsive */

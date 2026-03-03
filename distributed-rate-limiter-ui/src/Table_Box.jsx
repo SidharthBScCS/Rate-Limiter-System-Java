@@ -180,6 +180,7 @@ function ApiTable({ refreshTick }) {
                     <td>
                       <div className="usage-cell">
                         <div className="usage-header">
+                          <span>{key.requestCount || 0} req</span>
                           <span style={{ color: usage > 80 ? "#F85149" : "#3FB950" }}>
                             {usage.toFixed(1)}%
                           </span>

@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
+  --sidebar-width: 280px;
+  --page-padding-x: 2rem;
+  --page-padding-y: 1.5rem;
   --bg-primary: #0A0A0F;
   --bg-secondary: #12121A;
   --bg-card: #1A1A24;
@@ -40,8 +43,8 @@ body {
 
 .right-content {
   flex: 1;
-  margin-left: 280px;
-  padding: 1.5rem 2rem;
+  margin-left: var(--sidebar-width);
+  padding: var(--page-padding-y) var(--page-padding-x);
   background: var(--bg-primary);
   transition: margin 0.3s ease;
   min-height: 100vh;
@@ -60,6 +63,8 @@ body {
 .dashboard-page,
 .page-container {
   width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .dashboard-content {
@@ -165,7 +170,7 @@ body {
 @media (max-width: 1024px) {
   .right-content {
     margin-left: 0;
-    padding: 1rem;
+    padding: 4.5rem 1rem 1rem;
   }
 
   .mobile-nav-toggle {
@@ -173,7 +178,7 @@ body {
   }
 
   .right-content.analytics-layout {
-    padding: 1rem;
+    padding: 4.5rem 0 0;
   }
 }
 

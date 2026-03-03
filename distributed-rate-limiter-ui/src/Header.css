@@ -2,6 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
   margin-bottom: 2rem;
   padding: 0.5rem 0;
 }
@@ -29,6 +31,8 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .search-wrapper {
@@ -160,8 +164,21 @@
 }
 
 @media (max-width: 768px) {
+  .page-title {
+    font-size: 1.35rem;
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
   .search-wrapper {
-    width: 200px;
+    width: min(100%, 260px);
   }
   
   .date-badge {
@@ -169,6 +186,10 @@
   }
   
   .page-badge {
+    display: none;
+  }
+
+  .search-shortcut {
     display: none;
   }
 }

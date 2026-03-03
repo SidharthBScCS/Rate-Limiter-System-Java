@@ -3,9 +3,6 @@ import Header from "./Heading";
 import StatsCards from "./Card";
 import ApiTable from "./Table_Box";
 import Analytics from "./Analytics";
-import RulesLimits from "./RulesLimits";
-import SettingsPage from "./SettingsPage";
-import LandingPage from "./LandingPage";
 import LoginPage from "./LoginPage";
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -29,8 +26,7 @@ function App() {
   const [refreshTick, setRefreshTick] = useState(0);
   const isAuthenticated = hasAuthenticatedUser();
   const isAnalyticsPage = location.pathname === "/analytics";
-  const isFullWidthPage =
-    location.pathname === "/" || location.pathname === "/login";
+  const isFullWidthPage = location.pathname === "/login";
   const showSidebar = !isFullWidthPage && isAuthenticated;
 
   // Refresh data periodically
@@ -71,7 +67,10 @@ function App() {
 
       <div className={`right-content ${isFullWidthPage ? "full-width" : ""} ${isAnalyticsPage ? "analytics-layout" : ""}`}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/"
+            element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
+          />
           
           <Route
             path="/login"
@@ -110,34 +109,9 @@ function App() {
           />
           
           <Route
-            path="/rules-limits"
-            element={
-              isAuthenticated ? (
-                <div className="page-container">
-                  <Header />
-                  <RulesLimits />
-                </div>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
+            path="*"
+            element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
           />
-          
-          <Route
-            path="/settings"
-            element={
-              isAuthenticated ? (
-                <div className="page-container">
-                  <Header />
-                  <SettingsPage />
-                </div>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </>

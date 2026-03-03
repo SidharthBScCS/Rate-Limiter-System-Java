@@ -3,6 +3,7 @@ package com.system.ratelimiter.service;
 import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.repository.ApiKeyRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -110,7 +111,6 @@ public class DistributedRateLimiterService {
     private final RequestStatsService requestStatsService;
     private final MeterRegistry meterRegistry;
     private final String redisPrefix;
-    private final long blockThreshold;
     private final double tokenBucketRefillPerSecond;
     private final double tokenBucketCapacityMultiplier;
     private final DefaultRedisScript<List> fixedWindowScript;
@@ -123,7 +123,6 @@ public class DistributedRateLimiterService {
             RequestStatsService requestStatsService,
             MeterRegistry meterRegistry,
             @Value("${ratelimiter.redis-prefix:ratelimiter}") String redisPrefix,
-            @Value("${ratelimiter.block-threshold:10}") long blockThreshold,
             @Value("${ratelimiter.token-bucket.refill-per-second:1.0}") double tokenBucketRefillPerSecond,
             @Value("${ratelimiter.token-bucket.capacity-multiplier:1.0}") double tokenBucketCapacityMultiplier
     ) {
@@ -132,7 +131,6 @@ public class DistributedRateLimiterService {
         this.requestStatsService = requestStatsService;
         this.meterRegistry = meterRegistry;
         this.redisPrefix = redisPrefix == null || redisPrefix.isBlank() ? "ratelimiter" : redisPrefix.trim();
-        this.blockThreshold = Math.max(0L, blockThreshold);
         this.tokenBucketRefillPerSecond = tokenBucketRefillPerSecond;
         this.tokenBucketCapacityMultiplier = tokenBucketCapacityMultiplier;
 
@@ -164,20 +162,7 @@ public class DistributedRateLimiterService {
         ApiKey apiKey = apiKeyRepository.findByApiKey(apiKeyValue)
                 .orElseThrow(() -> new IllegalArgumentException("API key not found"));
 
-        long currentTotal = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
         String algorithm = resolveAlgorithm(requestedAlgorithm, apiKey.getAlgorithm());
-        if (blockThreshold > 0 && currentTotal >= blockThreshold) {
-            Decision decision = new Decision(false, 60, "HARD_BLOCK_THRESHOLD_EXCEEDED", algorithm);
-            updateStats(apiKey, false);
-            meterRegistry.counter(
-                    "ratelimiter_requests_total",
-                    "algorithm",
-                    decision.algorithm(),
-                    "result",
-                    "blocked"
-            ).increment();
-            return decision;
-        }
 
         int cost = Math.max(1, tokens);
         String routeKey = normalizeRoute(route);
@@ -199,6 +184,8 @@ public class DistributedRateLimiterService {
                 "ratelimiter_requests_total",
                 "algorithm",
                 algorithm,
+                "route",
+                routeKey,
                 "result",
                 decision.allowed() ? "allowed" : "blocked"
         ).increment();
@@ -279,17 +266,20 @@ public class DistributedRateLimiterService {
         long total = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
         long allowedCount = apiKey.getAllowedRequests() == null ? 0L : apiKey.getAllowedRequests();
         long blockedCount = apiKey.getBlockedRequests() == null ? 0L : apiKey.getBlockedRequests();
-        long nextTotal = total + 1L;
-
-        apiKey.setTotalRequests(nextTotal);
+        apiKey.setTotalRequests(total + 1L);
         if (allowed) {
             apiKey.setAllowedRequests(allowedCount + 1L);
         } else {
             apiKey.setBlockedRequests(blockedCount + 1L);
         }
 
-        boolean exceedsThreshold = nextTotal > blockThreshold;
-        apiKey.setStatus((!allowed || exceedsThreshold) ? "Blocked" : "Normal");
+        if (allowed) {
+            clearBlockMarker(apiKey.getApiKey());
+            apiKey.setStatus("Normal");
+        } else {
+            setBlockMarker(apiKey.getApiKey(), apiKey.getWindowSeconds());
+            apiKey.setStatus("Blocked");
+        }
         apiKeyRepository.save(apiKey);
 
         if (allowed) {
@@ -297,6 +287,43 @@ public class DistributedRateLimiterService {
         } else {
             requestStatsService.incrementBlocked(1L);
         }
+    }
+
+    public String resolveCurrentStatus(ApiKey apiKey) {
+        if (apiKey == null || apiKey.getApiKey() == null || apiKey.getApiKey().isBlank()) {
+            return "Normal";
+        }
+        return hasActiveBlockMarker(apiKey.getApiKey()) ? "Blocked" : "Normal";
+    }
+
+    private boolean hasActiveBlockMarker(String apiKeyValue) {
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(blockMarkerKey(apiKeyValue)));
+        } catch (Exception ignored) {
+            // Fallback to non-blocking status if Redis is temporarily unavailable.
+            return false;
+        }
+    }
+
+    private void setBlockMarker(String apiKeyValue, Integer windowSeconds) {
+        try {
+            Duration ttl = Duration.ofSeconds(Math.max(1, windowSeconds == null ? 60 : windowSeconds));
+            redisTemplate.opsForValue().set(blockMarkerKey(apiKeyValue), "1", ttl);
+        } catch (Exception ignored) {
+            // Ignore marker failures; limiter decision has already been made.
+        }
+    }
+
+    private void clearBlockMarker(String apiKeyValue) {
+        try {
+            redisTemplate.delete(blockMarkerKey(apiKeyValue));
+        } catch (Exception ignored) {
+            // Ignore marker cleanup failures.
+        }
+    }
+
+    private String blockMarkerKey(String apiKeyValue) {
+        return redisPrefix + ":status:block:" + apiKeyValue;
     }
 
     private long windowMs(ApiKey apiKey) {

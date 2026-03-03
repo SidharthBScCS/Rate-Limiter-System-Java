@@ -73,7 +73,7 @@ public class ApiKeyController {
                     long requestCount = apiKey.getTotalRequests() == null ? 0L : apiKey.getTotalRequests();
                     int rateLimit = apiKey.getRateLimit() == null || apiKey.getRateLimit() <= 0 ? 1 : apiKey.getRateLimit();
                     double usagePercentage = Math.min((requestCount * 100.0) / rateLimit, 100.0);
-                    String status = apiKey.getStatus() == null ? "Normal" : apiKey.getStatus();
+                    String status = distributedRateLimiterService.resolveCurrentStatus(apiKey);
                     Map<String, Object> row = new java.util.LinkedHashMap<>();
                     row.put("id", apiKey.getId());
                     row.put("apiKey", apiKey.getApiKey());

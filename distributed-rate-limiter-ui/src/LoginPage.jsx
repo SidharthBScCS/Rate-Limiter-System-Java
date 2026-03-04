@@ -46,7 +46,7 @@ function LoginPage() {
       <div className="gh-main">
         <div className="gh-right gh-right--single">
           <div className="gh-card">
-            <span className="gh-chip">Cyber Access</span>
+            <div className="gh-card-glow" />
             <div className="gh-auth-head">
               <h3>Secure Sign In</h3>
               <p>Authenticate to access the rate limiter control panel</p>

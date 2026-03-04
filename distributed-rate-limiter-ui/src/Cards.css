@@ -18,6 +18,7 @@
   opacity: 0;
   transform: translateY(20px);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  min-height: 210px;
 }
 
 .stat-card:hover {
@@ -96,6 +97,7 @@
   display: flex;
   align-items: center;
   gap: 0;
+  margin-top: auto;
 }
 
 .trend-badge {
@@ -173,6 +175,10 @@
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    min-height: 190px;
   }
 }
 

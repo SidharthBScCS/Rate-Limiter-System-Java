@@ -16,6 +16,12 @@ function ApiTable({ refreshTick, defaults }) {
   });
   const [createError, setCreateError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedText, setCopiedText] = useState("");
+  const [successModal, setSuccessModal] = useState({
+    open: false,
+    apiKey: "",
+    userName: "",
+  });
 
   useEffect(() => {
     fetchKeys();
@@ -30,6 +36,44 @@ function ApiTable({ refreshTick, defaults }) {
       });
     }
   }, [defaultRateLimit, defaultWindowSeconds, isCreateModalOpen]);
+
+  useEffect(() => {
+    const anyModalOpen = isCreateModalOpen || successModal.open;
+    if (anyModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        if (successModal.open) {
+          setSuccessModal({ open: false, apiKey: "", userName: "" });
+          return;
+        }
+        if (isCreateModalOpen && !isSubmitting) {
+          setIsCreateModalOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isCreateModalOpen, successModal.open, isSubmitting]);
+
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedText("Copied to clipboard");
+      window.setTimeout(() => setCopiedText(""), 1200);
+    } catch {
+      setCopiedText("Copy failed");
+      window.setTimeout(() => setCopiedText(""), 1200);
+    }
+  };
 
   const fetchKeys = async () => {
     try {
@@ -92,9 +136,15 @@ function ApiTable({ refreshTick, defaults }) {
         const message = body.message;
         throw new Error(message);
       }
+      const created = await response.json();
 
       await fetchKeys();
       setIsCreateModalOpen(false);
+      setSuccessModal({
+        open: true,
+        apiKey: created.apiKey,
+        userName: created.userName,
+      });
     } catch (error) {
       setCreateError(error instanceof Error ? error.message : "");
     } finally {
@@ -134,6 +184,10 @@ function ApiTable({ refreshTick, defaults }) {
                 <td colSpan="7" className="empty-state">
                   <div className="empty-content">
                     <h3>NO API KEY FOUND</h3>
+                    <button className="empty-action-btn" onClick={openCreateModal}>
+                      <Plus size={16} />
+                      Create First API Key
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -151,7 +205,8 @@ function ApiTable({ refreshTick, defaults }) {
                         <code className="key-code">{fullApiKey}</code>
                         <button
                           className="action-btn"
-                          onClick={() => navigator.clipboard.writeText(fullApiKey)}
+                          onClick={() => handleCopy(fullApiKey)}
+                          aria-label="Copy API key"
                         >
                           <Copy size={14} />
                         </button>
@@ -238,9 +293,9 @@ function ApiTable({ refreshTick, defaults }) {
               {createError ? <p className="create-error">{createError}</p> : null}
 
               <div className="modal-actions">
-                <button type="button" className="secondary-btn" onClick={closeCreateModal} disabled={isSubmitting}>
-                  Cancel
-                </button>
+              <button type="button" className="secondary-btn" onClick={closeCreateModal} disabled={isSubmitting}>
+                Cancel
+              </button>
                 <button type="submit" className="create-btn" disabled={isSubmitting}>
                   {isSubmitting ? "Creating..." : "Create API Key"}
                 </button>
@@ -249,6 +304,39 @@ function ApiTable({ refreshTick, defaults }) {
           </div>
         </div>
       ) : null}
+
+      {successModal.open ? (
+        <div className="modal-overlay" onClick={() => setSuccessModal({ open: false, apiKey: "", userName: "" })}>
+          <div className="modal-card success-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>API Key Created Successfully</h3>
+            <p className="success-message">
+              New API key has been created for <strong>{successModal.userName}</strong>.
+            </p>
+            <div className="success-key-box">
+              <code>{successModal.apiKey}</code>
+              <button
+                type="button"
+                className="action-btn"
+                onClick={() => handleCopy(successModal.apiKey)}
+                aria-label="Copy API key"
+              >
+                <Copy size={16} />
+              </button>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="create-btn"
+                onClick={() => setSuccessModal({ open: false, apiKey: "", userName: "" })}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {copiedText ? <div className="copy-toast">{copiedText}</div> : null}
     </div>
   );
 }

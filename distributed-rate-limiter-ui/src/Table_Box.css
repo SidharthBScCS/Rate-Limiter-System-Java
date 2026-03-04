@@ -4,6 +4,7 @@
   border-radius: 20px;
   padding: 1.5rem;
   margin-top: 2rem;
+  box-shadow: 0 20px 40px rgba(1, 4, 9, 0.24);
 }
 
 .table-header {
@@ -49,6 +50,14 @@
   background: #2ea043;
   border-color: rgba(240, 246, 252, 0.1);
   box-shadow: 0 0 transparent;
+}
+
+.create-btn:focus-visible,
+.secondary-btn:focus-visible,
+.action-btn:focus-visible,
+.empty-action-btn:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
 }
 
 .table-wrapper {
@@ -244,6 +253,26 @@
   letter-spacing: 0.04em;
 }
 
+.empty-action-btn {
+  margin-top: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.empty-action-btn:hover {
+  background: var(--bg-hover);
+  border-color: #3fb950;
+}
+
 .table-skeleton {
   height: 400px;
   background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
@@ -269,6 +298,7 @@
   border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 1.75rem;
+  animation: modalIn 0.18s ease-out;
 }
 
 .modal-card h3 {
@@ -321,6 +351,34 @@
   margin-top: 0.5rem;
 }
 
+.success-modal {
+  width: min(560px, 100%);
+}
+
+.success-message {
+  color: var(--text-secondary);
+  margin-bottom: 0.9rem;
+}
+
+.success-key-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+}
+
+.success-key-box code {
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", monospace;
+  color: var(--accent-primary);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 .secondary-btn {
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
@@ -339,6 +397,67 @@
 .create-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.copy-toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1400;
+  background: #1f6feb;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  box-shadow: 0 12px 28px rgba(1, 4, 9, 0.35);
+  animation: fadeInOut 1.25s ease;
+}
+
+@keyframes modalIn {
+  from {
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInOut {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 880px) {
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .api-table-container {
+    padding: 1rem;
+  }
+
+  .table-header h2 {
+    font-size: 1.55rem;
+  }
 }
 
 .api-table th:nth-child(1),

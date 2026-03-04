@@ -41,6 +41,19 @@
   pointer-events: none;
 }
 
+@keyframes ghPulse {
+  0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.45; }
+  50% { transform: translate(-50%, -50%) scale(1.03); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.45; }
+}
+
+@keyframes ghSweep {
+  0% { transform: translateX(-130%) rotate(10deg); opacity: 0; }
+  15% { opacity: 0.6; }
+  40% { opacity: 0.2; }
+  100% { transform: translateX(220%) rotate(10deg); opacity: 0; }
+}
+
 .gh-main {
   width: 100%;
   max-width: 560px;
@@ -54,6 +67,7 @@
 }
 
 .gh-card {
+  position: relative;
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(89, 174, 255, 0.35);
@@ -67,25 +81,45 @@
     0 0 0 1px rgba(0, 255, 170, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .gh-right--single {
   width: 100%;
 }
 
-.gh-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.34rem 0.72rem;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 255, 170, 0.5);
-  color: #7dffd4;
-  background: rgba(0, 255, 170, 0.1);
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 0.95rem;
+.gh-card-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 20px;
+  background: conic-gradient(
+    from 120deg,
+    rgba(0, 255, 170, 0.45),
+    rgba(56, 139, 253, 0.24),
+    rgba(0, 255, 170, 0.45)
+  );
+  filter: blur(12px);
+  opacity: 0.32;
+  z-index: -1;
+  animation: ghPulse 5s ease-in-out infinite;
+}
+
+.gh-card::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -50%;
+  width: 70%;
+  height: 220%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 170, 0),
+    rgba(0, 255, 170, 0.16),
+    rgba(0, 255, 170, 0)
+  );
+  pointer-events: none;
+  animation: ghSweep 6.5s linear infinite;
 }
 
 .gh-auth-head {
@@ -132,6 +166,7 @@
   padding: 0 14px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.12s ease;
+  caret-color: #00ffd5;
 }
 
 .gh-form input:focus {
@@ -160,6 +195,10 @@
   filter: brightness(1.05);
   transform: translateY(-1px);
   box-shadow: 0 12px 26px rgba(0, 224, 190, 0.36);
+}
+
+.gh-submit:active {
+  transform: translateY(0);
 }
 
 .gh-submit:disabled {

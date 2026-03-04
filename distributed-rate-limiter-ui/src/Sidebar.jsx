@@ -2,14 +2,17 @@ import {
   LayoutDashboard, 
   BarChart3, 
   Shield, 
-  LogOut
+  LogOut,
+  X
 } from "lucide-react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useState } from "react";
 import { apiUrl } from "./apiBase";
 import "./Sidebar.css";
 
 function Sidebar({ isMobileOpen }) {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const menuItems = [
     { 
@@ -34,7 +37,7 @@ function Sidebar({ isMobileOpen }) {
       // Ignore API errors and still force a UI-side auth refresh.
     } finally {
       window.dispatchEvent(new Event("auth-changed"));
-      navigate("/login", { replace: true });
+      window.location.assign("/login");
     }
   };
 
@@ -55,10 +58,10 @@ function Sidebar({ isMobileOpen }) {
           const Icon = item.icon;
 
           return (
-            <NavLink
+            <a
               key={item.path}
-              to={item.path}
-              className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+              href={item.path}
+              className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
             >
               <div className="nav-content">
                 <div className="nav-icon">
@@ -66,17 +69,50 @@ function Sidebar({ isMobileOpen }) {
                 </div>
                 <span className="nav-label">{item.label}</span>
               </div>
-            </NavLink>
+            </a>
           );
         })}
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
+        <button className="logout-btn" onClick={() => setShowLogoutConfirm(true)}>
           <LogOut size={20} />
           <span>Logout</span>
         </button>
       </div>
+
+      {showLogoutConfirm ? (
+        <div className="logout-modal-overlay" onClick={() => setShowLogoutConfirm(false)}>
+          <div className="logout-modal-card" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="logout-modal-close"
+              onClick={() => setShowLogoutConfirm(false)}
+              aria-label="Close logout confirmation"
+            >
+              <X size={18} />
+            </button>
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div className="logout-modal-actions">
+              <button
+                type="button"
+                className="logout-cancel-btn"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="logout-confirm-btn"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </aside>
   );
 }

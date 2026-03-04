@@ -23,10 +23,9 @@ public class PublicConfigController {
             @Value("${ui.grafana.dashboard-url:}") String grafanaDashboardUrl,
             @Value("${ui.refresh-interval-ms:30000}") int refreshIntervalMs,
             @Value("${ui.defaults.rate-limit:10}") int defaultRateLimit,
-            @Value("${ui.defaults.window-seconds:60}") int defaultWindowSeconds,
-            @Value("${ui.defaults.algorithm:SLIDING_WINDOW}") String defaultAlgorithm
+            @Value("${ui.defaults.window-seconds:60}") int defaultWindowSeconds
     ) {
-        this.grafanaDashboardUrl = grafanaDashboardUrl;
+        this.grafanaDashboardUrl = normalizeGrafanaDashboardUrl(grafanaDashboardUrl);
         this.refreshIntervalMs = Math.max(5000, refreshIntervalMs);
         this.defaultRateLimit = Math.max(1, defaultRateLimit);
         this.defaultWindowSeconds = Math.max(1, defaultWindowSeconds);
@@ -46,5 +45,19 @@ public class PublicConfigController {
                         "algorithm", defaultAlgorithm
                 )
         ));
+    }
+
+    private static String normalizeGrafanaDashboardUrl(String value) {
+        if (value == null) {
+            return "";
+        }
+        String url = value.trim();
+        if (url.isEmpty()) {
+            return "";
+        }
+        if (url.contains("kiosk=")) {
+            return url;
+        }
+        return url + (url.contains("?") ? "&" : "?") + "kiosk=tv";
     }
 }

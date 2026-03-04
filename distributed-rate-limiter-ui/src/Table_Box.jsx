@@ -4,8 +4,8 @@ import { apiUrl } from "./apiBase";
 import "./Table_Box.css";
 
 function ApiTable({ refreshTick, defaults }) {
-  const defaultRateLimit = String(defaults?.rateLimit ?? "");
-  const defaultWindowSeconds = String(defaults?.windowSeconds ?? "");
+  const defaultRateLimit = defaults.rateLimit;
+  const defaultWindowSeconds = defaults.windowSeconds;
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -35,23 +35,12 @@ function ApiTable({ refreshTick, defaults }) {
     try {
       const res = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
       const data = await res.json();
-      setKeys(data.apiKeys || []);
+      setKeys(data.apiKeys);
     } catch {
-      console.error("Failed to fetch keys");
+      // Keep previous table state on network failures.
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusColor = (status, statusColor) => {
-    if (statusColor) {
-      return {
-        bg: `${statusColor}22`,
-        color: statusColor,
-        dot: statusColor,
-      };
-    }
-    return { bg: "rgba(139, 148, 158, 0.14)", color: "#8B949E", dot: "#8B949E" };
   };
 
   if (loading) {
@@ -83,9 +72,9 @@ function ApiTable({ refreshTick, defaults }) {
     setIsSubmitting(true);
 
     const payload = {
-      userName: formState.userName.trim(),
-      rateLimit: Number(formState.rateLimit),
-      windowSeconds: Number(formState.windowSeconds),
+      userName: formState.userName,
+      rateLimit: formState.rateLimit,
+      windowSeconds: formState.windowSeconds,
     };
 
     try {
@@ -99,21 +88,15 @@ function ApiTable({ refreshTick, defaults }) {
       });
 
       if (!response.ok) {
-        const contentType = response.headers.get("content-type") || "";
-        const body = contentType.includes("application/json")
-          ? await response.json()
-          : await response.text();
-        const message =
-          (typeof body === "object" && body && body.message) ||
-          (typeof body === "string" && body) ||
-          "Failed to create API key";
+        const body = await response.json();
+        const message = body.message;
         throw new Error(message);
       }
 
       await fetchKeys();
       setIsCreateModalOpen(false);
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "Failed to create API key");
+      setCreateError(error instanceof Error ? error.message : "");
     } finally {
       setIsSubmitting(false);
     }
@@ -156,10 +139,10 @@ function ApiTable({ refreshTick, defaults }) {
               </tr>
             ) : (
               keys.map((key) => {
-                const status = getStatusColor(key.status, key.statusColor);
-                const usage = key.usagePercentage || 0;
-                const usageColor = key.usageColor || "#8B949E";
-                const fullApiKey = key.apiKey || key.apiKeyFull || key.apiKeyDisplay || "";
+                const statusColor = key.statusColor;
+                const usage = key.usagePercentage;
+                const usageColor = key.usageColor;
+                const fullApiKey = key.apiKey;
 
                 return (
                   <tr key={key.id} className="table-row">
@@ -190,9 +173,9 @@ function ApiTable({ refreshTick, defaults }) {
                     <td>
                       <div className="usage-cell">
                         <div className="usage-header">
-                          <span>{key.requestCount || 0} req</span>
+                          <span>{key.requestCount} req</span>
                           <span style={{ color: usageColor }}>
-                            {usage.toFixed(1)}%
+                            {usage}%
                           </span>
                         </div>
                         <div className="usage-bar">
@@ -207,9 +190,9 @@ function ApiTable({ refreshTick, defaults }) {
                       </div>
                     </td>
                     <td>
-                      <div className="status-cell" style={{ background: status.bg }}>
-                        <span className="status-dot" style={{ background: status.dot }} />
-                        <span style={{ color: status.color }}>{key.status || "NORMAL"}</span>
+                      <div className="status-cell" style={{ background: `${statusColor}22` }}>
+                        <span className="status-dot" style={{ background: statusColor }} />
+                        <span style={{ color: statusColor }}>{key.status}</span>
                       </div>
                     </td>
                   </tr>
@@ -231,7 +214,6 @@ function ApiTable({ refreshTick, defaults }) {
                   type="text"
                   value={formState.userName}
                   onChange={(event) => updateField("userName", event.target.value)}
-                  required
                 />
               </label>
 
@@ -239,10 +221,8 @@ function ApiTable({ refreshTick, defaults }) {
                 Rate Limit
                 <input
                   type="number"
-                  min="1"
                   value={formState.rateLimit}
                   onChange={(event) => updateField("rateLimit", event.target.value)}
-                  required
                 />
               </label>
 
@@ -250,10 +230,8 @@ function ApiTable({ refreshTick, defaults }) {
                 Window (seconds)
                 <input
                   type="number"
-                  min="1"
                   value={formState.windowSeconds}
                   onChange={(event) => updateField("windowSeconds", event.target.value)}
-                  required
                 />
               </label>
 

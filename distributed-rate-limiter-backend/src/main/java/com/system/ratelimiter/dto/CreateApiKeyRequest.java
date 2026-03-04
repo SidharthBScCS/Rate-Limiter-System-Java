@@ -1,21 +1,17 @@
 package com.system.ratelimiter.dto;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class CreateApiKeyRequest {
 
     @NotBlank(message = "userName is required")
     private String userName;
 
-    @NotNull(message = "rateLimit is required")
-    @Min(value = 1, message = "rateLimit must be >= 1")
-    private Integer rateLimit;
+    @NotBlank(message = "rateLimit is required")
+    private String rateLimit;
 
-    @NotNull(message = "windowSeconds is required")
-    @Min(value = 1, message = "windowSeconds must be >= 1")
-    private Integer windowSeconds;
+    @NotBlank(message = "windowSeconds is required")
+    private String windowSeconds;
 
     public String getUserName() {
         return userName;
@@ -25,19 +21,19 @@ public class CreateApiKeyRequest {
         this.userName = userName;
     }
 
-    public Integer getRateLimit() {
+    public String getRateLimit() {
         return rateLimit;
     }
 
-    public void setRateLimit(Integer rateLimit) {
+    public void setRateLimit(String rateLimit) {
         this.rateLimit = rateLimit;
     }
 
-    public Integer getWindowSeconds() {
+    public String getWindowSeconds() {
         return windowSeconds;
     }
 
-    public void setWindowSeconds(Integer windowSeconds) {
+    public void setWindowSeconds(String windowSeconds) {
         this.windowSeconds = windowSeconds;
     }
 

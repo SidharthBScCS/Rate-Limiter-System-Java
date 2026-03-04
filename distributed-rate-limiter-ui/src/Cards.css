@@ -6,21 +6,43 @@
 }
 
 .stat-card {
-  background: var(--bg-card);
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(56, 139, 253, 0.08), transparent 55%),
+    linear-gradient(180deg, rgba(33, 38, 45, 0.92), rgba(22, 27, 34, 0.95));
   border: 1px solid var(--border-color);
   border-radius: 20px;
-  padding: 1.5rem;
+  padding: 1.6rem;
   position: relative;
   overflow: hidden;
-  animation: slideIn 0.4s ease forwards;
+  animation: slideIn 0.45s ease forwards;
   opacity: 0;
   transform: translateY(20px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .stat-card:hover {
-  border-color: var(--border-color);
-  box-shadow: 0 10px 26px rgba(22, 27, 34, 0.5);
+  transform: translateY(-3px);
+  border-color: #30363d;
+  box-shadow: 0 16px 38px rgba(1, 4, 9, 0.45);
   border-radius: 20px;
+}
+
+.stat-card:nth-child(1) {
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(139, 148, 158, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(33, 38, 45, 0.9), rgba(22, 27, 34, 0.95));
+}
+
+.stat-card:nth-child(2) {
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(63, 185, 80, 0.13), transparent 55%),
+    linear-gradient(180deg, rgba(33, 38, 45, 0.9), rgba(22, 27, 34, 0.95));
+}
+
+.stat-card:nth-child(3) {
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgba(248, 81, 73, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(33, 38, 45, 0.9), rgba(22, 27, 34, 0.95));
 }
 
 .card-header {
@@ -37,33 +59,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  border: 1px solid rgba(240, 246, 252, 0.06);
+  backdrop-filter: blur(2px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .stat-card:hover .card-icon-wrapper {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(1, 4, 9, 0.35);
 }
 
 .card-body {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.4rem;
 }
 
 .card-title {
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--text-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .card-value {
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: clamp(2.1rem, 2.8vw, 2.6rem);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 0 rgba(1, 4, 9, 0.25);
 }
 
 .card-footer {
@@ -76,21 +102,24 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 30px;
-  font-size: 0.82rem;
+  padding: 0.32rem 0.78rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  border: 1px solid transparent;
 }
 
 .trend-badge.up {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
+  background: rgba(35, 134, 54, 0.16);
+  color: #3fb950;
+  border-color: rgba(63, 185, 80, 0.2);
 }
 
 .trend-badge.down {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
+  background: rgba(248, 81, 73, 0.16);
+  color: #f85149;
+  border-color: rgba(248, 81, 73, 0.2);
 }
 
 .card-glow {
@@ -100,13 +129,13 @@
   width: 200px;
   height: 200px;
   filter: blur(60px);
-  opacity: 0.1;
+  opacity: 0.08;
   pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
 .stat-card:hover .card-glow {
-  opacity: 0.2;
+  opacity: 0.16;
 }
 
 .cards-skeleton {
@@ -144,5 +173,11 @@
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

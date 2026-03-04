@@ -10,27 +10,13 @@ import { apiUrl } from "./apiBase";
 import "./App.css";
 
 function App() {
-  const defaultUiConfig = {
-    grafanaDashboardUrl: "",
-    refreshIntervalMs: 30000,
-    allowedAlgorithms: [],
-    defaults: {
-      rateLimit: "",
-      windowSeconds: "",
-      algorithm: "",
-    },
-  };
-
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
-  const [authState, setAuthState] = useState("checking");
-  const [uiConfig, setUiConfig] = useState(defaultUiConfig);
-  const isAuthenticated = authState === "authenticated";
-  const isAuthChecking = authState === "checking";
+  const [uiConfig, setUiConfig] = useState(null);
   const isAnalyticsPage = location.pathname === "/analytics";
   const isFullWidthPage = location.pathname === "/login";
-  const showSidebar = !isFullWidthPage && isAuthenticated;
+  const showSidebar = !isFullWidthPage;
 
   const loadUiConfig = async () => {
     try {
@@ -38,36 +24,16 @@ function App() {
         credentials: "include",
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          window.location.assign("/login");
+        }
         return false;
       }
       const data = await response.json();
-      setUiConfig({
-        grafanaDashboardUrl: typeof data?.grafanaDashboardUrl === "string" ? data.grafanaDashboardUrl : "",
-        refreshIntervalMs: Number(data?.refreshIntervalMs) > 0 ? Number(data.refreshIntervalMs) : 30000,
-        allowedAlgorithms: Array.isArray(data?.allowedAlgorithms) && data.allowedAlgorithms.length > 0
-          ? data.allowedAlgorithms
-          : [],
-        defaults: {
-          rateLimit: Number(data?.defaults?.rateLimit) > 0 ? Number(data.defaults.rateLimit) : "",
-          windowSeconds: Number(data?.defaults?.windowSeconds) > 0 ? Number(data.defaults.windowSeconds) : "",
-          algorithm: typeof data?.defaults?.algorithm === "string" ? data.defaults.algorithm : "",
-        },
-      });
+      setUiConfig(data);
       return true;
     } catch {
       return false;
-    }
-  };
-
-  const refreshAuthState = async () => {
-    setAuthState("checking");
-    try {
-      const response = await fetch(apiUrl("/api/auth/me"), {
-        credentials: "include",
-      });
-      setAuthState(response.ok ? "authenticated" : "unauthenticated");
-    } catch {
-      setAuthState("unauthenticated");
     }
   };
 
@@ -75,44 +41,52 @@ function App() {
     const configTimeoutId = window.setTimeout(() => {
       loadUiConfig();
     }, 0);
-    const authTimeoutId = window.setTimeout(() => {
-      refreshAuthState();
-    }, 0);
     return () => {
       window.clearTimeout(configTimeoutId);
-      window.clearTimeout(authTimeoutId);
     };
   }, []);
 
   useEffect(() => {
     const onAuthChanged = () => {
       loadUiConfig();
-      refreshAuthState();
     };
     window.addEventListener("auth-changed", onAuthChanged);
     return () => window.removeEventListener("auth-changed", onAuthChanged);
   }, []);
 
   useEffect(() => {
-    if (isAnalyticsPage && !uiConfig.grafanaDashboardUrl) {
+    if (isAnalyticsPage && uiConfig && !uiConfig.grafanaDashboardUrl) {
       const timeoutId = window.setTimeout(() => {
         loadUiConfig();
       }, 0);
       return () => window.clearTimeout(timeoutId);
     }
     return undefined;
-  }, [isAnalyticsPage, uiConfig.grafanaDashboardUrl]);
+  }, [isAnalyticsPage, uiConfig]);
 
   // Refresh data periodically
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (isAuthenticated && !isFullWidthPage) {
-        setRefreshTick(prev => prev + 1);
-      }
-    }, uiConfig.refreshIntervalMs);
+    if (isFullWidthPage) {
+      return undefined;
+    }
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, isFullWidthPage, uiConfig.refreshIntervalMs]);
+    const source = new EventSource(apiUrl("/api/stream/dashboard"), { withCredentials: true });
+
+    const onTick = () => {
+      setRefreshTick((prev) => prev + 1);
+    };
+
+    source.addEventListener("tick", onTick);
+    source.onerror = () => {
+      source.close();
+      window.location.assign("/login");
+    };
+
+    return () => {
+      source.removeEventListener("tick", onTick);
+      source.close();
+    };
+  }, [isFullWidthPage]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -142,70 +116,54 @@ function App() {
       ) : null}
 
       <div className={`right-content ${isFullWidthPage ? "full-width" : ""} ${isAnalyticsPage ? "analytics-layout" : ""}`}>
+        {!isFullWidthPage && !uiConfig ? (
+          <div className="page-container">
+            <div className="analytics-empty-state">
+              <p>Loading configuration...</p>
+            </div>
+          </div>
+        ) : (
         <Routes>
           <Route
             path="/"
-            element={
-              isAuthChecking
-                ? <div className="auth-loading">Loading...</div>
-                : <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
-            }
+            element={<Navigate to="/dashboard" replace />}
           />
           
           <Route
             path="/login"
-            element={
-              isAuthChecking
-                ? <div className="auth-loading">Loading...</div>
-                : (isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />)
-            }
+            element={<LoginPage />}
           />
           
           <Route
             path="/dashboard"
             element={
-              isAuthChecking ? (
-                <div className="auth-loading">Loading...</div>
-              ) : isAuthenticated ? (
-                <div className="dashboard-page">
-                  <div className="dashboard-content">
-                    <StatsCards refreshTick={refreshTick} />
-                    <ApiTable
-                      refreshTick={refreshTick}
-                      defaults={uiConfig.defaults}
-                    />
-                  </div>
+              <div className="dashboard-page">
+                <div className="dashboard-content">
+                  <StatsCards refreshTick={refreshTick} />
+                  <ApiTable
+                    refreshTick={refreshTick}
+                    defaults={uiConfig.defaults}
+                  />
                 </div>
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              </div>
             }
           />
           
           <Route
             path="/analytics"
             element={
-              isAuthChecking ? (
-                <div className="auth-loading">Loading...</div>
-              ) : isAuthenticated ? (
-                <div className="page-container analytics-page-container">
-                  <Analytics grafanaDashboardUrl={uiConfig.grafanaDashboardUrl} />
-                </div>
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              <div className="page-container analytics-page-container">
+                <Analytics grafanaDashboardUrl={uiConfig.grafanaDashboardUrl} />
+              </div>
             }
           />
           
           <Route
             path="*"
-            element={
-              isAuthChecking
-                ? <div className="auth-loading">Loading...</div>
-                : <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
-            }
+            element={<Navigate to="/dashboard" replace />}
           />
         </Routes>
+        )}
       </div>
     </>
   );

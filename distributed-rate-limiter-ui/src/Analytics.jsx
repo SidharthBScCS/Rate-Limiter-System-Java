@@ -1,27 +1,17 @@
 import React from "react";
 import "./Analytics.css";
 
-function Analytics({ grafanaDashboardUrl = "" }) {
+function Analytics({ grafanaDashboardUrl }) {
   const [embedBlocked, setEmbedBlocked] = React.useState(false);
-  const grafanaEmbedUrl = (() => {
-    if (!grafanaDashboardUrl || !grafanaDashboardUrl.trim()) return "";
-    try {
-      const url = new URL(grafanaDashboardUrl.trim());
-      url.searchParams.set("kiosk", "tv");
-      return url.toString();
-    } catch {
-      return grafanaDashboardUrl;
-    }
-  })();
 
   return (
     <div className="analytics-page page-full-bleed">
       <section className="grafana-full-section">
-        {grafanaEmbedUrl ? (
+        {grafanaDashboardUrl ? (
           <div className="grafana-frame-wrap grafana-frame-wrap--full">
             <iframe
               title="Grafana Analytics"
-              src={grafanaEmbedUrl}
+              src={grafanaDashboardUrl}
               className="grafana-frame grafana-frame--full"
               loading="lazy"
               onError={() => setEmbedBlocked(true)}

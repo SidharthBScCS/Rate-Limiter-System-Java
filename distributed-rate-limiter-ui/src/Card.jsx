@@ -21,10 +21,9 @@ function StatsCards({ refreshTick }) {
     try {
       const res = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
       const data = await res.json();
-      setStats(data.stats || {});
-    // eslint-disable-next-line no-unused-vars
-    } catch (error) {
-      console.error("Failed to fetch stats");
+      setStats(data.stats);
+    } catch {
+      // Keep previous stats on fetch failures.
     } finally {
       setLoading(false);
     }
@@ -33,27 +32,27 @@ function StatsCards({ refreshTick }) {
   const cards = [
     {
       title: "Total Requests",
-      value: stats.totalRequests || 0,
+      value: stats.totalRequests,
       icon: Activity,
-      change: "+12.3%",
+      change: `${stats.totalPercent}%`,
       trend: "up",
       color: "#8B949E",
       bgColor: "rgba(139, 148, 158, 0.16)"
     },
     {
       title: "Allowed Requests",
-      value: stats.allowedRequests || 0,
+      value: stats.allowedRequests,
       icon: CheckCircle,
-      change: `${stats.allowedPercent?.toFixed(1) || 0}%`,
+      change: `${stats.allowedPercent}%`,
       trend: "up",
       color: "#3FB950",
       bgColor: "rgba(63, 185, 80, 0.14)"
     },
     {
       title: "Blocked Requests",
-      value: stats.blockedRequests || 0,
+      value: stats.blockedRequests,
       icon: XCircle,
-      change: `${stats.blockedPercent?.toFixed(1) || 0}%`,
+      change: `${stats.blockedPercent}%`,
       trend: "down",
       color: "#F85149",
       bgColor: "rgba(248, 81, 73, 0.14)"
@@ -68,7 +67,8 @@ function StatsCards({ refreshTick }) {
     <div className="stats-grid">
       {cards.map((card, index) => {
         const Icon = card.icon;
-        const formattedValue = new Intl.NumberFormat().format(card.value);
+        const rawValue = card.value ?? "-";
+        const formattedValue = rawValue === "-" ? rawValue : new Intl.NumberFormat().format(rawValue);
 
         return (
           <div 

@@ -93,6 +93,7 @@ public class ApiKeyController {
                         "totalRequests", total,
                         "allowedRequests", allowed,
                         "blockedRequests", blocked,
+                        "totalPercent", total == 0 ? 0.0 : 100.0,
                         "allowedPercent", allowedPercent,
                         "blockedPercent", blockedPercent
                 ),
@@ -105,8 +106,7 @@ public class ApiKeyController {
         DistributedRateLimiterService.Decision decision = distributedRateLimiterService.evaluate(
                 request.getApiKey(),
                 request.getRoute(),
-                request.getTokens() == null ? 1 : request.getTokens(),
-                request.getAlgorithm()
+                request.getTokens() == null ? 1 : request.getTokens()
         );
         String safeReason = normalizeReason(decision.allowed(), decision.reason());
         RateLimitDecisionResponse body = new RateLimitDecisionResponse(
@@ -137,12 +137,31 @@ public class ApiKeyController {
 
     @PostMapping("/keys")
     public ResponseEntity<ApiKey> createApiKey(@Valid @RequestBody CreateApiKeyRequest request) {
+        int rateLimit = parsePositiveInt(request.getRateLimit(), "rateLimit");
+        int windowSeconds = parsePositiveInt(request.getWindowSeconds(), "windowSeconds");
         ApiKey created = apiKeyService.createApiKey(
                 request.getUserName(),
-                request.getRateLimit(),
-                request.getWindowSeconds()
+                rateLimit,
+                windowSeconds
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    private static int parsePositiveInt(String value, String field) {
+        String raw = value == null ? "" : value.trim();
+        if (raw.isEmpty()) {
+            throw new IllegalArgumentException(field + " is required");
+        }
+        final int parsed;
+        try {
+            parsed = Integer.parseInt(raw);
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(field + " must be a valid integer");
+        }
+        if (parsed < 1) {
+            throw new IllegalArgumentException(field + " must be >= 1");
+        }
+        return parsed;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

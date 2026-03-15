@@ -54,7 +54,7 @@ public class ApiKeyController {
 
     @GetMapping("/stats")
     public ResponseEntity<RequestStats> getStats() {
-        return ResponseEntity.ok(requestStatsService.getOrCreate());
+        return ResponseEntity.ok(requestStatsService.snapshot());
     }
 
     @GetMapping("/analytics/keys")
@@ -64,7 +64,7 @@ public class ApiKeyController {
 
     @GetMapping("/view/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboardView() {
-        RequestStats statsSnapshot = requestStatsService.syncWithApiKeys();
+        RequestStats statsSnapshot = requestStatsService.snapshot();
         List<ApiKey> allKeys = apiKeyService.getAllRealKeys();
         long total = statsSnapshot.getTotalRequests() == null ? 0L : statsSnapshot.getTotalRequests();
         long allowed = statsSnapshot.getAllowedRequests() == null ? 0L : statsSnapshot.getAllowedRequests();
@@ -107,7 +107,7 @@ public class ApiKeyController {
                 ),
                 "apiKeys", apiKeys,
                 "sources", Map.of(
-                        "postgres", "api_keys, request_stats",
+                        "postgres", "request_stats totals, api_keys metadata and persisted counters",
                         "redis", "live window counters and block markers"
                 ),
                 "generatedAt", java.time.Instant.now().toString()

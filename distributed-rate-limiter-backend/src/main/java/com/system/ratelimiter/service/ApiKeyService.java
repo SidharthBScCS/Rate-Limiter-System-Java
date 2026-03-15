@@ -11,18 +11,15 @@ import java.util.UUID;
 public class ApiKeyService {
 
     private final ApiKeyRepository apiKeyRepository;
-    private final RequestStatsService requestStatsService;
     private final String defaultAlgorithm;
     private final long blockThreshold;
 
     public ApiKeyService(
             ApiKeyRepository apiKeyRepository,
-            RequestStatsService requestStatsService,
             @Value("${ratelimiter.default-algorithm:SLIDING_WINDOW}") String defaultAlgorithm,
             @Value("${ratelimiter.block-threshold:10}") long blockThreshold
     ) {
         this.apiKeyRepository = apiKeyRepository;
-        this.requestStatsService = requestStatsService;
         this.defaultAlgorithm = normalizeOrDefault(defaultAlgorithm, "SLIDING_WINDOW");
         this.blockThreshold = Math.max(0L, blockThreshold);
     }
@@ -98,8 +95,6 @@ public class ApiKeyService {
         if (updated) {
             apiKeyRepository.saveAll(apiKeys);
         }
-
-        requestStatsService.syncWithApiKeys();
         return apiKeys;
     }
 

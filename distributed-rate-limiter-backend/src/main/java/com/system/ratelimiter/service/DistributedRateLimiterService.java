@@ -213,7 +213,7 @@ public class DistributedRateLimiterService {
         if (apiKey == null || apiKey.getApiKey() == null || apiKey.getApiKey().isBlank()) {
             return 0L;
         }
-        return Math.max(0L, sumSlidingWindowCount(apiKey.getApiKey()));
+        return Math.max(0L, sumSlidingWindowCount(apiKey.getApiKey(), windowMs(apiKey)));
     }
 
     private boolean hasActiveBlockMarker(String apiKeyValue) {
@@ -245,7 +245,7 @@ public class DistributedRateLimiterService {
         return redisPrefix + ":status:block:" + apiKeyValue;
     }
 
-    private long sumSlidingWindowCount(String apiKeyValue) {
+    private long sumSlidingWindowCount(String apiKeyValue, long windowMs) {
         Set<String> keys;
         try {
             keys = redisTemplate.keys(redisPrefix + ":sliding:" + apiKeyValue + ":*");
@@ -255,9 +255,12 @@ public class DistributedRateLimiterService {
         if (keys == null || keys.isEmpty()) {
             return 0L;
         }
+        long now = System.currentTimeMillis();
+        long minScore = Math.max(0L, now - Math.max(1L, windowMs));
         long sum = 0L;
         for (String key : keys) {
             try {
+                redisTemplate.opsForZSet().removeRangeByScore(key, 0, minScore);
                 Long value = redisTemplate.opsForZSet().zCard(key);
                 sum += value == null ? 0L : value;
             } catch (Exception ignored) {

@@ -1,11 +1,8 @@
 package com.system.ratelimiter.service;
 
-import com.system.ratelimiter.entity.ApiKey;
 import com.system.ratelimiter.entity.RequestStats;
-import com.system.ratelimiter.repository.ApiKeyRepository;
 import com.system.ratelimiter.repository.RequestStatsRepository;
 import jakarta.annotation.PostConstruct;
-import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,55 +10,77 @@ import org.springframework.transaction.annotation.Transactional;
 public class RequestStatsService {
 
     private final RequestStatsRepository requestStatsRepository;
-    private final ApiKeyRepository apiKeyRepository;
 
-    public RequestStatsService(RequestStatsRepository requestStatsRepository, ApiKeyRepository apiKeyRepository) {
+    public RequestStatsService(RequestStatsRepository requestStatsRepository) {
         this.requestStatsRepository = requestStatsRepository;
-        this.apiKeyRepository = apiKeyRepository;
     }
 
     public RequestStats getOrCreate() {
-        return requestStatsRepository.findTopByOrderByIdAsc()
+        RequestStats stats = requestStatsRepository.findTopByOrderByIdAsc()
                 .orElseGet(() -> {
-                    RequestStats stats = new RequestStats();
-                    stats.setTotalRequests(0L);
-                    stats.setAllowedRequests(0L);
-                    stats.setBlockedRequests(0L);
-                    return requestStatsRepository.save(stats);
+                    RequestStats created = new RequestStats();
+                    created.setTotalRequests(0L);
+                    created.setAllowedRequests(0L);
+                    created.setBlockedRequests(0L);
+                    return requestStatsRepository.save(created);
                 });
+        return normalize(stats);
     }
 
     public RequestStats incrementAllowed(long delta) {
-        RequestStats stats = getOrCreate();
-        stats.setTotalRequests(stats.getTotalRequests() + delta);
-        stats.setAllowedRequests(stats.getAllowedRequests() + delta);
+        RequestStats stats = normalize(getOrCreate());
+        stats.setTotalRequests(safe(stats.getTotalRequests()) + delta);
+        stats.setAllowedRequests(safe(stats.getAllowedRequests()) + delta);
         return requestStatsRepository.save(stats);
     }
 
     public RequestStats incrementBlocked(long delta) {
-        RequestStats stats = getOrCreate();
-        stats.setTotalRequests(stats.getTotalRequests() + delta);
-        stats.setBlockedRequests(stats.getBlockedRequests() + delta);
+        RequestStats stats = normalize(getOrCreate());
+        stats.setTotalRequests(safe(stats.getTotalRequests()) + delta);
+        stats.setBlockedRequests(safe(stats.getBlockedRequests()) + delta);
         return requestStatsRepository.save(stats);
     }
 
     @PostConstruct
     @Transactional
     public void syncOnStartup() {
-        syncWithApiKeys();
+        getOrCreate();
     }
 
-    @Transactional
-    public RequestStats syncWithApiKeys() {
-        List<ApiKey> apiKeys = apiKeyRepository.findAll();
-        long total = apiKeys.stream().mapToLong(key -> key.getTotalRequests() == null ? 0L : key.getTotalRequests()).sum();
-        long allowed = apiKeys.stream().mapToLong(key -> key.getAllowedRequests() == null ? 0L : key.getAllowedRequests()).sum();
-        long blocked = apiKeys.stream().mapToLong(key -> key.getBlockedRequests() == null ? 0L : key.getBlockedRequests()).sum();
+    public RequestStats snapshot() {
+        Object[] totals = requestStatsRepository.sumTotals();
+        RequestStats snapshot = new RequestStats();
+        snapshot.setTotalRequests(readTotal(totals, 0));
+        snapshot.setAllowedRequests(readTotal(totals, 1));
+        snapshot.setBlockedRequests(readTotal(totals, 2));
+        return normalize(snapshot);
+    }
 
-        RequestStats stats = getOrCreate();
-        stats.setTotalRequests(total);
-        stats.setAllowedRequests(allowed);
-        stats.setBlockedRequests(blocked);
-        return requestStatsRepository.save(stats);
+    private RequestStats normalize(RequestStats stats) {
+        boolean changed = false;
+        if (stats.getTotalRequests() == null) {
+            stats.setTotalRequests(0L);
+            changed = true;
+        }
+        if (stats.getAllowedRequests() == null) {
+            stats.setAllowedRequests(0L);
+            changed = true;
+        }
+        if (stats.getBlockedRequests() == null) {
+            stats.setBlockedRequests(0L);
+            changed = true;
+        }
+        return changed ? requestStatsRepository.save(stats) : stats;
+    }
+
+    private long safe(Long value) {
+        return value == null ? 0L : value;
+    }
+
+    private long readTotal(Object[] totals, int index) {
+        if (totals == null || totals.length <= index || !(totals[index] instanceof Number number)) {
+            return 0L;
+        }
+        return Math.max(0L, number.longValue());
     }
 }

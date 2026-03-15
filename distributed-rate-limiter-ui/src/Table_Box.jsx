@@ -252,6 +252,7 @@ function ApiTable({ dashboardData, loading, defaults, onDashboardRefresh }) {
                 const usageColor = key.usageColor;
                 const fullApiKey = key.apiKey;
                 const usageLabel = formatUsage(usage);
+                const algorithmLabel = key.algorithm ?? "-";
 
                 return (
                   <tr key={key.id} className="table-row">
@@ -278,7 +279,7 @@ function ApiTable({ dashboardData, loading, defaults, onDashboardRefresh }) {
                       <span className="window-value">{key.windowSeconds}s</span>
                     </td>
                     <td>
-                      <code className="algo-code">SLIDING_WINDOW</code>
+                      <code className="algo-code">{algorithmLabel}</code>
                     </td>
                     <td>
                       <div className="usage-cell">

@@ -12,16 +12,44 @@ import "./App.css";
 function App() {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [refreshTick, setRefreshTick] = useState(0);
   const [uiConfig, setUiConfig] = useState(null);
   const [configError, setConfigError] = useState("");
+  const [dashboardData, setDashboardData] = useState({ stats: {}, apiKeys: [] });
+  const [dashboardLoading, setDashboardLoading] = useState(true);
   const [toasts, setToasts] = useState([]);
   const seenDecisionKeysRef = useRef(new Set());
   const initializedDecisionFeedRef = useRef(false);
   const isAnalyticsPage = location.pathname === "/analytics";
   const isFullWidthPage = location.pathname === "/login";
   const showSidebar = !isFullWidthPage;
-  const triggerRefresh = () => setRefreshTick((prev) => prev + 1);
+
+  const loadDashboardData = async () => {
+    if (isFullWidthPage) {
+      return false;
+    }
+    try {
+      const response = await fetch(apiUrl("/api/view/dashboard"), {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          window.location.assign("/login");
+          return false;
+        }
+        return false;
+      }
+      const data = await response.json();
+      setDashboardData({
+        stats: data?.stats ?? {},
+        apiKeys: data?.apiKeys ?? [],
+      });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
 
   const loadUiConfig = async () => {
     try {
@@ -39,7 +67,6 @@ function App() {
       const data = await response.json();
       setUiConfig(data);
       setConfigError("");
-      triggerRefresh();
       return true;
     } catch {
       setConfigError("Cannot reach backend. Make sure Spring Boot is running.");
@@ -62,10 +89,19 @@ function App() {
   useEffect(() => {
     const onAuthChanged = () => {
       loadUiConfig();
+      loadDashboardData();
     };
     window.addEventListener("auth-changed", onAuthChanged);
     return () => window.removeEventListener("auth-changed", onAuthChanged);
   }, []);
+
+  useEffect(() => {
+    if (isFullWidthPage || !uiConfig) {
+      return undefined;
+    }
+    loadDashboardData();
+    return undefined;
+  }, [isFullWidthPage, uiConfig]);
 
   // Refresh data periodically
   useEffect(() => {
@@ -76,7 +112,7 @@ function App() {
     const source = new EventSource(apiUrl("/api/stream/dashboard"), { withCredentials: true });
 
     const onTick = () => {
-      triggerRefresh();
+      loadDashboardData();
     };
 
     source.addEventListener("tick", onTick);
@@ -97,7 +133,7 @@ function App() {
 
     const intervalMs = Math.max(5000, Number(uiConfig.refreshIntervalMs) || 30000);
     const intervalId = window.setInterval(() => {
-      triggerRefresh();
+      loadDashboardData();
     }, intervalMs);
 
     return () => window.clearInterval(intervalId);
@@ -109,12 +145,12 @@ function App() {
     }
 
     const handleWindowFocus = () => {
-      triggerRefresh();
+      loadDashboardData();
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        triggerRefresh();
+        loadDashboardData();
       }
     };
 
@@ -259,10 +295,15 @@ function App() {
               ) : (
                 <div className="dashboard-page">
                   <div className="dashboard-content">
-                    <StatsCards refreshTick={refreshTick} />
+                    <StatsCards
+                      stats={dashboardData.stats}
+                      loading={dashboardLoading}
+                    />
                     <ApiTable
-                      refreshTick={refreshTick}
+                      dashboardData={dashboardData}
+                      loading={dashboardLoading}
                       defaults={uiConfig.defaults}
+                      onDashboardRefresh={loadDashboardData}
                     />
                   </div>
                 </div>

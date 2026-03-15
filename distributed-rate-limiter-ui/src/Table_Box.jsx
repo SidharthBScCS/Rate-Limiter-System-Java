@@ -3,12 +3,10 @@ import { Plus, Copy, Search } from "lucide-react";
 import { apiUrl } from "./apiBase";
 import "./Table_Box.css";
 
-function ApiTable({ refreshTick, defaults }) {
+function ApiTable({ dashboardData, loading, defaults, onDashboardRefresh }) {
   const defaultRateLimit = defaults.rateLimit;
   const defaultWindowSeconds = defaults.windowSeconds;
   const rowsPerPage = 10;
-  const [keys, setKeys] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -26,6 +24,20 @@ function ApiTable({ refreshTick, defaults }) {
     userName: "",
   });
 
+  const keys = [...(dashboardData?.apiKeys ?? [])].sort((left, right) => {
+    const usageDiff = Number(right.usagePercentage ?? 0) - Number(left.usagePercentage ?? 0);
+    if (usageDiff !== 0) {
+      return usageDiff;
+    }
+
+    const requestDiff = Number(right.requestCount ?? 0) - Number(left.requestCount ?? 0);
+    if (requestDiff !== 0) {
+      return requestDiff;
+    }
+
+    return String(left.userName ?? "").localeCompare(String(right.userName ?? ""));
+  });
+
   const formatUsage = (value) => {
     const numericValue = Number(value ?? 0);
     if (!Number.isFinite(numericValue)) {
@@ -37,10 +49,6 @@ function ApiTable({ refreshTick, defaults }) {
     const rounded = numericValue >= 10 ? numericValue.toFixed(1) : numericValue.toFixed(2);
     return `${rounded.replace(/\.0+$/, "").replace(/(\.\d*[1-9])0+$/, "$1")}%`;
   };
-
-  useEffect(() => {
-    fetchKeys();
-  }, [refreshTick]);
 
   useEffect(() => {
     if (!isCreateModalOpen) {
@@ -87,34 +95,6 @@ function ApiTable({ refreshTick, defaults }) {
     } catch {
       setCopiedText("Copy failed");
       window.setTimeout(() => setCopiedText(""), 1200);
-    }
-  };
-
-  const fetchKeys = async () => {
-    try {
-      const res = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
-      if (!res.ok) {
-        throw new Error(`Failed dashboard table request: HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      const sortedKeys = [...(data.apiKeys ?? [])].sort((left, right) => {
-        const usageDiff = Number(right.usagePercentage ?? 0) - Number(left.usagePercentage ?? 0);
-        if (usageDiff !== 0) {
-          return usageDiff;
-        }
-
-        const requestDiff = Number(right.requestCount ?? 0) - Number(left.requestCount ?? 0);
-        if (requestDiff !== 0) {
-          return requestDiff;
-        }
-
-        return String(left.userName ?? "").localeCompare(String(right.userName ?? ""));
-      });
-      setKeys(sortedKeys);
-    } catch {
-      setKeys([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -196,7 +176,9 @@ function ApiTable({ refreshTick, defaults }) {
       }
       const created = await response.json();
 
-      await fetchKeys();
+      if (typeof onDashboardRefresh === "function") {
+        await onDashboardRefresh();
+      }
       setIsCreateModalOpen(false);
       setSuccessModal({
         open: true,

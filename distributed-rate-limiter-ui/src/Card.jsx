@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { 
   Activity, 
   CheckCircle, 
@@ -6,13 +6,9 @@ import {
   TrendingUp,
   TrendingDown
 } from "lucide-react";
-import { apiUrl } from "./apiBase";
 import "./Cards.css";
 
-function StatsCards({ refreshTick }) {
-  const [stats, setStats] = useState({});
-  const [loading, setLoading] = useState(true);
-
+function StatsCards({ stats, loading }) {
   const formatPercent = (value) => {
     const numericValue = Number(value ?? 0);
     if (!Number.isFinite(numericValue)) {
@@ -24,26 +20,7 @@ function StatsCards({ refreshTick }) {
     return `${rounded.replace(/\.0+$/, "").replace(/(\.\d*[1-9])0+$/, "$1")}%`;
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, [refreshTick]);
-
-  const fetchStats = async () => {
-    try {
-      const res = await fetch(apiUrl("/api/view/dashboard"), { credentials: "include" });
-      if (!res.ok) {
-        throw new Error(`Failed dashboard stats request: HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setStats(data?.stats ?? {});
-    } catch {
-      setStats({});
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cards = [
+  const cards = useMemo(() => [
     {
       title: "Total Requests",
       value: stats.totalRequests,
@@ -74,7 +51,7 @@ function StatsCards({ refreshTick }) {
       color: "#F85149",
       bgColor: "rgba(248, 81, 73, 0.14)"
     }
-  ];
+  ], [stats]);
 
   if (loading) {
     return <div className="cards-skeleton" />;

@@ -17,6 +17,7 @@
   margin-bottom: 1.3rem;
 }
 
+
 .table-header h2 {
   font-family: var(--font-display);
   font-size: 1.65rem;
@@ -423,6 +424,7 @@
   box-shadow: 0 12px 28px rgba(1, 4, 9, 0.35);
   animation: fadeInOut 1.25s ease;
 }
+
 
 @keyframes modalIn {
   from {

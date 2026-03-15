@@ -7,7 +7,17 @@ const USERNAME = __ENV.AUTH_USER || "admin";
 const PASSWORD = __ENV.AUTH_PASS || "admin";
 const ROUTE = __ENV.TEST_ROUTE || "/api/test";
 const TOKENS = Number(__ENV.TOKENS || "1");
-const SLEEP_MS = Number(__ENV.SLEEP_MS || "100");
+const SLEEP_MS = Number(__ENV.SLEEP_MS || "25");
+const START_VUS = Number(__ENV.START_VUS || "0");
+const STAGE_1_TARGET = Number(__ENV.STAGE_1_TARGET || "100");
+const STAGE_2_TARGET = Number(__ENV.STAGE_2_TARGET || "300");
+const STAGE_3_TARGET = Number(__ENV.STAGE_3_TARGET || "600");
+const STAGE_4_TARGET = Number(__ENV.STAGE_4_TARGET || "1000");
+const STAGE_1_DURATION = __ENV.STAGE_1_DURATION || "30s";
+const STAGE_2_DURATION = __ENV.STAGE_2_DURATION || "1m";
+const STAGE_3_DURATION = __ENV.STAGE_3_DURATION || "1m";
+const STAGE_4_DURATION = __ENV.STAGE_4_DURATION || "1m";
+const STAGE_5_DURATION = __ENV.STAGE_5_DURATION || "30s";
 
 const apiKeysEnv = __ENV.API_KEYS || "";
 const API_KEYS = apiKeysEnv
@@ -29,12 +39,13 @@ export const options = {
   scenarios: {
     sliding_window_load: {
       executor: "ramping-vus",
-      startVUs: 0,
+      startVUs: START_VUS,
       stages: [
-        { duration: "20s", target: 10 },
-        { duration: "40s", target: 50 },
-        { duration: "40s", target: 100 },
-        { duration: "20s", target: 0 },
+        { duration: STAGE_1_DURATION, target: STAGE_1_TARGET },
+        { duration: STAGE_2_DURATION, target: STAGE_2_TARGET },
+        { duration: STAGE_3_DURATION, target: STAGE_3_TARGET },
+        { duration: STAGE_4_DURATION, target: STAGE_4_TARGET },
+        { duration: STAGE_5_DURATION, target: 0 },
       ],
       gracefulRampDown: "10s",
     },

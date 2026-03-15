@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Copy } from "lucide-react";
+import { Plus, Copy, Search } from "lucide-react";
 import { apiUrl } from "./apiBase";
 import "./Table_Box.css";
 
@@ -10,6 +10,7 @@ function ApiTable({ refreshTick, defaults }) {
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [formState, setFormState] = useState({
     userName: "",
@@ -40,11 +41,6 @@ function ApiTable({ refreshTick, defaults }) {
   useEffect(() => {
     fetchKeys();
   }, [refreshTick]);
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(keys.length / rowsPerPage));
-    setCurrentPage((page) => Math.min(page, totalPages));
-  }, [keys.length]);
 
   useEffect(() => {
     if (!isCreateModalOpen) {
@@ -122,10 +118,6 @@ function ApiTable({ refreshTick, defaults }) {
     }
   };
 
-  if (loading) {
-    return <div className="table-skeleton" />;
-  }
-
   const openCreateModal = () => {
     setCreateError("");
     setFormState({
@@ -145,10 +137,36 @@ function ApiTable({ refreshTick, defaults }) {
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
-  const totalPages = Math.max(1, Math.ceil(keys.length / rowsPerPage));
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredKeys = keys.filter((key) => {
+    if (!normalizedSearch) {
+      return true;
+    }
+    return [
+      key.apiKey,
+      key.userName,
+      key.status,
+      key.algorithm,
+      String(key.rateLimit),
+      String(key.windowSeconds),
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedSearch));
+  });
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredKeys.length / rowsPerPage));
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [filteredKeys.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredKeys.length / rowsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * rowsPerPage;
-  const visibleKeys = keys.slice(startIndex, startIndex + rowsPerPage);
+  const visibleKeys = filteredKeys.slice(startIndex, startIndex + rowsPerPage);
+
+  if (loading) {
+    return <div className="table-skeleton" />;
+  }
 
   const handleCreateApiKey = async (event) => {
     event.preventDefault();
@@ -205,6 +223,18 @@ function ApiTable({ refreshTick, defaults }) {
         </button>
       </div>
 
+      <div className="table-toolbar">
+        <label className="table-search">
+          <Search size={16} />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search by API key, user, status, limit, or window"
+          />
+        </label>
+      </div>
+
       <div className="table-wrapper">
         <table className="api-table">
           <thead>
@@ -219,15 +249,17 @@ function ApiTable({ refreshTick, defaults }) {
             </tr>
           </thead>
           <tbody>
-            {keys.length === 0 ? (
+            {filteredKeys.length === 0 ? (
               <tr>
                 <td colSpan="7" className="empty-state">
                   <div className="empty-content">
-                    <h3>NO API KEY FOUND</h3>
-                    <button className="empty-action-btn" onClick={openCreateModal}>
-                      <Plus size={16} />
-                      Create First API Key
-                    </button>
+                    <h3>{keys.length === 0 ? "NO API KEY FOUND" : "NO MATCHING API KEY"}</h3>
+                    {keys.length === 0 ? (
+                      <button className="empty-action-btn" onClick={openCreateModal}>
+                        <Plus size={16} />
+                        Create First API Key
+                      </button>
+                    ) : null}
                   </div>
                 </td>
               </tr>
@@ -310,7 +342,8 @@ function ApiTable({ refreshTick, defaults }) {
             Previous
           </button>
           <span className="pagination-status">
-            Showing {startIndex + 1}-{Math.min(startIndex + rowsPerPage, keys.length)} of {keys.length}
+            Showing {filteredKeys.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, filteredKeys.length)} of {filteredKeys.length}
+            {searchTerm.trim() ? ` (filtered from ${keys.length})` : ""}
           </span>
           <button
             type="button"
